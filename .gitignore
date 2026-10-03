@@ -1,0 +1,53 @@
+# ---------------------------------------------------------------------------
+#  axiom/hilbert — .gitignore
+#  本專案零第三方依賴，故除了建置產物與編輯器雜物外幾乎無須忽略任何東西。
+# ---------------------------------------------------------------------------
+
+# MoonBit 建置產物 / build artefacts
+target/
+_build/
+.mooncakes/
+.moonagent/
+*.wasm
+*.wat
+*.core
+*.mi
+
+# MoonBit 工具快取 / toolchain caches
+.moon/
+moon.mod.json.lock
+
+# 編輯器與 IDE / editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+\#*\#
+.\#*
+
+# 作業系統雜物 / OS cruft
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# 暫存與日誌 / scratch & logs
+tmp_*
+*.tmp
+*.log
+*.bak
+*.orig
+*.rej
+
+# 憑證與密鑰 —— 絕不入庫 / never commit secrets
+.env
+.env.*
+*.pem
+*.key
+.netrc
+.git-credentials

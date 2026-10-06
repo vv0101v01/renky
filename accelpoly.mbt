@@ -797,6 +797,42 @@ pub fn plan_qsolve(n : Int, bits : Int) -> AccelPlan {
 }
 
 ///|
+/// ℤ 伴隨矩陣之分派。
+///
+/// 為何需要獨立分派器（而不能沿用 plan_zdet）：
+///   行列式之輸出為「1 個整數」，伴隨矩陣之輸出為「n² 個整數」。
+///   多模路徑對每個輸出都要獨立做 Θ(k²) 之 CRT 累積，故 CRT 項帶 n² 因子；
+///   行列式無此因子。這使伴隨矩陣在小 n 上淨虧，而行列式自 n=2 起即獲利。
+///
+/// 命題（交叉點）：以下模型在 bits = 64 時之預測與實測網格吻合 ——
+///   n=5 ×0.33（實測 ×0.35）、n=8 ×1.70（實測 ×1.70）、n=11 ×5.21（實測 ×5.79），
+///   交叉點 n ≈ 7。常數 619/100 由該三點校準。
+///   基準為餘因子式 Bareiss：n² 個 (n−1) 階行列式，各 ((n−1)³/3)·w²。
+pub fn plan_zadj(n : Int, bits : Int) -> AccelPlan {
+  let nn = n.to_int64()
+  let m = (n - 1).to_int64()
+  let w = words_of_bits(6 * n * (bits + 6) / 10)
+  // 基準：n² 個 (n−1) 階餘因子行列式（Bareiss）
+  let pred_base = nn * nn * (m * m * m / 3L) * w * w
+  let k = (n * (bits + 6) + 30) / 31
+  let kk = k.to_int64()
+  // 加速：k 個素數各一次 n³ 消去；CRT 項帶 n² 因子（n² 個輸出各自重建）
+  let pred_fast = kk *
+    (nn * nn * nn / 3L + 46L * nn + nn * nn * words_of_bits(bits)) +
+    619L * nn * nn * kk * kk / 100L
+  decide(
+    "ℤ 伴隨矩陣",
+    pred_base,
+    pred_fast,
+    "輸出 " +
+    (n * n).to_string() +
+    " 個整數（非 1 個）⇒ CRT 項帶 n² 因子；需 " +
+    k.to_string() +
+    " 個素數；交叉點 n ≈ 7",
+  )
+}
+
+///|
 /// ℤ[x] 乘法之分派：schoolbook 為 d²w²；
 ///   多模 NTT 為 k·(3·sz·lg + sz + 2d·字數(b)) + 1.44·d·k²（CRT 累積）。
 pub fn plan_zpolymul(d : Int, bits : Int) -> AccelPlan {

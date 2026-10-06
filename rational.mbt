@@ -40,9 +40,52 @@ pub fn big_sign(a : BigInt) -> Int {
   }
 }
 
+// ---------------------------------------------------------------------------
+// 【演算法 006b】機器整數快路徑（small-value fast path）
+//
+// 動機（實測）：big_gcd 在小值上耗 2250 ns，而同演算法之 Int64 版僅 78 ns
+//   （×29）。由於 Q::make 每次呼叫必做一次 gcd，而全庫之精確 ℚ 軌道
+//   （A–J 群）幾乎每個運算都經過 Q::make，此處為全庫之單點瓶頸。
+//
+// 定義（守衛）：fits64(x) :⟺ bitlen(|x|) ≤ 62。
+// 命題 006b-1（轉換忠實性）：fits64(x) ⇒ from_int64(to_int64(x)) = x。
+//   證明：bitlen(|x|) ≤ 62 ⇒ |x| ≤ 2⁶² − 1 < 2⁶³ − 1 = Int64::max_value，
+//   故 x 落於 Int64 可表示區間內，to_int64 為該區間上之單射且 from_int64
+//   為其左逆。（bit_length 與正負號無關，已實測：bitlen(−7) = bitlen(7) = 3。）∎
+// 命題 006b-2（取反安全性）：fits64(x) ⇒ −to_int64(x) 不溢位。
+//   證明：|to_int64(x)| ≤ 2⁶² < 2⁶³ − 1。∎
+// 命題 006b-3（結果仍在守衛內）：gcd 與約分皆不增大絕對值，
+//   故快路徑之輸出必滿足 fits64，無須再次檢查。∎
+// 定理 006b（語意保持）：快路徑與慢路徑在 fits64 成立時輸出相同之 Q。
+//   證明：兩者皆計算「除以 gcd 後、分母取正」之既約表示，
+//   而既約表示在 ℚ 中唯一（命題 008）。∎
+// ---------------------------------------------------------------------------
+
 ///|
-/// gcd(|a|,|b|)（Euclid）
+/// 守衛：|x| ≤ 2⁶² 時可無損轉為 Int64（見命題 006b-1）
+fn fits64(x : BigInt) -> Bool {
+  x.bit_length() <= 62
+}
+
+///|
+/// Int64 上之 Euclid gcd（|a|,|b|）
+fn gcd64(a : Int64, b : Int64) -> Int64 {
+  let mut x = if a < 0L { -a } else { a }
+  let mut y = if b < 0L { -b } else { b }
+  while y != 0L {
+    let t = x % y
+    x = y
+    y = t
+  }
+  x
+}
+
+///|
+/// gcd(|a|,|b|)（Euclid；小值走 Int64 快路徑，見定理 006b）
 pub fn big_gcd(a : BigInt, b : BigInt) -> BigInt {
+  if fits64(a) && fits64(b) {
+    return BigInt::from_int64(gcd64(a.to_int64(), b.to_int64()))
+  }
   let mut x = big_abs(a)
   let mut y = big_abs(b)
   while y != 0N {
@@ -113,6 +156,23 @@ pub struct Q {
 ///|
 /// 正規化建構子（den = 0 為前置條件違反 ⇒ abort）。
 pub fn Q::make(n : BigInt, d : BigInt) -> Q {
+  // 快路徑：分子分母皆 ≤ 62 位元時全程以 Int64 運算（定理 006b）
+  if fits64(n) && fits64(d) {
+    let mut a = n.to_int64()
+    let mut b = d.to_int64()
+    if b == 0L {
+      abort("Q::make 前置條件違反：分母為 0（ℚ 中 0 不可逆）")
+    }
+    if b < 0L {
+      a = -a
+      b = -b
+    }
+    if a == 0L {
+      return { num: 0N, den: 1N }
+    }
+    let g = gcd64(a, b)
+    return { num: BigInt::from_int64(a / g), den: BigInt::from_int64(b / g) }
+  }
   if d == 0N {
     abort("Q::make 前置條件違反：分母為 0（ℚ 中 0 不可逆）")
   }

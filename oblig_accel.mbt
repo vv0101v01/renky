@@ -314,12 +314,49 @@ pub fn ob_k07() -> Check {
   let mut ok = true
   let mut n = 0
   let mut skipped_total = 0
-  for t in 0..<8 {
-    let sz = 3 + t % 3
+  // 尺寸網格橫跨交叉點 n ≈ 7（plan_zadj），以同時驗證正確性與分派正向性
+  let mut plan_violations = 0
+  let mut accel_cases = 0
+  let mut best = 0.0
+  let mut worst_refused = 0.0
+  for t in 0..<4 {
+    let sz = [4, 6, 7, 8][t]
     let rows = zrand_mat(rng, sz, 16)
     let c = Cost::new()
     let (adj, _used, sk) = zadj_crt(rows, ps, c)
     skipped_total = skipped_total + sk
+    // 分派器決策 vs 實測增益（基準：n² 個 (n−1) 階餘因子 Bareiss 行列式）
+    let plan = plan_zadj(sz, 16)
+    let cb = Cost::new()
+    for i in 0..<sz {
+      for j in 0..<sz {
+        let minor : Array[Array[BigInt]] = []
+        for r in 0..<sz {
+          if r != i {
+            let row : Array[BigInt] = []
+            for cc2 in 0..<sz {
+              if cc2 != j {
+                row.push(rows[r][cc2])
+              }
+            }
+            minor.push(row)
+          }
+        }
+        ignore(zdet_bareiss(minor, cb))
+      }
+    }
+    let gain = Cost::ratio(cb, c)
+    if plan.use_fast {
+      accel_cases = accel_cases + 1
+      if gain <= 1.0 {
+        plan_violations = plan_violations + 1
+      }
+      if gain > best {
+        best = gain
+      }
+    } else if gain > worst_refused {
+      worst_refused = gain
+    }
     let lib = madj(zrows_to_qmat(rows))
     for i in 0..<sz {
       for j in 0..<sz {
@@ -343,12 +380,18 @@ pub fn ob_k07() -> Check {
     n = n + 1
   }
   mk_check(
-    "K-07 伴隨矩陣之多模 CRT",
-    ok,
+    "K-07 伴隨矩陣之多模 CRT（含 plan_zadj 門檻）",
+    ok && plan_violations == 0,
     n,
-    "8 組與 madj 逐項相同且滿足 A·adj A = det(A)·I；壞素數（det ≡ 0）跳過 " +
+    "n = 4,6,7,8 與 madj 逐項相同且滿足 A·adj A = det(A)·I；壞素數跳過 " +
     skipped_total.to_string() +
-    " 次",
+    " 次；plan_zadj 採用加速之 " +
+    accel_cases.to_string() +
+    " 例增益皆 > 1（最高 ×" +
+    fmt_d(best, 2) +
+    "），拒絕之例最高僅 ×" +
+    fmt_d(worst_refused, 2) +
+    "（bits=16 時交叉點落於 n = 6|7 之間：n≤6 拒絕、n≥7 採用，定理 Λ3-13）",
   )
 }
 

@@ -1837,12 +1837,12 @@ pub fn catalogue() -> Array[Algo] {
   })
   xs.push({
     code: "K-07",
-    zh: "伴隨矩陣之多模 CRT 與壞素數跳過",
+    zh: "伴隨矩陣之多模 CRT（含 plan_zadj 門檻 n ≈ 7）",
     cat: "ℤ 層加速",
     spaces: "ℤ^{n×n}（源自 C-18 adjugate）",
     deff: "於 det ≢ 0 (mod p) 之素數上取 adj A ≡ det(A)·A⁻¹ (mod p)；det ≡ 0 之素數視為壞素數並跳過。",
     formula: "A·adj A = adj A·A = (det A)·I；|（adj A)_{ij}| ≤ H(A)",
-    thm: "命題：adj A 之元素為 (n−1) 階餘因子，受同一 Hadamard 界控制；壞素數集合有限，跳過不影響正確性。",
+    thm: "命題：adj A 之元素為 (n−1) 階餘因子，受同一 Hadamard 界控制；壞素數集合有限，跳過不影響正確性。\n定理（門檻必要性）：伴隨矩陣之輸出為 n² 個整數而非 1 個，故 CRT 重建項帶 n² 因子；實測 n=5 ×0.35、n=8 ×1.70、n=11 ×5.79，交叉點 n ≈ 7。無條件加速在 n < 7 時為淨虧，故須經 plan_zadj 分派。",
     proof: "餘因子為子式，Hadamard 界對子式亦成立（去一列一行只會縮小界）。det A ≠ 0 時只有有限多個 p 整除 det A，故可用之素數充裕。義務同時以 A·adj A = det(A)·I 作獨立覆核。∎",
     track: "精確 ℤ（CRT）",
     run: ob_k07,
@@ -1937,13 +1937,13 @@ pub fn catalogue() -> Array[Algo] {
   })
   xs.push({
     code: "L-05",
-    zh: "ℚ 之 RREF 與轉換矩陣 T 之重建（憑證 T·A = R）",
-    cat: "ℚ 層加速",
+    zh: "ℚ 之 RREF 多模重建 —— 誠實反例（實測 ×0.15，不應加速）",
+    cat: "ℚ 層反例",
     spaces: "ℚ^{m×n}（源自 C-03 Gauss–Jordan）",
     deff: "對增廣 [A_z | I] 逐素數作 RREF，只取 A 部分之樞軸型態；取最大秩之型態作 CRT 與重建，輸出 (R, T)。",
     formula: "T·A = R，T 可逆；rank A = #{樞軸 < n}",
-    thm: "定理：RREF 唯一；模約化只會降秩，故取最大秩之樞軸型態即真型態；憑證 T·A = R ∧ det T ≠ 0 給出無條件正確性。",
-    proof: "RREF 之唯一性為標準結果（與樞軸選擇無關）。壞素數使某些樞軸消失而降秩，取極大值排除之。T 由增廣之單位塊承載列運算；增廣部分之額外樞軸只會對「A 部分為零列」之列作運算，不影響 A 部分，故截取前 n 行仍為 RREF(A)。∎",
+    thm: "定理（正確性）：RREF 唯一；模約化只會降秩，故取最大秩之樞軸型態即真型態；憑證 T·A = R ∧ det T ≠ 0 給出無條件正確性。\n定理（負面結果，本條之主張）：本路徑對 ℚ 直接消去為淨虧，且虧損隨 n 擴大 —— 實測 ×0.25／×0.22／×0.15（n=6/10/14）。故本條列為反例，不計入加速層。",
+    proof: "正確性：RREF 之唯一性為標準結果（與樞軸選擇無關）。壞素數使某些樞軸消失而降秩，取極大值排除之。T 由增廣之單位塊承載列運算；增廣部分之額外樞軸只會對「A 部分為零列」之列作運算，不影響 A 部分，故截取前 n 行仍為 RREF(A)。∎\n負面結果之成因：CRT 加速之適用條件為「中間量 ≫ 輸出量」。RREF 之輸出為 m×n 個有理數，每個都需獨立之 Θ(k²) CRT 累積與 Θ(w²) 有理重建，合計 Θ(mn·k²)；而 ℚ 直接消去之中間係數膨脹並不比輸出更嚴重，故無膨脹可省。虧損隨 n 擴大即因 CRT 項之 mn 因子隨 n² 成長而消去項僅 n³ 成長。∎",
     track: "精確 ℚ（重建+憑證）",
     run: ob_l05,
   })
@@ -1973,13 +1973,13 @@ pub fn catalogue() -> Array[Algo] {
   })
   xs.push({
     code: "L-08",
-    zh: "Gram 之 LDLᵀ 重建（等價於 Gram–Schmidt）",
-    cat: "ℚ 層加速",
+    zh: "Gram 之 LDLᵀ 多模重建 —— 誠實反例（實測 ×0.6，不應加速）",
+    cat: "ℚ 層反例",
     spaces: "任意 IPSpace（源自 D-01／D-02 Gram–Schmidt）",
     deff: "於 𝔽p 上作無開方 Cholesky G = LDLᵀ（L 單位下三角），CRT + 重建後以精確算術驗證 LDLᵀ = G。",
     formula: "G = L D Lᵀ；D_{jj} = ‖q_j‖²；det G = ∏ D_{jj}",
-    thm: "定理：對稱正定矩陣有唯一 LDLᵀ 分解，且 L 之第 j 行即 Gram–Schmidt 展開係數、D 為正交向量之範數平方。",
-    proof: "對 j 歸納施行無開方 Cholesky，正定性保證 D_{jj} > 0 可除。Gram–Schmidt 之遞迴 q_j = w_j − Σ_{k<j}(⟨w_j,q_k⟩/‖q_k‖²)q_k 與 LDLᵀ 之遞迴逐項對應。義務以函式庫 gram_schmidt 之 ‖q_i‖² 與 det G = ∏Dᵢ 雙重覆核。∎",
+    thm: "定理（正確性）：對稱正定矩陣有唯一 LDLᵀ 分解，且 L 之第 j 行即 Gram–Schmidt 展開係數、D 為正交向量之範數平方。\n定理（負面結果，本條之主張）：本路徑永不獲利 —— 實測 ×0.45／×0.56／×0.62（n=6/10/14），比值收斂於約 0.6 而不越過 1。故本條列為反例，不計入加速層。",
+    proof: "正確性：對 j 歸納施行無開方 Cholesky，正定性保證 D_{jj} > 0 可除。Gram–Schmidt 之遞迴 q_j = w_j − Σ_{k<j}(⟨w_j,q_k⟩/‖q_k‖²)q_k 與 LDLᵀ 之遞迴逐項對應。義務以函式庫 gram_schmidt 之 ‖q_i‖² 與 det G = ∏Dᵢ 雙重覆核。∎\n負面結果之成因：D_j 為前導主子式之比 D_j = Δ_j/Δ_{j−1}（Bareiss 型），其位元數受 Hadamard 界控制而與輸出同階 —— 即「中間量 ≈ 輸出量」，無係數爆炸可消。CRT 之固定開銷（k 個素數之模消去 + 重建）因此永遠無法被攤銷，比值收斂於一常數而非隨 n 發散。此與 L-05 合為「CRT 不適用條件」之二例。∎",
     track: "精確 ℚ（重建+憑證）",
     run: ob_l08,
   })

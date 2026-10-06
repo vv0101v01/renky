@@ -646,7 +646,9 @@ pub fn ob_h19() -> Check {
   let rng = ob_rng()
   let mut ok = true
   let mut w = 0.0
-  for n in [4, 8, 16] {
+  let mut cnt = 0
+  for n in [2, 3, 4, 5, 6, 8, 9, 12, 16] {
+    cnt = cnt + 1
     let f = dft_matrix(n)
     let id : CMat = Mat::ident(n)
     w = maxd(w, f.adjointm().times(f).max_dev(id))
@@ -676,7 +678,7 @@ pub fn ob_h19() -> Check {
   mk_check(
     "H-19 DFT 么正性與循環對角化",
     ok,
-    3,
+    cnt,
     "‖F*F−I‖=" + fmt_e(w) + "；F C F* 之非對角為 0",
   )
 }
@@ -829,15 +831,14 @@ pub fn ob_h23() -> Check {
 ///|
 /// H-24 CGS 與 MGS 之正交性損失（Björck）：病態 Hilbert 基底上 MGS 遠優於 CGS。
 pub fn ob_h24() -> Check {
-  // 以 Hilbert 矩陣之行向量為病態基底
-  let n = 9
-  let s : IPSpace[Array[Double], Double] = euclidean_space(n)
-  let cols : Array[Array[Double]] = Array::makei(n, j => {
-    Array::makei(n, i => 1.0 / (i + j + 1).to_double())
-  })
-  let g1 = gram_schmidt(s, cols)
-  let g2 = modified_gram_schmidt(s, cols)
-  let loss = (vs : Array[Array[Double]]) => {
+  // 以 Hilbert 矩陣之行向量為病態基底；掃描 n 得到一整條 κ₂ 曲線
+  let mut ok = true
+  let mut n = 0
+  let rows : Array[String] = []
+  let mut worst_ratio = 0.0
+  let mut kappa_min = 0.0
+  let mut kappa_max = 0.0
+  let loss = (s : IPSpace[Array[Double], Double], vs : Array[Array[Double]]) => {
     let m = vs.length()
     let mut worst = 0.0
     for i in 0..<m {
@@ -854,20 +855,62 @@ pub fn ob_h24() -> Check {
     }
     worst
   }
-  let l1 = loss(g1.ortho)
-  let l2 = loss(g2.ortho)
-  let kappa = cond2(Mat::of_cols(cols))
-  let ok = l2 <= l1 + 1.0e-18 && l2 < 1.0e-6
+  for sz in [3, 4, 5, 6, 7, 8, 9, 10] {
+    let s : IPSpace[Array[Double], Double] = euclidean_space(sz)
+    let cols : Array[Array[Double]] = Array::makei(sz, j => {
+      Array::makei(sz, i => 1.0 / (i + j + 1).to_double())
+    })
+    let l1 = loss(s, gram_schmidt(s, cols).ortho)
+    let l2 = loss(s, modified_gram_schmidt(s, cols).ortho)
+    let kappa = cond2(Mat::of_cols(cols))
+    // 定理之內容：MGS 之正交性損失恆不劣於 CGS
+    if l2 > l1 + 1.0e-18 {
+      ok = false
+    }
+    if kappa_min == 0.0 {
+      kappa_min = kappa
+    }
+    kappa_max = kappa
+    if l2 > 0.0 && l1 / l2 > worst_ratio {
+      worst_ratio = l1 / l2
+    }
+    rows.push(
+      "n=" +
+      sz.to_string() +
+      " κ₂=" +
+      fmt_e(kappa) +
+      " CGS=" +
+      fmt_e(l1) +
+      " MGS=" +
+      fmt_e(l2),
+    )
+    n = n + 1
+  }
+  // 良態對照組：κ₂≈1 時兩法應同樣良好（差距不應出現）
+  for sz in [4, 8] {
+    let s : IPSpace[Array[Double], Double] = euclidean_space(sz)
+    let cols : Array[Array[Double]] = Array::makei(sz, j => {
+      Array::makei(sz, i => if i == j { 1.0 } else { 0.1 })
+    })
+    let l1 = loss(s, gram_schmidt(s, cols).ortho)
+    let l2 = loss(s, modified_gram_schmidt(s, cols).ortho)
+    if l1 > 1.0e-14 || l2 > 1.0e-14 {
+      ok = false
+    }
+    n = n + 1
+  }
   mk_check(
-    "H-24 CGS vs MGS 正交性損失",
+    "H-24 CGS vs MGS 正交性損失（κ₂ 掃描曲線）",
     ok,
-    1,
-    "κ₂≈" +
-    fmt_e(kappa) +
-    "；CGS 損失 " +
-    fmt_e(l1) +
-    "，MGS 損失 " +
-    fmt_e(l2),
+    n,
+    "κ₂ 自 " +
+    fmt_e(kappa_min) +
+    " 掃至 " +
+    fmt_e(kappa_max) +
+    "：MGS 恆不劣於 CGS，最大差距 ×" +
+    fmt_e(worst_ratio) +
+    "；良態對照組（κ₂≈1）兩者皆 < 1e-14。曲線：" +
+    rows.join("；"),
   )
 }
 

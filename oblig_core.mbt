@@ -471,20 +471,91 @@ pub fn ob_b13() -> Check {
 ///|
 /// B-14 Gram 矩陣 Hermitian 正定（Sylvester 判準）於多個空間。
 pub fn ob_b14() -> Check {
-  let s1 : IPSpace[Poly[Q], Q] = poly_space_l2(5)
-  let s2 : IPSpace[Mat[Q], Q] = sym_matrix_space(3)
-  let s3 : IPSpace[Array[Quat[Q]], Q] = quaternion_space(2)
-  let s4 : IPSpace[MPoly[Q], Q] = mpoly_space(2, 2, true)
-  let g1 = gram_of_space(s1)
-  let g2 = gram_of_space(s2)
-  let g3 = gram_of_space(s3)
-  let g4 = gram_of_space(s4)
-  let ok = is_positive_definite(g1) &&
-    is_positive_definite(g2) &&
-    is_positive_definite(g3) &&
-    is_positive_definite(g4)
+  let rng = ob_rng()
+  let mut ok = true
+  let mut n = 0
+  // Sylvester 判準：Hermitian A 正定 ⟺ 全部前導主子式 Δ_k > 0
+  let sylvester = (g : Mat[Q]) => {
+    let d = g.mrows
+    let mut all_pos = true
+    for k in 1..=d {
+      let sub : Mat[Q] = Mat::build(k, k, (i, j) => g.at(i, j))
+      if Q::cmp(mdet(sub), Q::zero()) <= 0 {
+        all_pos = false
+      }
+    }
+    all_pos
+  }
+  // 逐空間族 × 逐維度：Gram 必 Hermitian、正定，且與 Sylvester 判準一致
+  let probe = (g : Mat[Q]) => {
+    if !g.equals(g.adjointm()) {
+      ok = false
+    }
+    let pd = is_positive_definite(g)
+    if !pd {
+      ok = false
+    }
+    // 兩個獨立判準必須同意（互為見證）
+    if pd != sylvester(g) {
+      ok = false
+    }
+    n = n + 1
+  }
+  for d in [2, 3, 4, 5, 6] {
+    let sp : IPSpace[Poly[Q], Q] = poly_space_l2(d)
+    probe(gram_of_space(sp))
+  }
+  for d in [2, 3, 4] {
+    let sp : IPSpace[Mat[Q], Q] = sym_matrix_space(d)
+    probe(gram_of_space(sp))
+  }
+  for d in [1, 2, 3] {
+    let sp : IPSpace[Array[Quat[Q]], Q] = quaternion_space(d)
+    probe(gram_of_space(sp))
+  }
+  for d in [1, 2, 3] {
+    let sp : IPSpace[MPoly[Q], Q] = mpoly_space(2, d, true)
+    probe(gram_of_space(sp))
+  }
+  for d in [2, 3, 4, 5] {
+    let sp : IPSpace[Array[Q], Q] = euclidean_space(d)
+    probe(gram_of_space(sp))
+  }
+  // 任取生成集之 Gram：獨立 ⇒ 正定，相依 ⇒ 僅半定（det = 0）
+  let se = euclidean_space(5)
+  for _t in 0..<8 {
+    let xs = samples(se, rng, 3)
+    let g = gram_of(se, xs)
+    let indep = linearly_independent(se, xs)
+    if is_positive_definite(g) != indep {
+      ok = false
+    }
+    if is_positive_definite(g) != sylvester(g) {
+      ok = false
+    }
+    n = n + 1
+  }
+  // 反面對照：刻意相依之生成集必不正定，且 Sylvester 亦須否決
+  for _t in 0..<4 {
+    let xs = samples(se, rng, 2)
+    let dep = [xs[0], xs[1], vadd(se.vs, xs[0], xs[1])]
+    let g = gram_of(se, dep)
+    if is_positive_definite(g) {
+      ok = false
+    }
+    if sylvester(g) {
+      ok = false
+    }
+    if !Q::is_zero(mdet(g)) {
+      ok = false
+    }
+    n = n + 1
+  }
   mk_check(
-    "B-14 Gram 正定（Sylvester 判準）", ok, 4, "4 個空間之 Gram 皆 Hermitian 正定",
+    "B-14 Gram 正定（Sylvester 判準）",
+    ok,
+    n,
+    "5 個空間族 × 多維度共 18 個 Gram 皆 Hermitian 正定；8 組隨機生成集之「正定 ⟺ 線性獨立」；4 組刻意相依者 det G = 0 且兩判準同時否決",
   )
 }
 

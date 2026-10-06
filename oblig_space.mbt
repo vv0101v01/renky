@@ -108,22 +108,100 @@ pub fn ob_d02() -> Check {
 ///|
 /// D-03 正規化：ℚ 上一般失敗（√∉ℚ），ℝ 上成功且得標準正交基。
 pub fn ob_d03() -> Check {
-  let sq = stage_euc()
-  let rngq = ob_rng()
-  let xs = samples(sq, rngq, 3)
-  let failed_over_q = orthonormalize(sq, xs) is None
+  let rng = ob_rng()
+  let mut ok = true
+  let mut n = 0
+  let mut q_success = 0
+  let mut q_fail = 0
+  // ℚ 中之完全平方判定：既約 p/q 為平方 ⟺ p ≥ 0 且 |p|、q 皆為完全平方
+  let q_is_square = (x : Q) => {
+    if Q::cmp(x, Q::zero()) < 0 {
+      false
+    } else {
+      let rn = big_isqrt(x.num)
+      let rd = big_isqrt(x.den)
+      rn * rn == x.num && rd * rd == x.den
+    }
+  }
+  let sq : IPSpace[Array[Q], Q] = euclidean_space(5)
+  // (1) 刻劃定理：ℚ 上可標準正交化 ⟺ Gram–Schmidt 之各範數平方皆為 ℚ 中完全平方
+  for _t in 0..<12 {
+    let xs = samples(sq, rng, 3)
+    if !linearly_independent(sq, xs) {
+      continue
+    }
+    let gs = gram_schmidt(sq, xs)
+    let mut all_sq = true
+    for u in gs.ortho {
+      if !q_is_square((sq.inner)(u, u)) {
+        all_sq = false
+      }
+    }
+    let got = orthonormalize(sq, xs)
+    let succeeded = !(got is None)
+    // 這是本條之主張：成功與否恰由「範數平方是否皆為完全平方」決定
+    if succeeded != all_sq {
+      ok = false
+    }
+    if succeeded {
+      q_success = q_success + 1
+      match got {
+        Some(es) => if !is_orthonormal_set(sq, es) { ok = false }
+        None => ()
+      }
+    } else {
+      q_fail = q_fail + 1
+    }
+    n = n + 1
+  }
+  // (2) 肯定面：有理正交矩陣（Cayley 變換）之行必可於 ℚ 上標準正交化
+  for _t in 0..<6 {
+    let qm = rational_orthogonal(rng, 4)
+    let se4 : IPSpace[Array[Q], Q] = euclidean_space(4)
+    let cols : Array[Array[Q]] = Array::makei(4, j2 => qm.col(j2))
+    // 同一刻劃定理之肯定面：此處 GS 範數平方皆為 1（完全平方），故必成功
+    let gs4 = gram_schmidt(se4, cols)
+    let mut all_sq4 = true
+    for u in gs4.ortho {
+      if !q_is_square((se4.inner)(u, u)) {
+        all_sq4 = false
+      }
+    }
+    let got4 = orthonormalize(se4, cols)
+    let succeeded4 = !(got4 is None)
+    if succeeded4 != all_sq4 {
+      ok = false
+    }
+    if !succeeded4 {
+      ok = false
+    }
+    q_success = q_success + 1
+    match got4 {
+      None => ()
+      Some(es) => if !is_orthonormal_set(se4, es) { ok = false }
+    }
+    n = n + 1
+  }
+  // (3) ℝ 上恆可（正定性保證範數為正實數，開方封閉）
   let sr : IPSpace[Array[Double], Double] = euclidean_space(5)
   let rngr = ob_rng()
-  let ys = samples(sr, rngr, 3)
-  let ok_over_r = match orthonormalize(sr, ys) {
-    None => false
-    Some(es) => is_orthonormal_set(sr, es)
+  for _t in 0..<6 {
+    let ys = samples(sr, rngr, 3)
+    match orthonormalize(sr, ys) {
+      None => ok = false
+      Some(es) => if !is_orthonormal_set(sr, es) { ok = false }
+    }
+    n = n + 1
   }
   mk_check(
     "D-03 標準正交化（體相依性）",
-    failed_over_q && ok_over_r,
-    2,
-    "ℚ 上失敗（√2∉ℚ），ℝ 上成功",
+    ok,
+    n,
+    "刻劃定理「ℚ 上可標準正交化 ⟺ GS 各範數平方皆為 ℚ 中完全平方」雙向逐例驗證：否定面 " +
+    q_fail.to_string() +
+    " 組（隨機 ℚ 基底，範數平方非平方 ⇒ 失敗）、肯定面 " +
+    q_success.to_string() +
+    " 組（有理正交矩陣之行，範數平方 = 1 ⇒ 成功），無一例外；另 6 組 ℝ 上恆成功（開方封閉）",
   )
 }
 
@@ -953,31 +1031,57 @@ pub fn ob_e07() -> Check {
 ///|
 /// E-08 離散點值空間：Gram = VᵀV；節點數 ≥ dim 時正定，否則退化。
 pub fn ob_e08() -> Check {
-  let dim = 4
-  let nodes : Array[Q] = [
-    Q::of_int(-2),
-    Q::of_int(-1),
-    Q::zero(),
-    Q::of_int(1),
-    Q::of_int(2),
-  ]
-  let s : IPSpace[Poly[Q], Q] = poly_space_nodes(dim, nodes)
-  let g = gram_of_space(s)
-  let v = vandermonde(nodes, dim)
-  let mut ok = g.equals(v.transpose().times(v))
-  if !is_positive_definite(g) {
-    ok = false
-  }
-  // 節點不足 ⇒ 半定（退化）
-  let s2 : IPSpace[Poly[Q], Q] = poly_space_nodes(dim, [
-    Q::of_int(1),
-    Q::of_int(2),
-  ])
-  if !Q::is_zero(mdet(gram_of_space(s2))) {
-    ok = false
+  let mut ok = true
+  let mut n = 0
+  let mut degen = 0
+  let mut pdcnt = 0
+  // 掃描：維度 dim × 節點數 m，驗證 G = VᵀV、rank G = min(m, dim)、
+  //   以及「正定 ⟺ m ≥ dim」（節點互異時 Vandermonde 列滿秩）
+  for dim in [2, 3, 4, 5] {
+    for m in [dim - 2, dim - 1, dim, dim + 1, dim + 2] {
+      if m < 1 {
+        continue
+      }
+      let nodes : Array[Q] = Array::makei(m, k => Q::of_int(k - m / 2))
+      let s : IPSpace[Poly[Q], Q] = poly_space_nodes(dim, nodes)
+      let g = gram_of_space(s)
+      let v = vandermonde(nodes, dim)
+      // 定理：⟨p,q⟩ = Σ p(xₖ)q(xₖ) ⇒ G = VᵀV
+      if !g.equals(v.transpose().times(v)) {
+        ok = false
+      }
+      // 定理：rank(VᵀV) = rank(V) = min(m, dim)（節點互異）
+      let want_rank = if m < dim { m } else { dim }
+      if mrank(g) != want_rank {
+        ok = false
+      }
+      // 定理：正定 ⟺ 節點數 ≥ 維度
+      let pd = is_positive_definite(g)
+      if pd != (m >= dim) {
+        ok = false
+      }
+      if pd {
+        pdcnt = pdcnt + 1
+      } else {
+        degen = degen + 1
+        if !Q::is_zero(mdet(g)) {
+          ok = false
+        }
+      }
+      n = n + 1
+    }
   }
   mk_check(
-    "E-08 離散點值內積 Gram = VᵀV", ok, 2, "節點 ≥ dim ⇒ 正定；不足 ⇒ 退化（半定）",
+    "E-08 離散點值內積 Gram = VᵀV",
+    ok,
+    n,
+    "維度 2–5 × 節點數 dim−2…dim+2 共 " +
+    n.to_string() +
+    " 組：G = VᵀV 逐例成立；rank G = min(m, dim)；正定 " +
+    pdcnt.to_string() +
+    " 組、退化 " +
+    degen.to_string() +
+    " 組，且「正定 ⟺ 節點數 ≥ 維度」無一例外",
   )
 }
 

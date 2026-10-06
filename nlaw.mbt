@@ -678,3 +678,191 @@ pub fn synth_compare(e : SpaceExpr) -> (Bool, Int64, Int64, String, Int) {
   }
   (same, cd.wmul, cf.wmul, e.slabel(), e.sdim())
 }
+
+// ---------------------------------------------------------------------------
+// 【演算法 175】結構律搜尋引擎（N-13）
+//
+// 前面的 N-03／N-04／N-05 是「人先想到律，再叫檢驗器驗」。本條反過來：
+// 機械枚舉 (演算法 Φ, 組合子 C, 合成規則 ⊙) 三元組，對每一組問
+//     Φ(C(A,B)) =? Φ(A) ⊙ Φ(B)
+// 由 N-02 之檢驗器裁決，自動產出定律表。
+//
+// 定理 175（搜尋之可靠性，承定理 170）：引擎輸出之「推翻」為確定性結論
+//   （已持有具體反例）；「成立」為受 Schwartz–Zippel 控制之機率性證據。
+//   故本引擎之正當用途是**縮小搜尋範圍**：把 |Φ|·|C|·|⊙| 個候選篩成少數
+//   待證命題，再由人補上代數證明（N-03／N-04／N-05 即為已補證者）。
+//
+// 命題 175-2（判別力）：若引擎對全部候選皆回報成立，則它毫無價值。
+//   故義務要求推翻數 > 成立數，且指定若干已知真／已知偽之候選必須各歸其位。
+//
+// 命題 175-3（網格之必要性 —— 本條最實用的發現）：
+//   單一尺寸之網格會放行偽律。例：rank(A⊗B) =? rank A + rank B 在 (2,2) 上
+//   給出 4 = 2+2 而通過，加入 (2,3) 後 6 ≠ 5 立刻被推翻。
+//   故搜尋網格必須含非對稱尺寸，否則 n·m 與 n+m 在 n=m=2 處之巧合會汙染定律表。
+// ---------------------------------------------------------------------------
+
+///|
+/// 計入成本之矩陣乘法
+pub fn qmul_cost(c : Cost, a : Mat[Q], b : Mat[Q]) -> Mat[Q] {
+  Mat::build(a.mrows, b.mcols, (i, j) => {
+    let mut s = Q::zero()
+    for k in 0..<a.mcols {
+      s = cq_add(c, s, cq_mul(c, a.data[i * a.mcols + k], b.data[k * b.mcols + j]))
+    }
+    s
+  })
+}
+
+///|
+/// 計入成本之純量乘矩陣
+pub fn qsmul_cost(c : Cost, s : Q, a : Mat[Q]) -> Mat[Q] {
+  Mat::build(a.mrows, a.mcols, (i, j) => cq_mul(c, s, a.data[i * a.mcols + j]))
+}
+
+///|
+/// 跡（加法不計乘法成本）
+pub fn qtrace(c : Cost, a : Mat[Q]) -> Q {
+  let mut s = Q::zero()
+  for i in 0..<a.mrows {
+    s = cq_add(c, s, a.data[i * a.mcols + i])
+  }
+  s
+}
+
+///|
+/// 伴隨矩陣 adj(A) = det(A)·A⁻¹
+pub fn qadj(c : Cost, a : Mat[Q]) -> Mat[Q]? {
+  match qinv_gauss(a, c) {
+    Some(h) => Some(qsmul_cost(c, qdet_gauss(a, c), h))
+    None => None
+  }
+}
+
+///|
+/// q^k（計入成本）
+pub fn qpow_cost(c : Cost, x : Q, k : Int) -> Q {
+  let mut acc = Q::one()
+  for _i in 0..<k {
+    acc = cq_mul(c, acc, x)
+  }
+  acc
+}
+
+///|
+/// 候選律之裁決紀錄
+pub struct LawCand {
+  cphi : String
+  ccomb : String
+  crule : String
+  cholds : Bool
+  cgain : Double
+}
+
+///|
+/// 候選律之可讀名稱
+pub fn LawCand::cname(self : LawCand) -> String {
+  self.cphi + "(A " + self.ccomb + " B) =? " + self.cphi + "(A) " + self.crule + " " + self.cphi + "(B)"
+}
+
+///|
+/// 【搜尋】枚舉 (Φ, C, ⊙) 三元組，自動產出定律表
+pub fn law_search(rng : Rng, sizes : Array[(Int, Int)]) -> Array[LawCand] {
+  // 矩陣值演算法 Φ
+  let phis_mat : Array[(String, (Mat[Q], Cost) -> Mat[Q]?)] = [
+    ("inv", (a, c) => qinv_gauss(a, c)),
+    ("tr̃ans", (a, _c) => Some(a.transpose())),
+    ("sq", (a, c) => Some(qmul_cost(c, a, a))),
+    ("adj", (a, c) => qadj(c, a)),
+  ]
+  // 純量值演算法 Φ（包成 1×1）
+  let phis_sca : Array[(String, (Mat[Q], Cost) -> Mat[Q]?)] = [
+    ("det", (a, c) => Some(q_scalar_mat(qdet_gauss(a, c)))),
+    ("trace", (a, c) => Some(q_scalar_mat(qtrace(c, a)))),
+    ("rank", (a, _c) => Some(q_scalar_mat(Q::of_int(mrank(a))))),
+  ]
+  // 組合子 C
+  let combs : Array[(String, (Mat[Q], Mat[Q]) -> Mat[Q])] = [
+    ("⊗", (a, b) => mkron(a, b)),
+    ("⊕", (a, b) => qblock_diag(a, b)),
+  ]
+  // 矩陣值合成規則 ⊙（含帶標量修正之 Kronecker）
+  let rules_mat : Array[(String, (Mat[Q], Mat[Q], Mat[Q], Mat[Q], Cost) -> Mat[Q]?)] = [
+    ("⊗", (x, y, _a, _b, c) => Some(qkron_cost(c, x, y))),
+    ("⊕", (x, y, _a, _b, _c) => Some(qblock_diag(x, y))),
+    // Sylvester 型：(det A)^{m-1}(det B)^{n-1}·(ΦA ⊗ ΦB)
+    ("⊗ₛ", (x, y, a, b, c) => {
+      let n = a.mrows
+      let m = b.mrows
+      let s = cq_mul(
+        c,
+        qpow_cost(c, qdet_gauss(a, c), m - 1),
+        qpow_cost(c, qdet_gauss(b, c), n - 1),
+      )
+      Some(qsmul_cost(c, s, qkron_cost(c, x, y)))
+    }),
+  ]
+  // 純量值合成規則 ⊙
+  let rules_sca : Array[(String, (Mat[Q], Mat[Q], Mat[Q], Mat[Q], Cost) -> Mat[Q]?)] = [
+    ("·", (x, y, _a, _b, c) => Some(q_scalar_mat(cq_mul(c, x.data[0], y.data[0])))),
+    ("+", (x, y, _a, _b, c) => Some(q_scalar_mat(cq_add(c, x.data[0], y.data[0])))),
+    // det 型：Φ(A)^{dim B} · Φ(B)^{dim A}
+    ("^", (x, y, a, b, c) => Some(
+      q_scalar_mat(
+        cq_mul(
+          c,
+          qpow_cost(c, x.data[0], b.mrows),
+          qpow_cost(c, y.data[0], a.mrows),
+        ),
+      ),
+    )),
+  ]
+  let out : Array[LawCand] = []
+  let groups : Array[
+    (
+      Array[(String, (Mat[Q], Cost) -> Mat[Q]?)],
+      Array[(String, (Mat[Q], Mat[Q], Mat[Q], Mat[Q], Cost) -> Mat[Q]?)],
+    ),
+  ] = [(phis_mat, rules_mat), (phis_sca, rules_sca)]
+  for grp in groups {
+    let (phis, rules) = grp
+    for ph in phis {
+      let (pname, phi) = ph
+      for cb in combs {
+        let (cbname, comb) = cb
+        for rl in rules {
+          let (rname, rule) = rl
+          let v = check_law(
+            pname + " / " + cbname + " / " + rname,
+            comb,
+            phi,
+            (a, b, c) => match (phi(a, c), phi(b, c)) {
+              (Some(x), Some(y)) => rule(x, y, a, b, c)
+              _ => None
+            },
+            sizes,
+            rng,
+          )
+          out.push({
+            cphi: pname,
+            ccomb: cbname,
+            crule: rname,
+            cholds: v.holds,
+            cgain: v.lgain(),
+          })
+        }
+      }
+    }
+  }
+  out
+}
+
+///|
+/// 於定律表中查某候選之裁決
+pub fn law_find(tbl : Array[LawCand], phi : String, comb : String, rule : String) -> Bool? {
+  for t in tbl {
+    if t.cphi == phi && t.ccomb == comb && t.crule == rule {
+      return Some(t.cholds)
+    }
+  }
+  None
+}

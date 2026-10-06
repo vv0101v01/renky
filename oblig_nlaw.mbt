@@ -374,3 +374,104 @@ pub fn ob_n11() -> Check {
     depth_rows.join("　"),
   )
 }
+
+///|
+/// N-13 結構律搜尋引擎：機械枚舉 (Φ, C, ⊙) 並自動裁決。
+pub fn ob_n13() -> Check {
+  let rng = ob_rng()
+  let mut ok = true
+  // 網格必含非對稱尺寸（命題 175-3）
+  let tbl = law_search(rng, [(2, 2), (2, 3), (3, 3)])
+  let mut nh = 0
+  let mut nr = 0
+  for t in tbl {
+    if t.cholds {
+      nh = nh + 1
+    } else {
+      nr = nr + 1
+    }
+  }
+  // 命題 175-2 判別力：推翻數必須多於成立數，否則引擎無價值
+  if nr <= nh {
+    ok = false
+  }
+  if tbl.length() != 42 {
+    ok = false
+  }
+  // 已知為真之候選必須被尋獲
+  let must_hold : Array[(String, String, String)] = [
+    ("inv", "⊗", "⊗"), ("inv", "⊕", "⊕"),
+    ("det", "⊗", "^"), ("det", "⊕", "·"),
+    ("sq", "⊗", "⊗"), ("sq", "⊕", "⊕"),
+    ("adj", "⊗", "⊗ₛ"),
+    ("trace", "⊗", "·"), ("trace", "⊕", "+"),
+    ("rank", "⊗", "·"), ("rank", "⊕", "+"),
+  ]
+  for m in must_hold {
+    let (p, c, r) = m
+    if law_find(tbl, p, c, r) != Some(true) {
+      ok = false
+    }
+  }
+  // 已知為偽之候選必須被推翻（含張冠李戴與少了指數者）
+  let must_fail : Array[(String, String, String)] = [
+    ("inv", "⊗", "⊕"), ("inv", "⊕", "⊗"),
+    ("det", "⊗", "·"), ("det", "⊕", "^"),
+    ("adj", "⊗", "⊗"), ("adj", "⊕", "⊕"),
+    ("trace", "⊗", "+"), ("trace", "⊕", "·"),
+    ("rank", "⊗", "+"), ("rank", "⊕", "·"),
+    ("sq", "⊗", "⊕"), ("sq", "⊗", "⊗ₛ"),
+  ]
+  for m in must_fail {
+    let (p, c, r) = m
+    if law_find(tbl, p, c, r) != Some(false) {
+      ok = false
+    }
+  }
+  // 命題 175-3：退化網格會放行偽律 —— 以 rank(A⊗B) =? rank A + rank B 示範
+  let rk_direct = (g : Mat[Q], _c : Cost) => Some(q_scalar_mat(Q::of_int(mrank(g))))
+  let rk_sum = (x : Mat[Q], y : Mat[Q], c : Cost) => Some(
+    q_scalar_mat(cq_add(c, Q::of_int(mrank(x)), Q::of_int(mrank(y)))),
+  )
+  let deg = check_law(
+    "rank/⊗/+ @ 退化網格",
+    (x, y) => mkron(x, y),
+    rk_direct,
+    rk_sum,
+    [(2, 2)],
+    rng,
+  )
+  let fix = check_law(
+    "rank/⊗/+ @ 非對稱網格",
+    (x, y) => mkron(x, y),
+    rk_direct,
+    rk_sum,
+    [(2, 3)],
+    rng,
+  )
+  // 退化網格必須放行（示範危害），非對稱網格必須推翻（示範解方）
+  if !deg.holds || fix.holds {
+    ok = false
+  }
+  // 列出機器尋獲且成本可量測之加速律
+  let wins : Array[String] = []
+  for t in tbl {
+    if t.cholds && (t.cphi == "inv" || t.cphi == "det" || t.cphi == "sq" || t.cphi == "adj" || t.cphi == "trace") {
+      wins.push(t.cphi + "/" + t.ccomb + "/" + t.crule + " ×" + fmt_d(t.cgain, 2))
+    }
+  }
+  mk_check(
+    "N-13 結構律搜尋引擎（機械枚舉 Φ×C×⊙）",
+    ok,
+    tbl.length() + 2,
+    "枚舉 " +
+    tbl.length().to_string() +
+    " 個候選：成立 " +
+    nh.to_string() +
+    "、推翻 " +
+    nr.to_string() +
+    "（推翻 > 成立，具判別力）。11 條已知真律全數尋獲、12 條已知偽律全數推翻。成本可量測之加速律：" +
+    wins.join("　") +
+    "。機器獨立尋獲之 adj/⊗/⊗ₛ 值得注意：樸素規則 adj/⊗/⊗ 被推翻後，帶標量修正之 Sylvester 型規則獲裁定成立。命題 175-3 示範：rank/⊗/+ 於退化網格 (2,2) 被放行（4 = 2+2），加入非對稱 (2,3) 後立即推翻（6 ≠ 5）",
+  )
+}

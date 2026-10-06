@@ -37,11 +37,13 @@ pub struct Cost {
   mut bigops : Int64
   /// 中間量之最大位元長度（量度係數膨脹）
   mut maxbits : Int
+  /// ℝ 軌浮點運算次數（乘 + 加 + 比較；見 rcost.mbt 之 N-20）
+  mut flops : Int64
 }
 
 ///|
 pub fn Cost::new() -> Cost {
-  { wmul: 0L, wadd: 0L, bigops: 0L, maxbits: 0 }
+  { wmul: 0L, wadd: 0L, bigops: 0L, maxbits: 0, flops: 0L }
 }
 
 ///|

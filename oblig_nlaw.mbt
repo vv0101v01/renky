@@ -644,3 +644,73 @@ pub fn ob_n10() -> Check {
     "（e=10）—— 指數 C(n−1,k−1) 隨 n 組合爆炸，若右式用線性冪，整條律之增益會在 (7,3) 之後**開始下降**。一次性實測（因基準法過貴未納入常規義務）：線性冪 (7,3) ×99.4 → (8,4) ×85.1 → (9,4) ×75.3 逐步惡化；二進位冪 ×232.3 → ×395.5 → ×814.4 持續上升",
   )
 }
+
+///|
+/// N-06 Hom 律：Hom(V,W) ≡ W ⊗ V*，catamorphism 無須修改即可處理。
+pub fn ob_n06() -> Check {
+  let rng = ob_rng()
+  let mut ok = true
+  let mut n = 0
+  let mut tb = 0L
+  let mut tf = 0L
+  let rows : Array[String] = []
+  let mut hom_gain = 0.0
+  let mut ten_gain = 0.0
+  for pq in [(2, 3), (3, 3), (3, 4), (4, 4), (4, 5)] {
+    let (p, q) = pq
+    let v = SLeaf("V", rand_gram(rng, p))
+    let w = SLeaf("W", rand_gram(rng, q))
+    let h = shom(v, w)
+    // 命題 182-1：維數與 Gram
+    if h.sdim() != p * q {
+      ok = false
+    }
+    let gh = h.sgram()
+    if !is_positive_definite(gh) || !gh.equals(gh.transpose()) {
+      ok = false
+    }
+    // G(Hom) = G(W) ⊗ G(V)⁻ᵀ 之獨立覆核
+    let c0 = Cost::new()
+    match qinv_gauss(v.sgram(), c0) {
+      None => ok = false
+      Some(iv) =>
+        if !gh.equals(mkron(w.sgram(), iv.transpose())) {
+          ok = false
+        }
+    }
+    // 定理 182：catamorphism 直接適用，且結果正確
+    let (same, wb, wf, _l, _d) = synth_compare(h)
+    if !same {
+      ok = false
+    }
+    tb = tb + wb
+    tf = tf + wf
+    rows.push("dim" + (p * q).to_string() + " ×" + fmt_d(wb.to_double() / wf.to_double(), 1))
+    n = n + 3
+  }
+  // 推論 182-1：同維之下 Hom 之增益高於純 ⊗（前者只需一次求逆）
+  let v4 = SLeaf("V", rand_gram(rng, 4))
+  let w4 = SLeaf("W", rand_gram(rng, 4))
+  let (_s1, hb, hf, _l1, _d1) = synth_compare(shom(v4, w4))
+  let (_s2, tbb, tff, _l2, _d2) = synth_compare(STensor(v4, w4))
+  hom_gain = hb.to_double() / hf.to_double()
+  ten_gain = tbb.to_double() / tff.to_double()
+  if hom_gain <= ten_gain {
+    ok = false
+  }
+  n = n + 1
+  mk_check(
+    "N-06 Hom 律 Hom(V,W) ≡ W ⊗ V*",
+    ok,
+    n,
+    "命題 182-1 於 5 組維度逐例成立：dim(Hom) = dim V·dim W、G(Hom) 對稱正定、且與 G(W)⊗G(V)⁻ᵀ 逐元素相等。定理 182：Hom 不是獨立構造子而是 ⊗ 與 * 之複合，故 N-11 之 catamorphism **無須任何修改**即可對 Hom 節點合成演算法，合成結果逐例等於直接法。成本：" +
+    rows.join("　") +
+    "，總增益 ×" +
+    fmt_d(tb.to_double() / tf.to_double(), 1) +
+    "。推論 182-1 之實測（同為 dim 16）：Hom(V,W) ×" +
+    fmt_d(hom_gain, 1) +
+    " 高於 V⊗W ×" +
+    fmt_d(ten_gain, 1) +
+    " —— 成因是 Hom 之對偶節點依定理 173-2 零成本，合成法只需一次求逆而非兩次",
+  )
+}

@@ -275,3 +275,122 @@ pub fn csvd_jacobi(
   }
   (u, sig, v)
 }
+
+// ---------------------------------------------------------------------------
+// 【演算法 181】Kronecker 矩陣–向量積（不物化大矩陣）—— 快速變換之本體
+//
+// 【定義】給定因子 A₁,…,A_k（階 n₁,…,n_k），令 N = Πnᵢ。
+//   直接法：物化 A₁⊗…⊗A_k（N² 元）再做矩陣向量積，成本 Θ(N²)。
+//   模積法：逐一沿第 i 模作用 Aᵢ，成本 Σᵢ N·nᵢ。
+//
+// 【定理 181】兩法結果相同。
+//   證：Kronecker 積可分解為 A₁⊗…⊗A_k = Π_i (I_{L_i} ⊗ Aᵢ ⊗ I_{R_i})，
+//   其中 L_i = Π_{j<i} n_j、R_i = Π_{j>i} n_j（各因子作用於不同模，彼此交換）。
+//   沿第 i 模之作用即左乘 (I ⊗ Aᵢ ⊗ I)，依序施行即得全積。∎
+//
+// 【推論 181-1（快速變換即結構律）】取 Aᵢ = H₂ = [[1,1],[1,−1]] 全體相同，
+//   則 A₁⊗…⊗A_k = H_{2ᵏ}（Sylvester–Hadamard），而模積法即 FWHT 之蝶形。
+//   成本 Σ N·2 = 2kN 對 N²，增益 N/(2k) = 2ᵏ/(2k)。
+//   **故 FWHT 不是一個獨立演算法，而是本定理在 Kronecker 樹上的實例；
+//   其 Θ(N log N) 相對 Θ(N²) 之優勢，就是結構律增益本身。**
+//   同理 Cooley–Tukey 之 DFT_{nm} = P(DFT_n⊗I_m)T(I_n⊗DFT_m)Q 亦為本定理之實例
+//   （多一個扭轉因子 T，因 DFT 之分解含置換與旋轉）。
+// ---------------------------------------------------------------------------
+
+///|
+/// 受計量之稠密矩陣–向量積
+pub fn cmatvec(c : Cost, a : RMat, x : Array[Double]) -> Array[Double] {
+  let m = a.mrows
+  let n = a.mcols
+  cflop(c, 2L * (m * n).to_int64())
+  Array::makei(m, i => {
+    let mut s = 0.0
+    for j in 0..<n {
+      s = s + a.at(i, j) * x[j]
+    }
+    s
+  })
+}
+
+///|
+/// 【演算法 181】模積法：施行 A₁⊗…⊗A_k 於 x，全程不物化大矩陣
+pub fn kron_matvec(
+  c : Cost,
+  factors : Array[RMat],
+  x0 : Array[Double],
+) -> Array[Double] {
+  let k = factors.length()
+  let mut total = 1
+  for f in factors {
+    total = total * f.mrows
+  }
+  let mut y = x0.copy()
+  let mut left = 1
+  for i in 0..<k {
+    let a = factors[i]
+    let n = a.mrows
+    let right = total / (left * n)
+    let z = Array::make(total, 0.0)
+    for l in 0..<left {
+      for r in 0..<right {
+        for p in 0..<n {
+          let mut s = 0.0
+          for t in 0..<n {
+            s = s + a.at(p, t) * y[(l * n + t) * right + r]
+          }
+          z[(l * n + p) * right + r] = s
+        }
+      }
+    }
+    // 本模之成本：left·right·n² 次乘 + 同數加
+    cflop(c, 2L * (left * right * n * n).to_int64())
+    y = z
+    left = left * n
+  }
+  y
+}
+
+///|
+/// 受計量之 FWHT（realmat.mbt fwht 之孿生體）
+pub fn cfwht(x0 : Array[Double], c : Cost) -> Array[Double] {
+  let x = x0.copy()
+  let n = x.length()
+  let mut len = 1
+  while len < n {
+    let mut i = 0
+    while i < n {
+      for j in i..<(i + len) {
+        let a = x[j]
+        let b = x[j + len]
+        x[j] = a + b
+        x[j + len] = a - b
+      }
+      i = i + 2 * len
+    }
+    cflop(c, n.to_int64())
+    len = len * 2
+  }
+  x
+}
+
+///|
+/// H₂ = [[1,1],[1,−1]]
+pub fn h2() -> RMat {
+  Mat::build(2, 2, (i, j) => if i == 1 && j == 1 { -1.0 } else { 1.0 })
+}
+
+///|
+/// 兩向量之最大偏差
+pub fn vec_dev(x : Array[Double], y : Array[Double]) -> Double {
+  if x.length() != y.length() {
+    return 1.0e30
+  }
+  let mut d = 0.0
+  for i in 0..<x.length() {
+    let e = absd(x[i] - y[i])
+    if e > d {
+      d = e
+    }
+  }
+  d
+}

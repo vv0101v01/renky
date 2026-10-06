@@ -2258,6 +2258,30 @@ pub fn catalogue() -> Array[Algo] {
     track: "ℝ 軌（flop 計量）",
     run: ob_n22,
   })
+  xs.push({
+    code: "N-06",
+    zh: "Hom 律 Hom(V,W) ≡ W ⊗ V*（複合構造子）",
+    cat: "結構律",
+    spaces: "Hom(V,W)（線性映射空間，Hilbert–Schmidt 內積）",
+    deff: "Hom(V,W) 以 Hilbert–Schmidt 內積成為內積空間。本條主張它不是一個獨立構造子，而是 ⊗ 與 * 之複合：SHom(V,W) ≡ STensor(W, SDual(V))。於是 N-11 之 catamorphism 無須任何修改即可對 Hom 節點合成演算法。",
+    formula: "G(Hom(V,W)) = G(W) ⊗ G(V)⁻ᵀ；inv G(Hom) = inv G(W) ⊗ G(V)",
+    thm: "命題 182-1：Hom(V,W) ≅ W ⊗ V* 為等距同構，故 G(Hom) = G(W) ⊗ G(V)⁻ᵀ。\n定理 182：Hom 為複合構造子，catamorphism 無須擴充即可處理 —— 這是「把構造子化約為已有構造子之複合」所帶來的直接紅利。\n推論 182-1：同維之下 Hom(V,W) 之合成增益必高於 V⊗W。因前者之分解為 inv(G_W) ⊗ G_V（由定理 173-2，對偶節點零求逆，只需一次求逆），後者為 inv(G_V) ⊗ inv(G_W)（兩次求逆）。",
+    proof: "命題 182-1 於 5 組維度以三重方式覆核：維數 dim(Hom) = dim V·dim W、G(Hom) 對稱正定、且與獨立計算之 G(W)⊗G(V)⁻ᵀ 逐元素相等。定理 182 之可執行證據是：未對 SpaceExpr 增加任何構造子、未修改 synth_inv 一行，shom() 僅為 STensor(w, SDual(v)) 之別名，而 synth_compare 對其合成之結果逐例等於直接法 —— 若 Hom 真是獨立構造子，這不可能成立。推論 182-1 以同為 dim 16 之對照實測自證，義務明文要求 Hom 之增益嚴格高於 V⊗W。∎",
+    track: "精確 ℚ",
+    run: ob_n06,
+  })
+  xs.push({
+    code: "N-25",
+    zh: "快速變換即結構律（FWHT／Hadamard 為 Kronecker 樹之實例）",
+    cat: "結構律",
+    spaces: "(𝔽²)^{⊗k} ≅ 𝔽^{2ᵏ}",
+    deff: "給定因子 A₁,…,A_k（階 n₁,…,n_k），N = Πnᵢ。直接法物化 A₁⊗…⊗A_k（N² 元）再做矩陣向量積，成本 Θ(N²)；模積法逐一沿第 i 模作用 Aᵢ，成本 Σᵢ N·nᵢ，全程不物化大矩陣。",
+    formula: "A₁⊗…⊗A_k = Π_i (I_{L_i} ⊗ Aᵢ ⊗ I_{R_i})；取 Aᵢ = H₂ 即得 FWHT",
+    thm: "定理 181：Kronecker 積可分解為逐模因子之積（各因子作用於不同模，彼此交換），故模積法與稠密法結果相同，成本由 Θ(N²) 降為 Θ(Σ N·nᵢ)。\n推論 181-1（快速變換即結構律）：取 Aᵢ = H₂ = [[1,1],[1,−1]] 全體相同，則 A₁⊗…⊗A_k = H_{2ᵏ}（Sylvester–Hadamard），而模積法即 FWHT 之蝶形，增益 N/(2k) = 2ᵏ/(2k)。故 FWHT 不是一個獨立演算法，而是定理 181 在 Kronecker 樹上的實例；其 Θ(N log N) 相對 Θ(N²) 之優勢就是結構律增益本身。同理 Cooley–Tukey 之 DFT_{nm} = P(DFT_n⊗I_m)T(I_n⊗DFT_m)Q 亦為本定理之實例（多一扭轉因子 T）。",
+    proof: "定理 181 之證明如上（確定性）。推論 181-1 以三重精確相等自證，7 組尺寸 k = 2…8 全部偏差**恰為 0**：(1) hadamard_matrix(k) 與 H₂ ⊗ hadamard_matrix(k−1) 精確相等 —— 即 realmat.mbt 既有之建構本身就是 Kronecker 遞迴；(2) 模積法與稠密矩陣向量積結果相同；(3) **既有之 fwht 輸出與前兩者皆精確相同**。第三點是本條的關鍵證據：它表明庫裡原本被歸類為「數值演算法」的 FWHT，其實一直是 N 群的實例。\n成本面：k=8（N=256）時模積法 ×16.0，恰為理論值 N/(2k)（義務以 0.5 之容差明文比對預測與實測）；FWHT 蝶形再快一截達 ×64，因 H₂ 之元為 ±1 連乘法都省去 —— 這是「一般結構律」與「特化實作」之間的額外 ×4，兩者層次不同，不應混為一談。另驗非同構因子 A₂⊗B₃⊗C₂ 之一般情形亦成立，排除「只對同構因子有效」之疑慮。∎",
+    track: "ℝ 軌（flop 計量）",
+    run: ob_n25,
+  })
   xs
 }
 

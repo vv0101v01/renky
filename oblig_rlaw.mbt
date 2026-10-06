@@ -346,3 +346,86 @@ pub fn ob_n22() -> Check {
     " 倍，成因為組裝成本佔比：Cholesky 本體僅 Θ(N³/3)，而 Kronecker 組裝為 Θ(N²)，小尺寸時組裝吃掉大半紅利；SVD 本體為 Θ(N³·掃描數) 故組裝可忽略。此即「結構律之增益取決於本體與組裝之比」之具體例證",
   )
 }
+
+///|
+/// N-25 快速變換即結構律：FWHT 與 Hadamard 矩陣皆為 Kronecker 樹之實例。
+pub fn ob_n25() -> Check {
+  let rng = ob_rng()
+  let mut ok = true
+  let mut n = 0
+  let rows : Array[String] = []
+  let mut g_mode = 0.0
+  let mut g_fwht = 0.0
+  let mut maxdev = 0.0
+  for k in [2, 3, 4, 5, 6, 7, 8] {
+    let nn = 1 << k
+    let h = hadamard_matrix(k)
+    // 推論 181-1 之結構面：H_{2ᵏ} = H₂ ⊗ H_{2ᵏ⁻¹}（精確相等）
+    if !mkron(h2(), hadamard_matrix(k - 1)).equals(h) {
+      ok = false
+    }
+    let x = Array::makei(nn, _i => (rng.next_below(9) - 4).to_double())
+    let cd = Cost::new()
+    let yd = cmatvec(cd, h, x)
+    let factors : Array[RMat] = Array::makei(k, _i => h2())
+    let cf = Cost::new()
+    let yf = kron_matvec(cf, factors, x)
+    let cw = Cost::new()
+    let yw = cfwht(x, cw)
+    // 定理 181：模積法與稠密法結果相同；且既有 fwht 亦相同
+    let d1 = vec_dev(yd, yf)
+    let d2 = vec_dev(yd, yw)
+    if d1 != 0.0 || d2 != 0.0 {
+      ok = false
+    }
+    if d1 > maxdev {
+      maxdev = d1
+    }
+    if k == 8 {
+      g_mode = flop_ratio(cd, cf)
+      g_fwht = flop_ratio(cd, cw)
+    }
+    rows.push("N" + nn.to_string() + " ×" + fmt_d(flop_ratio(cd, cf), 1))
+    n = n + 3
+  }
+  // 增益須為 N/(2k)（模積法之理論值）
+  let predicted = 256.0 / 16.0
+  if absd(g_mode - predicted) > 0.5 {
+    ok = false
+  }
+  // FWHT 蝶形須再快一截（H₂ 之元為 ±1，省去乘法）
+  if g_fwht <= g_mode {
+    ok = false
+  }
+  // 非同構因子之一般情形：A(2)⊗B(3)⊗C(2)
+  let a = Mat::build(2, 2, (i, j) => (rng.next_below(7) - 3).to_double() +
+    (if i == j { 4.0 } else { 0.0 }))
+  let b = Mat::build(3, 3, (i, j) => (rng.next_below(7) - 3).to_double() +
+    (if i == j { 4.0 } else { 0.0 }))
+  let c3 = Mat::build(2, 2, (i, j) => (rng.next_below(7) - 3).to_double() +
+    (if i == j { 4.0 } else { 0.0 }))
+  let big = mkron(mkron(a, b), c3)
+  let x12 = Array::makei(12, _i => (rng.next_below(9) - 4).to_double())
+  let cdd = Cost::new()
+  let y1 = cmatvec(cdd, big, x12)
+  let cff = Cost::new()
+  let y2 = kron_matvec(cff, [a, b, c3], x12)
+  if vec_dev(y1, y2) > 1.0e-10 {
+    ok = false
+  }
+  n = n + 1
+  mk_check(
+    "N-25 快速變換即結構律（FWHT／Hadamard 為 Kronecker 樹之實例）",
+    ok,
+    n,
+    "7 組尺寸逐例成立且偏差恰為 " +
+    fmt_d(maxdev, 1) +
+    "：(1) H_{2ᵏ} = H₂ ⊗ H_{2ᵏ⁻¹} 精確相等 —— realmat.mbt 之 hadamard_matrix 本身就是 Kronecker 遞迴；(2) 定理 181 模積法與稠密矩陣向量積結果相同；(3) **既有之 fwht 輸出與兩者皆精確相同**。成本：" +
+    rows.join("　") +
+    "。k=8（N=256）時模積法 ×" +
+    fmt_d(g_mode, 1) +
+    "（恰為理論值 N/(2k) = 16），FWHT 蝶形再快一截達 ×" +
+    fmt_d(g_fwht, 1) +
+    "（H₂ 之元為 ±1，連乘法都省去）。結論：FWHT 不是一個獨立演算法，而是定理 181 在 Kronecker 樹上的實例，其 Θ(N log N) 相對 Θ(N²) 之優勢**就是結構律增益本身**。另驗非同構因子 A₂⊗B₃⊗C₂ 之一般情形亦成立",
+  )
+}

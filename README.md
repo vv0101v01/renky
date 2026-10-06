@@ -1,13 +1,13 @@
 # axiom/hilbert — 公理化向量空間與有限維內積空間（MoonBit）
 
 以 **MoonBit** 從零（**零第三方依賴**）建構之向量空間／有限維內積空間函式庫：
-18 種具體空間建構 × 7 種空間構造子 × **180 條評審準則演算法**，每一條都附
+18 種具體空間建構 × 7 種空間構造子 × **182 條評審準則演算法**，每一條都附
 **定義 · 算式 · 命題／定理 · 證明 · 可執行之義務自證**。
 
 ```
-條目總數 180（題目要求 > 80）　　通過 180／180　　驗證實例 11,673　　6.9 s
+條目總數 182（題目要求 > 80）　　通過 182／182　　驗證實例 11,711　　6.5 s
 基礎層 A–J 140 條　　加速層 K/L/M 28 條（純 CRT 篩選 · Fp 層級有理重建）
-結構律 N 群 12 條（演算法合成器：吃演算法、吐演算法）
+結構律 N 群 14 條（演算法合成器：吃演算法、吐演算法）
 ```
 
 ## 快速開始
@@ -15,7 +15,7 @@
 ```bash
 moon check            # 型別檢查（0 error, 0 warning）
 moon test             # 單元測試（含整份目錄之迴歸測試）
-moon run cmd/main     # 逐條執行 180 條義務自證，列印結果表
+moon run cmd/main     # 逐條執行 182 條義務自證，列印結果表
 moon run cmd/accel    # 加速層實測：成本模型對照表 + 分派器決策網格
 moon run cmd/audit    # 逐條目掛鐘量測（TSV，供評估報告使用）
 moon run cmd/report > docs/評審報告.md   # 產生完整 Markdown 評審報告
@@ -39,7 +39,7 @@ moon run cmd/report > docs/評審報告.md   # 產生完整 Markdown 評審報�
 `moon.mod` 之依賴區為空，函式庫本體（root `moon.pkg`）之 import 區亦為空，
 連 `@math` 都未使用。（唯一例外：`cmd/accel` 這支**執行檔**為了量掛鐘時間而 import
 `moonbitlang/core/bench` —— 那是編譯器自帶之標準庫而非第三方套件，且函式庫本體與
-全部 180 條義務自證皆不依賴它。）
+全部 182 條義務自證皆不依賴它。）
 
 | 需求 | 自建實作 |
 | --- | --- |
@@ -129,7 +129,7 @@ moon run cmd/report > docs/評審報告.md   # 產生完整 Markdown 評審報�
 | `fp.mbt` | 加速層 Λ0：𝔽p 原子層（Miller–Rabin、Montgomery 批次求逆、NTT） |
 | `crt.mbt` | 加速層 Λ1：Garner CRT、對稱提升、有理重建、Hadamard／係數界 |
 | `accel.mbt` · `accelpoly.mbt` | 加速層 Λ2／Λ3：ℤ／ℚ／𝔽[x] 管、C 管憑證、成本模型、分派器 |
-| `oblig_core.mbt` · `oblig_space.mbt` · `oblig_num.mbt` · `oblig_accel.mbt` · `oblig_nlaw.mbt` | 180 條可執行證明義務 |
+| `oblig_core.mbt` · `oblig_space.mbt` · `oblig_num.mbt` · `oblig_accel.mbt` · `oblig_nlaw.mbt` | 182 條可執行證明義務 |
 | `nlaw.mbt` | **N 群：結構律與演算法合成** —— 空間表達式 AST、高階律檢驗器、Kronecker 律族、成本代數、搜尋引擎 |
 | `rcost.mbt` | **ℝ 軌 flop 計量器** —— 受計量之演算法孿生體（定理 177 忠實性） |
 | `catalogue.mbt` | 評審準則目錄（定義／算式／定理／證明／義務） |

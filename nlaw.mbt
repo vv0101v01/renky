@@ -445,3 +445,236 @@ pub fn law_table(vs : Array[LawVerdict]) -> String {
   }
   out.join("\n")
 }
+
+// ---------------------------------------------------------------------------
+// 【演算法 173】對偶反演律（N-05）
+//
+// 定理 173-1（對偶之 Gram）：G(A*) = (G_A⁻¹)ᵀ。（已於命題 169-2 給出。）
+//
+// 定理 173-2（對偶反演律 —— 本條之核心）：
+//     G(A*)⁻¹ = G_A
+//   證明：G(A*)⁻¹ = ((G_A⁻¹)ᵀ)⁻¹ = ((G_A⁻¹)⁻¹)ᵀ = (G_A)ᵀ = G_A，
+//   末步用到 Gram 矩陣之對稱性（實內積空間）。∎
+//
+//   推論（成本）：**對偶節點上之「求逆」不需要任何求逆運算。**
+//   直接法須在 n 階矩陣上做一次 Θ(n³) 的 ℚ 高斯消去；
+//   分解法直接回傳既有的 G_A，成本為 0 次乘法。
+//   這是合成樹上唯一「增益無上界」的節點型態。
+//
+// 定理 173-3（對偶之行列式）：det G(A*) = 1 / det G_A。
+//   證明：det((G_A⁻¹)ᵀ) = det(G_A⁻¹) = 1/det(G_A)。∎
+//
+// 定理 173-4（對合）：G(A**) = G_A，故 A** ≅ A 為等距同構。
+//   證明：G(A**) = (G(A*)⁻¹)ᵀ = (G_A)ᵀ = G_A。∎
+// ---------------------------------------------------------------------------
+
+///|
+/// 一元組合子之結構律檢驗器（對偶、實化、外冪等單參數構造子用）
+pub fn check_law1(
+  lname : String,
+  comb : (Mat[Q]) -> Mat[Q],
+  direct : (Mat[Q], Cost) -> Mat[Q]?,
+  fact : (Mat[Q], Cost) -> Mat[Q]?,
+  sizes : Array[Int],
+  rng : Rng,
+) -> LawVerdict {
+  let mut holds = true
+  let mut tb = 0L
+  let mut tf = 0L
+  let parts : Array[String] = []
+  for n in sizes {
+    let a = rand_gram(rng, n)
+    let cd = Cost::new()
+    let lhs = direct(comb(a), cd)
+    let cf = Cost::new()
+    let rhs = fact(a, cf)
+    let same = match (lhs, rhs) {
+      (Some(x), Some(y)) => x.equals(y)
+      (None, None) => true
+      _ => false
+    }
+    if !same {
+      holds = false
+    }
+    tb = tb + cd.wmul
+    tf = tf + cf.wmul
+    let g = if cf.wmul == 0L && cd.wmul > 0L {
+      "∞"
+    } else {
+      "×" + fmt_d(Cost::ratio(cd, cf), 2)
+    }
+    parts.push("dim" + n.to_string() + " " + g)
+  }
+  {
+    lname,
+    holds,
+    ltrials: sizes.length(),
+    base_wmul: tb,
+    fast_wmul: tf,
+    ldetail: parts.join("　"),
+  }
+}
+
+///|
+/// N-05 對偶反演律：G(A*)⁻¹ = G_A（分解法零乘法）
+pub fn law_dual_inv(rng : Rng, sizes : Array[Int]) -> LawVerdict {
+  check_law1(
+    "* 對偶反演律 G(A*)⁻¹ = G_A",
+    a => SDual(SLeaf("A", a)).sgram(),
+    (g, c) => qinv_gauss(g, c),
+    // 定理 173-2：直接回傳原 Gram，零次乘法
+    (a, _c) => Some(a),
+    sizes,
+    rng,
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 【演算法 174】合成樹求值器（N-11）—— catamorphism
+//
+// 這是整個 N 群的關鍵件：前面的 N-03／N-04／N-05 各自驗證「深度 1」之律，
+// 而本條把它們**沿著任意深度的表達式樹摺疊**（fold / catamorphism），
+// 從而對一棵事先未知的樹「合成」出一個演算法。
+//
+// 定義（合成子）：對 Φ = 求逆，合成規則為
+//     synth(Leaf G)   = G⁻¹                       （基礎：真的做一次消去）
+//     synth(A ⊗ B)    = synth(A) ⊗ synth(B)       （定理 171-2）
+//     synth(A ⊕ B)    = diag(synth(A), synth(B))  （定理 172-1）
+//     synth(A*)       = G_A                       （定理 173-2，零成本）
+//
+// 定理 174（合成之正確性）：對任意表達式 E，synth_inv(E) = (G_E)⁻¹。
+//   證明：對 E 之結構歸納。
+//   基礎：E = Leaf G，兩邊皆為 G⁻¹。
+//   ⊗：G_E = G_A ⊗ G_B，由定理 171-2 得 (G_A⊗G_B)⁻¹ = G_A⁻¹⊗G_B⁻¹
+//      = synth(A) ⊗ synth(B)（歸納假設）。
+//   ⊕：G_E = diag(G_A, G_B)，由定理 172-1 同理。
+//   *：G_E = (G_A⁻¹)ᵀ，由定理 173-2 得 G_E⁻¹ = G_A = synth(A*)。∎
+//
+// 定理 174-2（行列式之合成）：
+//     synthdet(Leaf G) = det G
+//     synthdet(A⊗B)    = synthdet(A)^{dim B} · synthdet(B)^{dim A}   （定理 171-3）
+//     synthdet(A⊕B)    = synthdet(A) · synthdet(B)                   （定理 172-2）
+//     synthdet(A*)     = 1 / synthdet(A)                             （定理 173-3）
+//   且 synthdet(E) = det(G_E)。證明：同上之結構歸納。∎
+//
+// 命題 174-3（成本）：設樹 E 之葉為 {Lᵢ}，維數為 {nᵢ}。
+//   直接法須先物化 n×n 之 Gram（n = dim E）再做 Θ(n³) 消去；
+//   合成法只在葉上做 Σ Θ(nᵢ³)，其餘節點僅為組裝（⊕ 零乘法、* 零乘法、
+//   ⊗ 為 Θ(輸出元素數) 次乘法）。由於 n 為葉維數之積與和的混合，
+//   n³ 相對 Σnᵢ³ 可以任意大 —— 增益隨樹之深度與寬度複合成長。
+// ---------------------------------------------------------------------------
+
+///|
+/// 計入成本之表達式 Gram（直接法必須誠實支付物化大 Gram 的代價）
+pub fn SpaceExpr::sgram_cost(self : SpaceExpr, c : Cost) -> Mat[Q] {
+  match self {
+    SLeaf(_, g) => g
+    STensor(a, b) => qkron_cost(c, a.sgram_cost(c), b.sgram_cost(c))
+    SSum(a, b) => qblock_diag(a.sgram_cost(c), b.sgram_cost(c))
+    SDual(a) => {
+      let g = a.sgram_cost(c)
+      match qinv_gauss(g, c) {
+        Some(h) => h.transpose()
+        None => Mat::ident(g.mrows)
+      }
+    }
+  }
+}
+
+///|
+/// 【合成】對任意表達式樹摺疊出「求逆」演算法（定理 174）
+pub fn synth_inv(e : SpaceExpr, c : Cost) -> Mat[Q]? {
+  match e {
+    SLeaf(_, g) => qinv_gauss(g, c)
+    STensor(a, b) =>
+      match (synth_inv(a, c), synth_inv(b, c)) {
+        (Some(x), Some(y)) => Some(qkron_cost(c, x, y))
+        _ => None
+      }
+    SSum(a, b) =>
+      match (synth_inv(a, c), synth_inv(b, c)) {
+        (Some(x), Some(y)) => Some(qblock_diag(x, y))
+        _ => None
+      }
+    // 定理 173-2：對偶節點之求逆 = 原 Gram，不需任何消去
+    SDual(a) => Some(a.sgram_cost(c))
+  }
+}
+
+///|
+/// 【合成】對任意表達式樹摺疊出「行列式」演算法（定理 174-2）
+pub fn synth_det(e : SpaceExpr, c : Cost) -> Q? {
+  match e {
+    SLeaf(_, g) => Some(qdet_gauss(g, c))
+    STensor(a, b) => {
+      let na = a.sdim()
+      let nb = b.sdim()
+      match (synth_det(a, c), synth_det(b, c)) {
+        (Some(da), Some(db)) => {
+          let mut acc = Q::one()
+          for _k in 0..<nb {
+            acc = cq_mul(c, acc, da)
+          }
+          for _k in 0..<na {
+            acc = cq_mul(c, acc, db)
+          }
+          Some(acc)
+        }
+        _ => None
+      }
+    }
+    SSum(a, b) =>
+      match (synth_det(a, c), synth_det(b, c)) {
+        (Some(da), Some(db)) => Some(cq_mul(c, da, db))
+        _ => None
+      }
+    SDual(a) =>
+      match synth_det(a, c) {
+        Some(da) => cq_div(c, Q::one(), da)
+        None => None
+      }
+  }
+}
+
+///|
+/// 隨機表達式樹（維數受上限控制，避免組合爆炸把義務跑死）
+pub fn rand_expr(rng : Rng, depth : Int, maxdim : Int) -> SpaceExpr {
+  if depth <= 0 {
+    let n = rng.next_range(2, 4)
+    return SLeaf("L" + n.to_string(), rand_gram(rng, n))
+  }
+  for _try in 0..<12 {
+    let k = rng.next_below(3)
+    let a = rand_expr(rng, depth - 1, maxdim)
+    let e = if k == 2 {
+      SDual(a)
+    } else {
+      let b = rand_expr(rng, depth - 1, maxdim)
+      if k == 0 {
+        STensor(a, b)
+      } else {
+        SSum(a, b)
+      }
+    }
+    if e.sdim() <= maxdim {
+      return e
+    }
+  }
+  let n = rng.next_range(2, 4)
+  SLeaf("L" + n.to_string(), rand_gram(rng, n))
+}
+
+///|
+/// 合成之一次評比：回傳 (正確?, 直接法字乘, 合成法字乘, 標籤, 維數)
+pub fn synth_compare(e : SpaceExpr) -> (Bool, Int64, Int64, String, Int) {
+  let cd = Cost::new()
+  let direct = qinv_gauss(e.sgram_cost(cd), cd)
+  let cf = Cost::new()
+  let synth = synth_inv(e, cf)
+  let same = match (direct, synth) {
+    (Some(x), Some(y)) => x.equals(y)
+    (None, None) => true
+    _ => false
+  }
+  (same, cd.wmul, cf.wmul, e.slabel(), e.sdim())
+}

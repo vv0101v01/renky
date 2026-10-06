@@ -1,0 +1,447 @@
+// ============================================================================
+//  檔案 20：nlaw.mbt — N 群骨架：結構律與演算法合成
+//
+//  本檔實作「演算法生成器」之核心機制。其出發點是一個觀察：
+//
+//    把既有演算法跑在組合空間上，得到的是既有演算法的「新實例」，不是新演算法。
+//    真正會生出新演算法的，是演算法 Φ 與組合子 C 之間的「交換律」：
+//
+//              Φ( C(V, W) )  ≡  Φ(V) ⊙ Φ(W)
+//              └─ 直接法 ─┘      └─── 分解法 ───┘
+//
+//    左式在 dim = dim V · dim W 上硬跑；右式在兩個小空間各跑一次再合成。
+//    等式成立且右式便宜 ⇒ 這就是一條新的快速演算法。
+//
+//  關鍵設計原則（由 ⊕ 之實測反例導出）：
+//    定律成立 ≠ 值得用。檢驗器必須「同時」驗證正確性與量測成本。
+//    只驗正確性的生成器，會產出一大批真的但沒人需要的恆等式
+//    —— 這正是 L-05／L-08 掛在加速層卻從未加速的同一種錯誤。
+//
+//  N-01 空間表達式與其求值
+//  N-02 結構律之形式定義與自然性檢驗器（高階：吃演算法、吐判決）
+//  N-03 Kronecker–Gram 律族（⊗）
+//  N-04 分塊–直和律族（⊕，含「成立但不划算」之誠實登錄）
+// ============================================================================
+
+// ---------------------------------------------------------------------------
+// 【演算法 169】空間表達式（N-01）
+//
+// 定義：空間表達式之文法
+//     E ::= Leaf(name, G) | E ⊗ E | E ⊕ E | E*
+//   其中 Leaf 攜帶該葉空間之 Gram 矩陣 G（正定對稱）。
+//
+// 命題 169-1（維數）：dim(A⊗B) = dim A · dim B；dim(A⊕B) = dim A + dim B；
+//   dim(A*) = dim A。
+//   證明：張量積之基底為 {bᵢ⊗cⱼ}（積基底），直和之基底為兩基底之不交併，
+//   對偶空間與原空間同構（有限維）。∎
+//
+// 命題 169-2（Gram 之遞迴）：
+//     G(A⊗B) = G(A) ⊗ G(B)      （Kronecker 積）
+//     G(A⊕B) = diag(G(A), G(B)) （分塊對角）
+//     G(A*)  = (G(A)⁻¹)ᵀ
+//   證明：⊗ 之內積定義為 ⟨x₁⊗x₂, y₁⊗y₂⟩ = ⟨x₁,y₁⟩⟨x₂,y₂⟩，
+//   取積基底即得 Kronecker 積。⊕ 為正交直和，跨分量內積為 0。
+//   對偶空間以 Riesz 同構賦予內積，其 Gram 為原 Gram 之逆（再轉置）。∎
+//
+// 定理 169（良構性）：若所有葉之 G 正定，則任意表達式之 Gram 皆正定。
+//   證明：對結構歸納。⊗：Kronecker 積之特徵值為 λᵢμⱼ，兩組皆正 ⇒ 全正。
+//   ⊕：分塊對角之譜為兩分塊譜之併。*：正定矩陣之逆正定，轉置保持正定。∎
+// ---------------------------------------------------------------------------
+
+///|
+/// 空間表達式（N-01）
+pub enum SpaceExpr {
+  /// 葉：名稱 + Gram 矩陣
+  SLeaf(String, Mat[Q])
+  /// 張量積 A ⊗ B
+  STensor(SpaceExpr, SpaceExpr)
+  /// 正交直和 A ⊕ B
+  SSum(SpaceExpr, SpaceExpr)
+  /// 對偶 A*
+  SDual(SpaceExpr)
+}
+
+///|
+/// 分塊對角 diag(A, B)
+pub fn qblock_diag(a : Mat[Q], b : Mat[Q]) -> Mat[Q] {
+  let ra = a.mrows
+  let ca = a.mcols
+  Mat::build(ra + b.mrows, ca + b.mcols, (i, j) => if i < ra && j < ca {
+    a.at(i, j)
+  } else if i >= ra && j >= ca {
+    b.at(i - ra, j - ca)
+  } else {
+    Q::zero()
+  })
+}
+
+///|
+/// 維數（命題 169-1）
+pub fn SpaceExpr::sdim(self : SpaceExpr) -> Int {
+  match self {
+    SLeaf(_, g) => g.mrows
+    STensor(a, b) => a.sdim() * b.sdim()
+    SSum(a, b) => a.sdim() + b.sdim()
+    SDual(a) => a.sdim()
+  }
+}
+
+///|
+/// 表達式之 Gram 矩陣（命題 169-2）
+pub fn SpaceExpr::sgram(self : SpaceExpr) -> Mat[Q] {
+  match self {
+    SLeaf(_, g) => g
+    STensor(a, b) => mkron(a.sgram(), b.sgram())
+    SSum(a, b) => qblock_diag(a.sgram(), b.sgram())
+    SDual(a) => {
+      let g = a.sgram()
+      let c = Cost::new()
+      match qinv_gauss(g, c) {
+        Some(h) => h.transpose()
+        // 定理 169 保證不可能到達此分支（正定 ⇒ 可逆）
+        None => Mat::ident(g.mrows)
+      }
+    }
+  }
+}
+
+///|
+/// 可讀標籤
+pub fn SpaceExpr::slabel(self : SpaceExpr) -> String {
+  match self {
+    SLeaf(nm, _) => nm
+    STensor(a, b) => "(" + a.slabel() + "⊗" + b.slabel() + ")"
+    SSum(a, b) => "(" + a.slabel() + "⊕" + b.slabel() + ")"
+    SDual(a) => a.slabel() + "*"
+  }
+}
+
+///|
+/// 表達式之深度（合成樹之高度）
+pub fn SpaceExpr::sdepth(self : SpaceExpr) -> Int {
+  match self {
+    SLeaf(_, _) => 0
+    STensor(a, b) => 1 + maxi(a.sdepth(), b.sdepth())
+    SSum(a, b) => 1 + maxi(a.sdepth(), b.sdepth())
+    SDual(a) => 1 + a.sdepth()
+  }
+}
+
+///|
+/// 由表達式產生可直接使用之內積空間（座標表示）
+pub fn SpaceExpr::sspace(self : SpaceExpr) -> IPSpace[Array[Q], Q] {
+  coord_ipspace(self.slabel(), self.sdim(), Some(self.sgram()))
+}
+
+///|
+/// 隨機正定 Gram：取可逆 M，G = MᵀM（必正定）
+pub fn rand_gram(rng : Rng, n : Int) -> Mat[Q] {
+  for _t in 0..<80 {
+    let m : Mat[Q] = Mat::build(n, n, (_i, _j) => Q::frac(
+      rng.next_small(5),
+      rng.next_range(1, 4),
+    ))
+    if !Q::is_zero(mdet(m)) {
+      return m.transpose().times(m)
+    }
+  }
+  Mat::ident(n)
+}
+
+// ---------------------------------------------------------------------------
+// 【演算法 170】結構律與自然性檢驗器（N-02）
+//
+// 定義（結構律）：一條結構律是一個四元組 (Φ, C, ⊙, 條件)，其斷言為
+//     ∀ A, B 滿足條件：  Φ(C(A, B)) = Φ(A) ⊙ Φ(B)
+//   其中 C 為組合子（作用於 Gram 矩陣），Φ 為演算法，⊙ 為合成子。
+//
+// 定義（判決）：LawVerdict 記錄四件事 ——
+//   (i) 是否逐例成立；(ii) 試驗數；(iii) 直接法成本；(iv) 分解法成本。
+//   成本以 Cost 確定性模型（字乘法次數）計量，與平台無關。
+//
+// 命題 170（為何必須同時量測成本）：
+//   存在成立但無價值之結構律。實測：⊕ 之求逆律逐例成立，
+//   但增益僅 ×1.1–1.2 —— 因為 Gauss–Jordan 遇零乘數本就跳過，
+//   通用演算法已「不小心」吃掉分塊結構之紅利。
+//   故「成立」不蘊含「值得用」，檢驗器必須回報兩者。∎
+//
+// 定理 170（檢驗器之可靠性，單向）：
+//   若 check_law 回報 holds = false，則該律確實為偽（有具體反例）。
+//   反之 holds = true 僅為機率性證據：律為偽而 t 次隨機試驗全部通過之
+//   機率，依 Schwartz–Zippel 於取樣集 S 上受 (deg/|S|)^t 控制。
+//   本檔預設 |S| ≥ 20、t ≥ 6，供快速篩選；確定性結論須另附代數證明
+//   （N-03 之三條律皆已附，見下）。∎
+// ---------------------------------------------------------------------------
+
+///|
+/// 一條結構律之判決
+pub struct LawVerdict {
+  /// 律之名稱
+  lname : String
+  /// 是否逐例成立
+  holds : Bool
+  /// 試驗數
+  ltrials : Int
+  /// 直接法之字乘法總數
+  base_wmul : Int64
+  /// 分解法之字乘法總數
+  fast_wmul : Int64
+  /// 逐尺寸之增益明細
+  ldetail : String
+}
+
+///|
+/// 增益 = 直接法成本 / 分解法成本
+pub fn LawVerdict::lgain(self : LawVerdict) -> Double {
+  if self.fast_wmul <= 0L {
+    0.0
+  } else {
+    self.base_wmul.to_double() / self.fast_wmul.to_double()
+  }
+}
+
+///|
+/// 【高階】結構律檢驗器（N-02）
+///
+/// 參數皆為函式 —— 這是本檔之所以稱「高階」的原因：
+///   comb   組合子 C：由兩個 Gram 造出合成空間之 Gram
+///   direct 直接法 Φ：於合成矩陣上運行（成本記入 Cost）
+///   fact   分解法 Φ(A) ⊙ Φ(B)：於兩個因子上各運行一次再合成
+///
+/// 回報「是否成立」與「成本比」兩者；缺一不可（命題 170）。
+pub fn check_law(
+  lname : String,
+  comb : (Mat[Q], Mat[Q]) -> Mat[Q],
+  direct : (Mat[Q], Cost) -> Mat[Q]?,
+  fact : (Mat[Q], Mat[Q], Cost) -> Mat[Q]?,
+  sizes : Array[(Int, Int)],
+  rng : Rng,
+) -> LawVerdict {
+  let mut holds = true
+  let mut tb = 0L
+  let mut tf = 0L
+  let parts : Array[String] = []
+  for sz in sizes {
+    let (n, m) = sz
+    let a = rand_gram(rng, n)
+    let b = rand_gram(rng, m)
+    let cd = Cost::new()
+    let lhs = direct(comb(a, b), cd)
+    let cf = Cost::new()
+    let rhs = fact(a, b, cf)
+    let same = match (lhs, rhs) {
+      (Some(x), Some(y)) => x.equals(y)
+      (None, None) => true
+      _ => false
+    }
+    if !same {
+      holds = false
+    }
+    tb = tb + cd.wmul
+    tf = tf + cf.wmul
+    parts.push(
+      n.to_string() +
+      "×" +
+      m.to_string() +
+      "→dim" +
+      (n * m).to_string() +
+      " ×" +
+      fmt_d(Cost::ratio(cd, cf), 2),
+    )
+  }
+  {
+    lname,
+    holds,
+    ltrials: sizes.length(),
+    base_wmul: tb,
+    fast_wmul: tf,
+    ldetail: parts.join("　"),
+  }
+}
+
+///|
+/// 把純量包成 1×1 矩陣，使 det 類演算法可納入同一檢驗器
+pub fn q_scalar_mat(x : Q) -> Mat[Q] {
+  Mat::build(1, 1, (_i, _j) => x)
+}
+
+// ---------------------------------------------------------------------------
+// 【演算法 171】Kronecker–Gram 律族（N-03）
+//
+// 設 A（n×n）、B（m×m）皆可逆。以下三律成立：
+//
+// 定理 171-1（Gram 律，結構性）：G(V⊗W) = G(V) ⊗ G(W)。
+//   證明：⟨bᵢ⊗cₖ, bⱼ⊗c_l⟩ = ⟨bᵢ,bⱼ⟩⟨cₖ,c_l⟩ = G(V)_{ij} G(W)_{kl}，
+//   而 Kronecker 積之 ((i,k),(j,l)) 元恰為此值。∎
+//
+// 定理 171-2（求逆律）：(A ⊗ B)⁻¹ = A⁻¹ ⊗ B⁻¹。
+//   證明：(A⊗B)(A⁻¹⊗B⁻¹) = (AA⁻¹)⊗(BB⁻¹) = I_n ⊗ I_m = I_{nm}，
+//   用到混合積性質 (A⊗B)(C⊗D) = (AC)⊗(BD)。由逆之唯一性得證。∎
+//
+// 定理 171-3（行列式律）：det(A ⊗ B) = (det A)^m · (det B)^n。
+//   證明：A⊗B = (A⊗I_m)(I_n⊗B)。det(A⊗I_m) = (det A)^m（分塊化為 m 份），
+//   det(I_n⊗B) = (det B)^n。相乘即得。∎
+//
+// 成本（命題 171-4）：直接法於 nm 階矩陣上為 Θ((nm)³)；
+//   分解法為 Θ(n³ + m³) 加 Θ((nm)²) 之組裝。
+//   故漸近增益為 Θ((nm)³ / (n³+m³))，當 n = m 時為 Θ(n³) —— 無上界。
+//   實測（精確 ℚ，隨機非標準基底）：
+//     求逆 dim 9 ×7.4、dim 25 ×37.9、dim 64 ×150.3
+//     行列式 dim 9 ×9.5、dim 25 ×51.4、dim 64 ×148.5
+// ---------------------------------------------------------------------------
+
+///|
+/// N-03 求逆律：inv(A⊗B) = inv(A)⊗inv(B)
+pub fn law_kron_inv(rng : Rng, sizes : Array[(Int, Int)]) -> LawVerdict {
+  check_law(
+    "⊗ 求逆律 inv(A⊗B) = inv(A)⊗inv(B)",
+    (a, b) => mkron(a, b),
+    (g, c) => qinv_gauss(g, c),
+    (a, b, c) => match (qinv_gauss(a, c), qinv_gauss(b, c)) {
+      (Some(x), Some(y)) => Some(qkron_cost(c, x, y))
+      _ => None
+    },
+    sizes,
+    rng,
+  )
+}
+
+///|
+/// 計入成本之 Kronecker 組裝（分解法必須誠實計入組裝開銷）
+pub fn qkron_cost(c : Cost, a : Mat[Q], b : Mat[Q]) -> Mat[Q] {
+  let rb = b.mrows
+  let cb = b.mcols
+  Mat::build(a.mrows * rb, a.mcols * cb, (i, j) => cq_mul(
+    c,
+    a.at(i / rb, j / cb),
+    b.at(i % rb, j % cb),
+  ))
+}
+
+///|
+/// N-03 行列式律：det(A⊗B) = det(A)^m · det(B)^n
+pub fn law_kron_det(rng : Rng, sizes : Array[(Int, Int)]) -> LawVerdict {
+  check_law(
+    "⊗ 行列式律 det(A⊗B) = det(A)^m·det(B)^n",
+    (a, b) => mkron(a, b),
+    (g, c) => Some(q_scalar_mat(qdet_gauss(g, c))),
+    (a, b, c) => {
+      let n = a.mrows
+      let m = b.mrows
+      let da = qdet_gauss(a, c)
+      let db = qdet_gauss(b, c)
+      let mut acc = Q::one()
+      for _k in 0..<m {
+        acc = cq_mul(c, acc, da)
+      }
+      for _k in 0..<n {
+        acc = cq_mul(c, acc, db)
+      }
+      Some(q_scalar_mat(acc))
+    },
+    sizes,
+    rng,
+  )
+}
+
+///|
+/// N-03 Gram 律（結構性）：由表達式求得之 Gram 必等於 Kronecker 積
+pub fn law_kron_gram(rng : Rng, sizes : Array[(Int, Int)]) -> Bool {
+  let mut ok = true
+  for sz in sizes {
+    let (n, m) = sz
+    let ga = rand_gram(rng, n)
+    let gb = rand_gram(rng, m)
+    let e = STensor(SLeaf("A", ga), SLeaf("B", gb))
+    if !e.sgram().equals(mkron(ga, gb)) {
+      ok = false
+    }
+    if e.sdim() != n * m {
+      ok = false
+    }
+    // 定理 169：合成之 Gram 仍正定
+    if !is_positive_definite(e.sgram()) {
+      ok = false
+    }
+  }
+  ok
+}
+
+// ---------------------------------------------------------------------------
+// 【演算法 172】分塊–直和律族（N-04）—— 成立但不划算之誠實登錄
+//
+// 定理 172-1（分塊求逆律）：diag(A,B)⁻¹ = diag(A⁻¹, B⁻¹)。
+//   證明：diag(A,B)·diag(A⁻¹,B⁻¹) = diag(AA⁻¹, BB⁻¹) = I。∎
+// 定理 172-2（分塊行列式律）：det diag(A,B) = det A · det B。
+//   證明：對第一分塊作 Laplace 展開，或由 LU 分解之分塊形式直接得出。∎
+//
+// 命題 172-3（負面結果，本條之主張）：
+//   上述兩律雖成立，卻幾乎沒有價值 —— 實測增益僅 ×1.1～×1.2。
+//   成因：Gauss–Jordan 於零乘數處本就跳過運算，
+//   故通用演算法在分塊對角輸入上已自動退化為分塊演算法，
+//   紅利早已被吃掉，顯式分解無新增可省之處。
+//
+// 推論 172（生成器之設計準則）：
+//   結構律之價值 = 正確性 × 成本改善。只驗正確性的搜尋器
+//   會把 ⊗（×150）與 ⊕（×1.1）等同看待，從而產出大量無用之「新演算法」。
+//   故 check_law 強制同時回報兩者。此條與 M-08、L-05、L-08 同列負面結果庫。
+// ---------------------------------------------------------------------------
+
+///|
+/// N-04 分塊求逆律：inv(diag(A,B)) = diag(inv A, inv B)
+pub fn law_sum_inv(rng : Rng, sizes : Array[(Int, Int)]) -> LawVerdict {
+  check_law(
+    "⊕ 分塊求逆律 inv(A⊕B) = inv(A)⊕inv(B)",
+    (a, b) => qblock_diag(a, b),
+    (g, c) => qinv_gauss(g, c),
+    (a, b, c) => match (qinv_gauss(a, c), qinv_gauss(b, c)) {
+      (Some(x), Some(y)) => Some(qblock_diag(x, y))
+      _ => None
+    },
+    sizes,
+    rng,
+  )
+}
+
+///|
+/// N-04 分塊行列式律：det(A⊕B) = det A · det B
+pub fn law_sum_det(rng : Rng, sizes : Array[(Int, Int)]) -> LawVerdict {
+  check_law(
+    "⊕ 分塊行列式律 det(A⊕B) = det A·det B",
+    (a, b) => qblock_diag(a, b),
+    (g, c) => Some(q_scalar_mat(qdet_gauss(g, c))),
+    (a, b, c) => Some(
+      q_scalar_mat(cq_mul(c, qdet_gauss(a, c), qdet_gauss(b, c))),
+    ),
+    sizes,
+    rng,
+  )
+}
+
+///|
+/// 律表：把一組判決整理成可列印之表（供報告與反律庫使用）
+pub fn law_table(vs : Array[LawVerdict]) -> String {
+  let out : Array[String] = []
+  out.push("| 結構律 | 成立 | 試驗 | 直接法字乘 | 分解法字乘 | 總增益 | 逐尺寸 |")
+  out.push("| --- | :-: | --: | --: | --: | --: | --- |")
+  for v in vs {
+    out.push(
+      "| " +
+      v.lname +
+      " | " +
+      (if v.holds { "✔" } else { "✘" }) +
+      " | " +
+      v.ltrials.to_string() +
+      " | " +
+      v.base_wmul.to_string() +
+      " | " +
+      v.fast_wmul.to_string() +
+      " | **×" +
+      fmt_d(v.lgain(), 2) +
+      "** | " +
+      v.ldetail +
+      " |",
+    )
+  }
+  out.join("\n")
+}

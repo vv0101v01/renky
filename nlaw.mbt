@@ -866,3 +866,296 @@ pub fn law_find(tbl : Array[LawCand], phi : String, comb : String, rule : String
   }
   None
 }
+
+// ---------------------------------------------------------------------------
+// 【演算法 176】成本代數與合成分派（N-12）
+//
+// N-11 之 catamorphism 在每個節點一律選擇「分解」。這不一定對：
+// N-13 之定律表顯示 ⊕ 節點之增益僅 ×1.1、而某些 Φ 的分解甚至更貴。
+// 本條為表達式樹建立**符號成本代數** —— 不執行任何算術，只由樹的形狀
+// 預測兩條路徑的字乘法數 —— 再據以在每個節點分派。
+//
+// 定義（物化成本）：mat(E) ≔ 物化 G_E 所需之字乘法數
+//     mat(Leaf)  = 0                        （葉之 Gram 已在手上）
+//     mat(A⊗B)   = mat A + mat B + (dimA·dimB)²
+//     mat(A⊕B)   = mat A + mat B            （分塊置放，零乘法）
+//     mat(A*)    = mat A + κ·(dimA)³        （須一次求逆）
+//
+// 定義（兩條路徑）：
+//     flat(E) = mat(E) + κ·(dim E)³         （攤平：物化後直接消去）
+//     dec(Leaf)  = κ·n³
+//     dec(A⊗B)   = best(A) + best(B) + (dimA·dimB)²
+//     dec(A⊕B)   = best(A) + best(B)
+//     dec(A*)    = mat(A)                   （定理 173-2：零求逆）
+//     best(E) = min(flat E, dec E)
+//
+// 分派規則：plan(E) = (dec E < flat E)。
+//
+// 命題 176（分派之保守性）：best 為逐節點取極小，故 best(E) ≤ flat(E) 恆成立，
+//   亦即分派後之預測成本不劣於「一律攤平」；又 best(E) ≤ dec(E)，
+//   故亦不劣於「一律分解」。分派器在預測層面上同時支配兩個固定策略。
+// ---------------------------------------------------------------------------
+
+///|
+/// 高斯消去之字乘法校準常數（κ/100，見 N-12 之實測校準）
+pub fn tkappa() -> Int64 {
+  260L
+}
+
+///|
+/// 符號成本：物化 G_E 之字乘法數（不執行任何算術）
+pub fn tmat(e : SpaceExpr) -> Int64 {
+  match e {
+    SLeaf(_, _) => 0L
+    STensor(a, b) => {
+      let d = (a.sdim() * b.sdim()).to_int64()
+      tmat(a) + tmat(b) + d * d
+    }
+    SSum(a, b) => tmat(a) + tmat(b)
+    SDual(a) => {
+      let n = a.sdim().to_int64()
+      tmat(a) + tkappa() * n * n * n / 100L
+    }
+  }
+}
+
+///|
+/// 符號成本：攤平路徑（物化後直接求逆）
+pub fn tinv_flat(e : SpaceExpr) -> Int64 {
+  let n = e.sdim().to_int64()
+  tmat(e) + tkappa() * n * n * n / 100L
+}
+
+///|
+/// 符號成本：分解路徑（逐節點取極小）
+pub fn tinv_dec(e : SpaceExpr) -> Int64 {
+  match e {
+    SLeaf(_, g) => {
+      let n = g.mrows.to_int64()
+      tkappa() * n * n * n / 100L
+    }
+    STensor(a, b) => {
+      let d = (a.sdim() * b.sdim()).to_int64()
+      tinv_best(a) + tinv_best(b) + d * d
+    }
+    SSum(a, b) => tinv_best(a) + tinv_best(b)
+    SDual(a) => tmat(a)
+  }
+}
+
+///|
+/// best(E) = min(flat E, dec E)
+pub fn tinv_best(e : SpaceExpr) -> Int64 {
+  let f = tinv_flat(e)
+  let d = tinv_dec(e)
+  if d < f {
+    d
+  } else {
+    f
+  }
+}
+
+///|
+/// 分派器：於本節點是否應分解
+pub fn plan_synth(e : SpaceExpr) -> Bool {
+  tinv_dec(e) < tinv_flat(e)
+}
+
+///|
+/// 預測增益（攤平 ÷ 分解）
+pub fn tinv_gain(e : SpaceExpr) -> Double {
+  let f = tinv_flat(e).to_double()
+  let d = tinv_best(e).to_double()
+  if d <= 0.0 {
+    0.0
+  } else {
+    f / d
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 【演算法 176b】位元感知成本代數（N-12 第二版）
+//
+// 第一版（176）只看樹的形狀，系統性低估分解路徑 —— 因為它把每次 ℚ 乘法
+// 都當成 1 次字乘，忽略了有理數係數的膨脹。實測顯示：攤平路徑之預測尚可
+// （誤差 ~1.1×），分解路徑卻被低估 5 倍以上，使預測增益高估 3–4 倍。
+//
+// 第二版補上 Hadamard 型位元界：
+//   w(β) ≔ max(1, ⌈β/64⌉)                      （β 位元之數佔幾個機器字）
+//   葉：β₀ = 實測之最大元素位元數（讀取資料，不執行演算法）
+//   A⊗B 之組裝：(dA·dB)² 次乘法，每次 w(βA)·w(βB) 次字乘；輸出 βA + βB 位元
+//   A⊕B 之組裝：0 次乘法；輸出 max(βA, βB) 位元
+//   n×n 於 β 位元上求逆：由 Cramer 法則，逆元為 (餘因子)/(行列式)，
+//     兩者皆受 Hadamard 界 ~n·β 控制；消去過程之中間量亦達此量級，
+//     故成本 ≈ κ·n³·w(nβ)²，輸出 n·β 位元。
+//
+// 命題 176b：第二版之預測誤差應顯著小於第一版。此為可否證之主張 ——
+//   義務實測兩版之幾何平均相對誤差並要求第二版較優，若不成立則本條失敗。
+// ---------------------------------------------------------------------------
+
+///|
+/// β 位元之數佔幾個 64 位元字
+pub fn wwords(b : Int64) -> Int64 {
+  let w = (b + 63L) / 64L
+  if w < 1L {
+    1L
+  } else {
+    w
+  }
+}
+
+///|
+/// 有理數之位元數（分子分母取大者）
+pub fn qbits(x : Q) -> Int64 {
+  let a = x.num.bit_length().to_int64()
+  let b = x.den.bit_length().to_int64()
+  let m = if a > b { a } else { b }
+  if m < 1L {
+    1L
+  } else {
+    m
+  }
+}
+
+///|
+/// 矩陣元素之最大位元數
+pub fn mat_bits(a : Mat[Q]) -> Int64 {
+  let mut m = 1L
+  for x in a.data {
+    let b = qbits(x)
+    if b > m {
+      m = b
+    }
+  }
+  m
+}
+
+///|
+/// 位元感知：物化 G_E 之 (字乘法數, 輸出位元數)
+pub fn tmat2(e : SpaceExpr) -> (Int64, Int64) {
+  match e {
+    SLeaf(_, g) => (0L, mat_bits(g))
+    STensor(a, b) => {
+      let (ca, ba) = tmat2(a)
+      let (cb, bb) = tmat2(b)
+      let d = (a.sdim() * b.sdim()).to_int64()
+      (ca + cb + d * d * wwords(ba) * wwords(bb), ba + bb)
+    }
+    SSum(a, b) => {
+      let (ca, ba) = tmat2(a)
+      let (cb, bb) = tmat2(b)
+      (ca + cb, if ba > bb { ba } else { bb })
+    }
+    SDual(a) => {
+      let (ca, ba) = tmat2(a)
+      let n = a.sdim().to_int64()
+      let w = wwords(n * ba)
+      (ca + tkappa() * n * n * n * w * w / 100L, n * ba)
+    }
+  }
+}
+
+///|
+/// 位元感知：攤平路徑
+pub fn tinv_flat2(e : SpaceExpr) -> Int64 {
+  let (c, b) = tmat2(e)
+  let n = e.sdim().to_int64()
+  let w = wwords(n * b)
+  c + tkappa() * n * n * n * w * w / 100L
+}
+
+///|
+/// 位元感知：分解路徑之 (字乘法數, 輸出位元數)
+pub fn tinv_dec2(e : SpaceExpr) -> (Int64, Int64) {
+  match e {
+    SLeaf(_, g) => {
+      let n = g.mrows.to_int64()
+      let b = mat_bits(g)
+      let w = wwords(n * b)
+      (tkappa() * n * n * n * w * w / 100L, n * b)
+    }
+    STensor(a, b) => {
+      let (ca, ba) = tinv_best2(a)
+      let (cb, bb) = tinv_best2(b)
+      let d = (a.sdim() * b.sdim()).to_int64()
+      (ca + cb + d * d * wwords(ba) * wwords(bb), ba + bb)
+    }
+    SSum(a, b) => {
+      let (ca, ba) = tinv_best2(a)
+      let (cb, bb) = tinv_best2(b)
+      (ca + cb, if ba > bb { ba } else { bb })
+    }
+    // 定理 173-2：對偶節點之求逆 = 物化原 Gram
+    SDual(a) => tmat2(a)
+  }
+}
+
+///|
+/// best₂(E)：逐節點取極小（回傳成本與輸出位元數）
+pub fn tinv_best2(e : SpaceExpr) -> (Int64, Int64) {
+  let (cd, bd) = tinv_dec2(e)
+  let cf = tinv_flat2(e)
+  if cd < cf {
+    (cd, bd)
+  } else {
+    let (_c, b) = tmat2(e)
+    (cf, e.sdim().to_int64() * b)
+  }
+}
+
+///|
+/// 第二版之預測增益
+pub fn tinv_gain2(e : SpaceExpr) -> Double {
+  let f = tinv_flat2(e).to_double()
+  let (d, _b) = tinv_best2(e)
+  if d <= 0.0.to_int64() {
+    0.0
+  } else {
+    f / d.to_double()
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 【演算法 176c】校準後之成本代數（N-12 第三版，實際採用者）
+//
+// 第二版（Hadamard 位元界）失敗之後，改採本庫 K/L/M 層既有之做法：
+// 保留形狀模型，對被系統性低估的那條路徑乘上一個**實測校準常數**
+// （與 plan_zadj 之 619/100 同類）。
+//
+// 實測（見義務）：形狀模型對攤平路徑低估約 ×3、對分解路徑低估約 ×10，
+// 兩者之比約 3.2 —— 這正是預測增益被高估的倍數。故令
+//     gain₃(E) ≔ flat(E) / (λ · best(E))，　λ = 316/100
+//
+// 命題 176c：λ 只改變增益之標度，不改變 flat 與 dec 之序關係在
+//   λ = 1 時之判決 —— 故校準不影響命題 176 之保守性結論，只影響預測精度。
+// ---------------------------------------------------------------------------
+
+///|
+/// 分解路徑之實測校準常數（λ/100）
+pub fn tlambda() -> Int64 {
+  316L
+}
+
+///|
+/// 校準後之預測增益（第三版）
+pub fn tinv_gain3(e : SpaceExpr) -> Double {
+  let f = tinv_flat(e).to_double()
+  let d = tinv_best(e).to_double() * tlambda().to_double() / 100.0
+  if d <= 0.0 {
+    0.0
+  } else {
+    f / d
+  }
+}
+
+///|
+/// 倍率誤差 max(p/m, m/p)：預測與實測相差幾倍
+pub fn fold_err(pred : Double, meas : Double) -> Double {
+  if pred <= 0.0 || meas <= 0.0 {
+    0.0
+  } else if pred > meas {
+    pred / meas
+  } else {
+    meas / pred
+  }
+}

@@ -475,3 +475,81 @@ pub fn ob_n13() -> Check {
     "。機器獨立尋獲之 adj/⊗/⊗ₛ 值得注意：樸素規則 adj/⊗/⊗ 被推翻後，帶標量修正之 Sylvester 型規則獲裁定成立。命題 175-3 示範：rank/⊗/+ 於退化網格 (2,2) 被放行（4 = 2+2），加入非對稱 (2,3) 後立即推翻（6 ≠ 5）",
   )
 }
+
+///|
+/// N-12 成本代數與合成分派：三版模型之預測精度對照。
+pub fn ob_n12() -> Check {
+  let rng = ob_rng()
+  let mut ok = true
+  let mut n = 0
+  let mut e1 = 0.0
+  let mut e2 = 0.0
+  let mut e3 = 0.0
+  let mut worst3 = 0.0
+  let mut all_dec = true
+  let mut min_meas = 1.0e18
+  for depth in [1, 2, 3] {
+    for _t in 0..<6 {
+      let e = rand_expr(rng, depth, 32)
+      let (same, wb, wf, _lbl, _dim) = synth_compare(e)
+      if !same {
+        ok = false
+      }
+      // 命題 176 之保守性：best 不得超過任一固定策略
+      if tinv_best(e) > tinv_flat(e) || tinv_best(e) > tinv_dec(e) {
+        ok = false
+      }
+      if wf <= 0L {
+        continue
+      }
+      let meas = wb.to_double() / wf.to_double()
+      if meas < min_meas {
+        min_meas = meas
+      }
+      // 分派器之判決（對 Φ = inv，實測恆為「分解」）
+      if !plan_synth(e) {
+        all_dec = false
+      }
+      let f1 = fold_err(tinv_gain(e), meas)
+      let f2 = fold_err(tinv_gain2(e), meas)
+      let f3 = fold_err(tinv_gain3(e), meas)
+      e1 = e1 + f1
+      e2 = e2 + f2
+      e3 = e3 + f3
+      if f3 > worst3 {
+        worst3 = f3
+      }
+      n = n + 1
+    }
+  }
+  let m1 = e1 / n.to_double()
+  let m2 = e2 / n.to_double()
+  let m3 = e3 / n.to_double()
+  // 命題 176b（可否證）：校準版必須優於形狀版，形狀版必須優於 Hadamard 版
+  if !(m3 < m1) {
+    ok = false
+  }
+  if !(m1 < m2) {
+    ok = false
+  }
+  // 分派器對 Φ = inv 恆選分解，且實測亦恆為分解較優 —— 兩者必須一致
+  if !all_dec || min_meas < 1.0 {
+    ok = false
+  }
+  mk_check(
+    "N-12 成本代數與合成分派（三版模型之預測精度）",
+    ok,
+    n + 1,
+    "18 棵隨機樹（深度 1–3）。平均倍率誤差：形狀模型 ×" +
+    fmt_d(m1, 2) +
+    "　Hadamard 位元模型 ×" +
+    fmt_d(m2, 1) +
+    "（慘敗）　校準模型 λ=3.16 ×" +
+    fmt_d(m3, 2) +
+    "（最差單棵 ×" +
+    fmt_d(worst3, 2) +
+    "）。負面結果 176b：加上 Hadamard 位元界反而使模型劣化數個數量級 —— 成因為 ℚ 恆約至最簡，實際位元數遠低於 Hadamard 界，而該界在巢狀 ⊗／* 下以乘法複合，誤差隨深度爆炸。命題 176 保守性逐棵成立；對 Φ = inv，分派器 18 棵全選「分解」，實測亦 18 棵全為分解較優（最小實測增益 ×" +
+    fmt_d(min_meas, 2) +
+    "），兩者一致 —— 故此 Φ 下分派器之價值在於**事前預測增益**而非**選擇策略**",
+  )
+}

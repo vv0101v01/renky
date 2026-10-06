@@ -749,6 +749,14 @@ pub fn qpow_cost(c : Cost, x : Q, k : Int) -> Q {
 }
 
 ///|
+/// ℚ 之 Kronecker 和 A ⊞ B = A⊗I_m + I_n⊗B（N-24 引入之第三個組合子）
+pub fn qkron_sum(a : Mat[Q], b : Mat[Q]) -> Mat[Q] {
+  let n = a.mrows
+  let m = b.mrows
+  mkron(a, Mat::ident(m)).plus(mkron(Mat::ident(n), b))
+}
+
+///|
 /// 候選律之裁決紀錄
 pub struct LawCand {
   cphi : String
@@ -773,6 +781,7 @@ pub fn law_search(rng : Rng, sizes : Array[(Int, Int)]) -> Array[LawCand] {
     ("tr̃ans", (a, _c) => Some(a.transpose())),
     ("sq", (a, c) => Some(qmul_cost(c, a, a))),
     ("adj", (a, c) => qadj(c, a)),
+    ("cube", (a, c) => Some(qmul_cost(c, a, qmul_cost(c, a, a)))),
   ]
   // 純量值演算法 Φ（包成 1×1）
   let phis_sca : Array[(String, (Mat[Q], Cost) -> Mat[Q]?)] = [
@@ -784,6 +793,7 @@ pub fn law_search(rng : Rng, sizes : Array[(Int, Int)]) -> Array[LawCand] {
   let combs : Array[(String, (Mat[Q], Mat[Q]) -> Mat[Q])] = [
     ("⊗", (a, b) => mkron(a, b)),
     ("⊕", (a, b) => qblock_diag(a, b)),
+    ("⊞", (a, b) => qkron_sum(a, b)),
   ]
   // 矩陣值合成規則 ⊙（含帶標量修正之 Kronecker）
   let rules_mat : Array[(String, (Mat[Q], Mat[Q], Mat[Q], Mat[Q], Cost) -> Mat[Q]?)] = [
@@ -1246,4 +1256,194 @@ pub fn qpow_fast(c : Cost, x : Q, e : Int) -> Q {
 /// Hom(V,W) 之表達式：W ⊗ V*（定理 182）
 pub fn shom(v : SpaceExpr, w : SpaceExpr) -> SpaceExpr {
   STensor(w, SDual(v))
+}
+
+// ---------------------------------------------------------------------------
+// 【演算法 185】同餘律族（N-08 度量扭曲、N-09 子空間）
+//
+// 【定義】度量扭曲：G ↦ AᵀGA（A 非奇異）即同餘變換，對應基底變換。
+//   子空間：S 為 n×k 含入映射（k ≤ n），誘導度量 G_U = SᵀGS。
+//
+// 【定理 185-1】det(AᵀGA) = det(A)²·det(G)。
+// 【定理 185-2】(AᵀGA)⁻¹ = A⁻¹G⁻¹A⁻ᵀ。
+// 【定理 185-3（Sylvester 慣性律）】A 非奇異時 inertia(AᵀGA) = inertia(G)。
+// 【定理 185-4（子空間）】G_U = SᵀGS 正定 ⟺ S 單射（rank S = k）；
+//   且 rank(SᵀGS) = rank(S) 當 G 正定。
+//
+// 【本族之特殊性 —— 一種新的「律」】
+//   185-1／185-2 是**加速律**：有成本比可量。
+//   185-3 卻是**不變量律**：它回報的不是「快多少」，而是「什麼被保持」。
+//   先前 N 群的 LawVerdict 只有 (holds, 成本比) 兩個欄位，裝不下這種律。
+//   本條因此把 N 群的律分成兩類，並說明為何成本比對不變量律無意義：
+//   慣性指數沒有「分解法」可言 —— 它不是被算得更快，而是根本不用重算。
+// ---------------------------------------------------------------------------
+
+///|
+/// 隨機非奇異上三角 ℚ 矩陣（det = 對角乘積 ≠ 0）
+pub fn rand_invertible(rng : Rng, n : Int) -> Mat[Q] {
+  Mat::build(n, n, (i, j) => if i > j {
+    Q::zero()
+  } else if i == j {
+    Q::of_int(rng.next_below(3) + 1)
+  } else {
+    Q::frac(rng.next_small(4), rng.next_range(1, 3))
+  })
+}
+
+///|
+/// 同餘變換 AᵀGA（計入成本）
+pub fn congruence(c : Cost, g : Mat[Q], a : Mat[Q]) -> Mat[Q] {
+  qmul_cost(c, a.transpose(), qmul_cost(c, g, a))
+}
+
+// ---------------------------------------------------------------------------
+// 【演算法 186】反律庫（N-14）
+//
+// 本庫之負面結果先前散落六處（N-04 ⊕ 不划算、N-08 同餘不划算、N-12 Hadamard
+// 模型慘敗、N-13 之 29 條推翻、N-24 expm⊕ 低增益、N-10 線性冪反而惡化）。
+// 散落的問題是：沒有任何機制保證它們「現在還成立」。
+// 某次重構若讓基準實作退化，⊕ 的增益可能忽然變高，而沒有人會發現。
+//
+// 本條把它們收進單一登錄表，並且**每次執行都重新量測**：
+// 每筆負面結果都附一個必須滿足的界，違反即失敗。
+// 這把「我們誠實回報了壞消息」從一次性宣告變成可持續的回歸測試。
+// ---------------------------------------------------------------------------
+
+///|
+/// 一筆負面結果之登錄
+pub struct NegResult {
+  nsrc : String
+  nclaim : String
+  nmeasured : Double
+  nbound : Double
+  nholds : Bool
+}
+
+///|
+/// 【反律庫】逐筆重新量測，回傳登錄表
+pub fn negative_registry() -> Array[NegResult] {
+  let rng = ob_rng()
+  let out : Array[NegResult] = []
+  let sizes : Array[(Int, Int)] = [(2, 2), (3, 3), (4, 4)]
+  // 1. ⊕ 求逆律成立但不划算（N-04）
+  let vs = law_sum_inv(rng, sizes)
+  out.push({
+    nsrc: "N-04",
+    nclaim: "⊕ 求逆律增益 ≈ 1（不划算）",
+    nmeasured: vs.lgain(),
+    nbound: 2.0,
+    nholds: vs.holds && vs.lgain() < 2.0,
+  })
+  // 2. 同為 ⊗ 之增益必須遠高（對照組，確保上一筆不是基準退化造成的）
+  let vk = law_kron_inv(rng, sizes)
+  out.push({
+    nsrc: "N-04",
+    nclaim: "⊗ 增益 ÷ ⊕ 增益 ≥ 5（對照）",
+    nmeasured: vk.lgain() / vs.lgain(),
+    nbound: 5.0,
+    nholds: vk.lgain() / vs.lgain() >= 5.0,
+  })
+  // 3. transpose 之 ⊗ 律成立但零收益（N-13 之 ×0.00 其實是計費假象，
+  //    誠實計費後應恰為 ×1.00：兩側都只付一次 Kronecker 組裝）
+  let a = rand_gram(rng, 4)
+  let b = rand_gram(rng, 4)
+  let cd = Cost::new()
+  let _ld = qkron_cost(cd, a, b).transpose()
+  let cf = Cost::new()
+  let _lf = qkron_cost(cf, a.transpose(), b.transpose())
+  let tr_ratio = Cost::ratio(cd, cf)
+  out.push({
+    nsrc: "N-13",
+    nclaim: "transpose 之 ⊗ 律誠實計費後恰為 ×1（零收益）",
+    nmeasured: tr_ratio,
+    nbound: 1.05,
+    nholds: tr_ratio < 1.05 && tr_ratio > 0.95,
+  })
+  // 4. Hadamard 位元模型劣於形狀模型（N-12）
+  let mut e1 = 0.0
+  let mut e2 = 0.0
+  let mut cnt = 0
+  for _t in 0..<6 {
+    let e = rand_expr(rng, 2, 24)
+    let (_s, wb, wf, _l, _d) = synth_compare(e)
+    if wf <= 0L {
+      continue
+    }
+    let meas = wb.to_double() / wf.to_double()
+    e1 = e1 + fold_err(tinv_gain(e), meas)
+    e2 = e2 + fold_err(tinv_gain2(e), meas)
+    cnt = cnt + 1
+  }
+  let m1 = e1 / cnt.to_double()
+  let m2 = e2 / cnt.to_double()
+  out.push({
+    nsrc: "N-12",
+    nclaim: "Hadamard 位元模型之誤差大於形狀模型（更精密 ≠ 更準）",
+    nmeasured: m2 / m1,
+    nbound: 1.0,
+    nholds: m2 > m1,
+  })
+  // 5. 搜尋引擎之推翻數必須多於成立數（N-13）
+  let tbl = law_search(rng, [(2, 2), (2, 3)])
+  let mut nh = 0
+  let mut nr = 0
+  for t in tbl {
+    if t.cholds {
+      nh = nh + 1
+    } else {
+      nr = nr + 1
+    }
+  }
+  out.push({
+    nsrc: "N-13",
+    nclaim: "搜尋引擎推翻數 > 成立數（具判別力）",
+    nmeasured: nr.to_double() / nh.to_double(),
+    nbound: 1.0,
+    nholds: nr > nh,
+  })
+  // 6. 同餘分解不划算（N-08）
+  let mut tb = 0L
+  let mut tf = 0L
+  for sz in [3, 4] {
+    let g = rand_gram(rng, sz)
+    let aa = rand_invertible(rng, sz)
+    let c0 = Cost::new()
+    let ga = congruence(c0, g, aa)
+    let ci = Cost::new()
+    let _x = qinv_gauss(ga, ci)
+    let cj = Cost::new()
+    match (qinv_gauss(aa, cj), qinv_gauss(g, cj)) {
+      (Some(ia), Some(ig)) =>
+        ignore(qmul_cost(cj, ia, qmul_cost(cj, ig, ia.transpose())))
+      _ => ()
+    }
+    tb = tb + ci.wmul
+    tf = tf + cj.wmul
+  }
+  let cg = tb.to_double() / tf.to_double()
+  out.push({
+    nsrc: "N-08",
+    nclaim: "同餘分解不划算（增益 ≤ 1.5）",
+    nmeasured: cg,
+    nbound: 1.5,
+    nholds: cg <= 1.5,
+  })
+  // 7. Sylvester–Franke 若用線性冪，增益會被右式拖累（N-10）
+  let g7 = rand_gram(rng, 6)
+  let c7 = Cost::new()
+  let ck = compound(g7, 3, c7)
+  let _d7 = qdet_gauss(ck, c7)
+  let cl = Cost::new()
+  let _r1 = qpow_cost(cl, qdet_gauss(g7, cl), sf_exponent(6, 3))
+  let cb = Cost::new()
+  let _r2 = qpow_fast(cb, qdet_gauss(g7, cb), sf_exponent(6, 3))
+  let pow_ratio = cl.wmul.to_double() / cb.wmul.to_double()
+  out.push({
+    nsrc: "N-10",
+    nclaim: "線性冪之成本高於二進位冪（右式會拖累整條律）",
+    nmeasured: pow_ratio,
+    nbound: 1.0,
+    nholds: pow_ratio > 1.0,
+  })
+  out
 }

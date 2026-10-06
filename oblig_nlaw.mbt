@@ -395,7 +395,7 @@ pub fn ob_n13() -> Check {
   if nr <= nh {
     ok = false
   }
-  if tbl.length() != 42 {
+  if tbl.length() != 72 {
     ok = false
   }
   // 已知為真之候選必須被尋獲
@@ -712,5 +712,326 @@ pub fn ob_n06() -> Check {
     " 高於 V⊗W ×" +
     fmt_d(ten_gain, 1) +
     " —— 成因是 Hom 之對偶節點依定理 173-2 零成本，合成法只需一次求逆而非兩次",
+  )
+}
+
+///|
+/// N-08 度量扭曲（同餘）律族：加速律 + 不變量律兩類並陳。
+pub fn ob_n08() -> Check {
+  let rng = ob_rng()
+  let mut ok = true
+  let mut n = 0
+  let mut tb = 0L
+  let mut tf = 0L
+  let rows : Array[String] = []
+  for sz in [2, 3, 4, 5] {
+    let g = rand_gram(rng, sz)
+    let a = rand_invertible(rng, sz)
+    let c0 = Cost::new()
+    let ga = congruence(c0, g, a)
+    // 定理 185-1：det(AᵀGA) = det(A)²·det(G)
+    let cd = Cost::new()
+    let lhs = qdet_gauss(ga, cd)
+    let cf = Cost::new()
+    let da = qdet_gauss(a, cf)
+    let rhs = cq_mul(cf, cq_mul(cf, da, da), qdet_gauss(g, cf))
+    if !lhs.eq(rhs) {
+      ok = false
+    }
+    // 定理 185-2：(AᵀGA)⁻¹ = A⁻¹G⁻¹A⁻ᵀ
+    let ci = Cost::new()
+    let direct = qinv_gauss(ga, ci)
+    let cj = Cost::new()
+    let fact = match (qinv_gauss(a, cj), qinv_gauss(g, cj)) {
+      (Some(ia), Some(ig)) =>
+        Some(qmul_cost(cj, ia, qmul_cost(cj, ig, ia.transpose())))
+      _ => None
+    }
+    match (direct, fact) {
+      (Some(x), Some(y)) => if !x.equals(y) { ok = false }
+      _ => ok = false
+    }
+    tb = tb + ci.wmul
+    tf = tf + cj.wmul
+    rows.push("n" + sz.to_string() + " ×" + fmt_d(Cost::ratio(ci, cj), 2))
+    n = n + 2
+  }
+  let g = tb.to_double() / tf.to_double()
+  // 命題 185-5（負面結果）：同餘之「分解」不划算 —— A 稠密時兩次矩陣乘
+  //   已抵銷求逆之節省。若忽然划算，表示基準實作退化，本條應失敗以示警。
+  if g > 1.5 {
+    ok = false
+  }
+  // ---- 不變量律：Sylvester 慣性律（ℝ 軌）----
+  let mut inv_ok = 0
+  for sz in [3, 4, 5, 6] {
+    // 造一個不定號對稱矩陣（含正負特徵值）
+    let s0 : RMat = Mat::build(sz, sz, (i, j) => if i == j {
+      (if i % 2 == 0 { 1.0 } else { -1.0 }) * (1.0 + i.to_double())
+    } else {
+      0.3 * ((i + j) % 3).to_double()
+    })
+    let sym : RMat = Mat::build(sz, sz, (i, j) => 0.5 *
+      (s0.at(i, j) + s0.at(j, i)))
+    let a : RMat = Mat::build(sz, sz, (i, j) => if i > j {
+      0.0
+    } else if i == j {
+      1.0 + (i % 2).to_double()
+    } else {
+      0.25 * ((i * 3 + j) % 4).to_double()
+    })
+    let cong = a.transpose().times(sym.times(a))
+    let (l1, q1, _r1) = cjacobi_eigen(sym, 1.0e-12, 2000, Cost::new())
+    let (l2, q2, _r2) = cjacobi_eigen(cong, 1.0e-12, 2000, Cost::new())
+    ignore(q1)
+    ignore(q2)
+    let i1 = inertia(l1)
+    let i2 = inertia(l2)
+    // 定理 185-3：慣性指數 (n₊, n₋, n₀) 完全相同
+    if i1.0 != i2.0 || i1.1 != i2.1 || i1.2 != i2.2 {
+      ok = false
+    } else {
+      inv_ok = inv_ok + 1
+    }
+    n = n + 1
+  }
+  mk_check(
+    "N-08 度量扭曲（同餘）律族 —— 加速律與不變量律兩類並陳",
+    ok,
+    n,
+    "【加速律】定理 185-1 det(AᵀGA) = det(A)²det(G)、185-2 (AᵀGA)⁻¹ = A⁻¹G⁻¹A⁻ᵀ 逐例成立；但成本 " +
+    rows.join("　") +
+    "，總增益僅 ×" +
+    fmt_d(g, 2) +
+    " —— 命題 185-5（負面結果）：A 稠密時分解法要付兩次矩陣乘法，已抵銷求逆之節省。義務反向約束增益不得超過 1.5，若忽然划算表示基準實作退化。\n【不變量律】定理 185-3 Sylvester 慣性律：" +
+    inv_ok.to_string() +
+    " 組不定號矩陣在同餘變換下 (n₊, n₋, n₀) 完全不變。此律**無成本比可言** —— 慣性指數不是被算得更快，而是根本不用重算。先前 N 群之 LawVerdict 只有 (成立?, 成本比) 兩欄，裝不下這種律；本條因此把結構律分為加速律與不變量律兩類",
+  )
+}
+
+///|
+/// N-09 子空間律：G_U = SᵀGS，正定性與秩之刻劃。
+pub fn ob_n09() -> Check {
+  let rng = ob_rng()
+  let mut ok = true
+  let mut n = 0
+  let mut pos = 0
+  let mut neg = 0
+  for dim in [3, 4, 5] {
+    let g = rand_gram(rng, dim)
+    for k in 1..=dim {
+      // (a) S 單射（取前 k 個標準基向量）⇒ G_U 應正定
+      let s : Mat[Q] = Mat::build(dim, k, (i, j) => if i == j {
+        Q::one()
+      } else {
+        Q::zero()
+      })
+      let c = Cost::new()
+      let gu = qmul_cost(c, s.transpose(), qmul_cost(c, g, s))
+      if gu.mrows != k || gu.mcols != k {
+        ok = false
+      }
+      // 定理 185-4 正向：S 單射 ⇒ G_U 正定
+      if !is_positive_definite(gu) {
+        ok = false
+      }
+      if mrank(gu) != k {
+        ok = false
+      }
+      // 誘導度量須為原度量之主子陣（子空間之內積即限制）
+      let sub : Mat[Q] = Mat::build(k, k, (i, j) => g.at(i, j))
+      if !gu.equals(sub) {
+        ok = false
+      }
+      pos = pos + 1
+      n = n + 1
+    }
+    // (b) S 不單射（最後一行重複）⇒ G_U 必不正定，且秩降
+    if dim >= 2 {
+      let s2 : Mat[Q] = Mat::build(dim, dim, (i, j) => if j == dim - 1 {
+        if i == 0 {
+          Q::one()
+        } else {
+          Q::zero()
+        }
+      } else if i == j {
+        Q::one()
+      } else {
+        Q::zero()
+      })
+      let c2 = Cost::new()
+      let gu2 = qmul_cost(c2, s2.transpose(), qmul_cost(c2, g, s2))
+      // 定理 185-4 反向：S 不單射 ⇒ G_U 不正定
+      if is_positive_definite(gu2) {
+        ok = false
+      }
+      if mrank(gu2) >= dim {
+        ok = false
+      }
+      neg = neg + 1
+      n = n + 1
+    }
+  }
+  mk_check(
+    "N-09 子空間律 G_U = SᵀGS（正定性之雙向刻劃）",
+    ok,
+    n,
+    "定理 185-4 之雙向驗證：" +
+    pos.to_string() +
+    " 組單射含入映射（k = 1…dim，dim = 3,4,5）逐例給出正定之 G_U、rank = k，且與原 Gram 之 k 階主子陣逐元素相等（即子空間之內積確為限制而非另行定義）；" +
+    neg.to_string() +
+    " 組刻意不單射之 S（末行重複）逐例給出非正定且降秩之 G_U。兩側皆驗，故為刻劃而非單向蘊含。本條為 N-08 同餘律在非方陣 S 下之推廣：方陣且非奇異時退化為同餘（定理 185-3 慣性守恆），非方陣時慣性不再守恆而改由秩與正定性刻劃",
+  )
+}
+
+///|
+/// N-14 反律庫：每次執行都重新量測全部負面結果。
+pub fn ob_n14() -> Check {
+  let reg = negative_registry()
+  let mut ok = true
+  let mut nfail = 0
+  let parts : Array[String] = []
+  for r in reg {
+    if !r.nholds {
+      ok = false
+      nfail = nfail + 1
+    }
+    parts.push(r.nsrc + " " + r.nclaim + "（實測 " + fmt_d(r.nmeasured, 2) + "）")
+  }
+  // 登錄表不得為空，且必須涵蓋至少 4 個不同來源條目
+  if reg.length() < 7 {
+    ok = false
+  }
+  let srcs : Array[String] = []
+  for r in reg {
+    let mut seen = false
+    for s in srcs {
+      if s == r.nsrc {
+        seen = true
+      }
+    }
+    if !seen {
+      srcs.push(r.nsrc)
+    }
+  }
+  if srcs.length() < 4 {
+    ok = false
+  }
+  mk_check(
+    "N-14 反律庫（負面結果之回歸測試）",
+    ok,
+    reg.length(),
+    "本庫之負面結果先前散落六處，沒有任何機制保證它們「現在還成立」—— 某次重構若讓基準實作退化，⊕ 的增益可能忽然變高而無人察覺。本條把它們收進單一登錄表並**每次執行都重新量測**，每筆附一個必須滿足的界，違反即失敗。現登錄 " +
+    reg.length().to_string() +
+    " 筆、涵蓋 " +
+    srcs.length().to_string() +
+    " 個來源條目，全數仍然成立（失效 " +
+    nfail.to_string() +
+    " 筆）：" +
+    parts.join("；") +
+    "。這把「我們誠實回報了壞消息」從一次性宣告變成可持續的回歸測試",
+  )
+}
+
+///|
+/// N-26 擴編搜尋空間：加入 cube 與 Kronecker 和 ⊞，並指認引擎之盲區。
+pub fn ob_n26() -> Check {
+  let rng = ob_rng()
+  let mut ok = true
+  let tbl = law_search(rng, [(2, 2), (2, 3), (3, 3)])
+  let mut nh = 0
+  let mut nr = 0
+  let mut ks_hold = 0
+  let mut ks_total = 0
+  for t in tbl {
+    if t.cholds {
+      nh = nh + 1
+    } else {
+      nr = nr + 1
+    }
+    if t.ccomb == "⊞" {
+      ks_total = ks_total + 1
+      if t.cholds {
+        ks_hold = ks_hold + 1
+      }
+    }
+  }
+  // 擴編後候選數應為 (5 矩陣 Φ + 3 純量 Φ) × 3 C × 3 ⊙ = 72
+  if tbl.length() != 72 {
+    ok = false
+  }
+  if nr <= nh {
+    ok = false
+  }
+  // cube 之已知真律必須尋獲
+  if law_find(tbl, "cube", "⊗", "⊗") != Some(true) {
+    ok = false
+  }
+  if law_find(tbl, "cube", "⊕", "⊕") != Some(true) {
+    ok = false
+  }
+  if law_find(tbl, "cube", "⊗", "⊕") != Some(false) {
+    ok = false
+  }
+  // ⊞ 之關鍵發現（兩項）：
+  // (1) 24 個候選中恰有 1 條被判成立 —— 即 rank(A⊞B) =? rank A · rank B；
+  // (2) 它是**取樣分布造成的偽陽性**：測試矩陣皆為 Gram（正定），
+  //     而正定時 A⊞B 之譜為 {λᵢ+μⱼ} 全正故必滿秩，等式自動成立；
+  //     一般矩陣則不然。下方以明確反例推翻之。
+  if ks_hold != 1 {
+    ok = false
+  }
+  if ks_total != 24 {
+    ok = false
+  }
+  if law_find(tbl, "rank", "⊞", "·") != Some(true) {
+    ok = false
+  }
+  // 明確反例：A = diag(1,−1)、B = [1] ⇒ A⊞B = diag(2,0)
+  //   rank(A⊞B) = 1，而 rank A · rank B = 2·1 = 2。
+  let ca : Mat[Q] = Mat::build(2, 2, (i, j) => if i != j {
+    Q::zero()
+  } else if i == 0 {
+    Q::one()
+  } else {
+    Q::of_int(-1)
+  })
+  let cb : Mat[Q] = Mat::build(1, 1, (_i, _j) => Q::one())
+  let ks = qkron_sum(ca, cb)
+  let counterexample_kills = mrank(ks) != mrank(ca) * mrank(cb)
+  if !counterexample_kills {
+    ok = false
+  }
+  // 但 N-24 已證 expm(A⊞B) = expm(A)⊗expm(B) 成立 —— 故限制在 Φ 集而非組合子
+  let a = Mat::build(2, 2, (_i, _j) => (rng.next_below(5) - 2).to_double() * 0.1)
+  let b = Mat::build(3, 3, (_i, _j) => (rng.next_below(5) - 2).to_double() * 0.1)
+  let c1 = Cost::new()
+  let lhs = cexpm(kron_sum(a, b), c1)
+  let c2 = Cost::new()
+  let rhs = rkron_cost(c2, cexpm(a, c2), cexpm(b, c2))
+  if mat_dev(lhs, rhs) > 1.0e-10 {
+    ok = false
+  }
+  let wins : Array[String] = []
+  for t in tbl {
+    if t.cholds && t.cphi == "cube" {
+      wins.push("cube/" + t.ccomb + "/" + t.crule + " ×" + fmt_d(t.cgain, 2))
+    }
+  }
+  mk_check(
+    "N-26 擴編搜尋空間（+cube、+Kronecker 和 ⊞）並指認引擎盲區",
+    ok,
+    tbl.length() + 1,
+    "候選數由 42 擴編至 " +
+    tbl.length().to_string() +
+    "（Φ 增 cube、C 增 ⊞）：成立 " +
+    nh.to_string() +
+    "、推翻 " +
+    nr.to_string() +
+    "。新 Φ 之 cube 如期尋獲 " +
+    wins.join("　") +
+    "。【發現一：偽陽性】⊞ 之 " +
+    ks_total.to_string() +
+    " 個候選中恰有 1 條被判成立 —— rank(A⊞B) =? rank A · rank B。它是**取樣分布造成的偽陽性**：測試矩陣皆為 Gram（正定），此時 A⊞B 之譜為 {λᵢ+μⱼ} 全正故必滿秩，等式自動成立。義務內附明確反例推翻之：A = diag(1,−1)、B = [1] ⇒ A⊞B = diag(2,0)，rank = 1 而 rank A · rank B = 2。這是 N-02 定理 170「holds = true 僅為機率性證據」之外的**第二種失真來源** —— 不是運氣不好，而是取樣分布有系統性偏差。【發現二：盲區】⊞ 上其餘 23 條全數推翻，然而 N-24 已證 expm(A⊞B) = expm(A)⊗expm(B) 確實成立（本條另行重驗一次）。故限制不在組合子而在 Φ 集：⊞ 上真正的律屬於矩陣指數，而引擎之 Φ 全是線性／多項式運算。推論：引擎找不到的律有兩種成因 —— Φ 集未涵蓋，或裁決器以成本比為核心而裝不下（N-08 不變量律、N-07 可行性律）。都不是「律不存在」，而是「這具引擎看不見」",
   )
 }

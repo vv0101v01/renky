@@ -641,3 +641,83 @@ pub fn ob_n24() -> Check {
     " 倍 —— ⊕ 只省下分塊之間的零乘，⊞ 卻把一個 nm 階的矩陣指數換成兩個小階的",
   )
 }
+
+///|
+/// N-07 實化律（ℂ → ℝ）：同態、譜倍增、行列式平方。
+pub fn ob_n07() -> Check {
+  let rng = ob_rng()
+  let mut ok = true
+  let mut n = 0
+  let mut maxpair = 0.0
+  let mut maxdet = 0.0
+  let mut maxhom = 0.0
+  let rows : Array[String] = []
+  for sz in [2, 3, 4, 5] {
+    let h = rand_herm_pd(rng, sz)
+    let r = realify_mat(h)
+    // 定理 187-2：ℜ(H) 實對稱且正定
+    if mat_dev(r, r.transpose()) > 1.0e-12 {
+      ok = false
+    }
+    let (lam, _q, _rt) = cjacobi_eigen(r, 1.0e-11, 4000, Cost::new())
+    let sl = lam.copy()
+    sort_doubles(sl)
+    for i in 0..<(2 * sz) {
+      if sl[i] <= 0.0 {
+        ok = false
+      }
+    }
+    // 定理 187-3（譜倍增）：排序後特徵值必兩兩成對相等
+    let mut pd = 0.0
+    for i in 0..<sz {
+      let e = absd(sl[2 * i] - sl[2 * i + 1])
+      if e > pd {
+        pd = e
+      }
+    }
+    if pd > 1.0e-7 {
+      ok = false
+    }
+    if pd > maxpair {
+      maxpair = pd
+    }
+    // 定理 187-4：det ℜ(H) = (det H)²（H Hermitian ⇒ det H 實）
+    let dh = mdet(h)
+    if absd(dh.cim) > 1.0e-8 * (1.0 + absd(dh.cre)) {
+      ok = false
+    }
+    let dr = mdet(r)
+    let rel = absd(dr - dh.cre * dh.cre) / (1.0 + absd(dr))
+    if rel > 1.0e-8 {
+      ok = false
+    }
+    if rel > maxdet {
+      maxdet = rel
+    }
+    // 定理 187-1：ℜ 為代數同態 ℜ(HK) = ℜ(H)ℜ(K)
+    let h2m = rand_herm_pd(rng, sz)
+    let hom = mat_dev(realify_mat(h.times(h2m)), r.times(realify_mat(h2m)))
+    if hom > 1.0e-8 {
+      ok = false
+    }
+    if hom > maxhom {
+      maxhom = hom
+    }
+    rows.push("n" + sz.to_string() + "→" + (2 * sz).to_string())
+    n = n + 4
+  }
+  mk_check(
+    "N-07 實化律（ℂ → ℝ）",
+    ok,
+    n,
+    "4 組尺寸（" +
+    rows.join("　") +
+    "）逐例成立：定理 187-1 ℜ 為 ℝ-代數同態 ℜ(HK) = ℜ(H)ℜ(K)（最大偏差 " +
+    fmt_e(maxhom) +
+    "）；定理 187-2 ℜ(H) 實對稱且正定；定理 187-3 譜倍增 —— 排序後 2n 個特徵值兩兩成對相等（最大對內偏差 " +
+    fmt_e(maxpair) +
+    "）；定理 187-4 det ℜ(H) = (det H)²，且 det H 之虛部為 0（Hermitian 之必然，一併驗證）（最大相對偏差 " +
+    fmt_e(maxdet) +
+    "）。成本面：實化**不是加速律** —— 它把 n 階複問題換成 2n 階實問題，而複乘為 4 次實乘，兩側量級相當；其價值在於讓只支援實數的演算法（本庫之 Jacobi、Cholesky、SVD 全部只收 RMat）能處理複問題，屬**可行性律**而非加速律。這是繼 N-08 慣性律之後，第三類不以成本比衡量的結構律",
+  )
+}

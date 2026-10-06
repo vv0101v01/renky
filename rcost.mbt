@@ -528,3 +528,64 @@ pub fn kron_sum(a : RMat, b : RMat) -> RMat {
   let m = b.mrows
   mkron(a, Mat::ident(m)).plus(mkron(Mat::ident(n), b))
 }
+
+// ---------------------------------------------------------------------------
+// 【演算法 187】實化律（N-07）
+//
+// 【定義】ℂⁿ 視為 ℝ^{2n}：z = x + iy ↦ (x, y)。Hermitian 矩陣 H = P + iQ
+//   （P = Re H 對稱、Q = Im H 反對稱）之實化為
+//       ℜ(H) = [[P, −Q], [Q, P]]   （2n×2n 實對稱矩陣）
+//
+// 【定理 187-1】ℜ 為 ℝ-代數同態：ℜ(HK) = ℜ(H)ℜ(K)、ℜ(H+K) = ℜ(H)+ℜ(K)。
+// 【定理 187-2】H Hermitian ⟺ ℜ(H) 實對稱；H 正定 ⟺ ℜ(H) 正定。
+// 【定理 187-3（譜倍增）】spec_ℝ(ℜ(H)) = spec_ℂ(H)，每個特徵值重數加倍。
+//   證：若 Hz = λz（λ ∈ ℝ，H Hermitian），z = x+iy，則 ℜ(H) 作用於
+//   (x,y) 與 (−y,x) 皆得 λ 倍，兩者實線性獨立，故每個 λ 至少重數 2；
+//   計維數 2n = Σ 2·(重數) 知恰為 2。∎
+// 【定理 187-4】det ℜ(H) = |det H|²；H Hermitian 時 det H ∈ ℝ，故 = (det H)²。
+// ---------------------------------------------------------------------------
+
+///|
+/// 複 Hermitian 矩陣之實化 ℜ(H) = [[P,−Q],[Q,P]]
+pub fn realify_mat(h : CMat) -> RMat {
+  let n = h.mrows
+  Mat::build(2 * n, 2 * n, (i, j) => {
+    let bi = i / n
+    let bj = j / n
+    let z = h.at(i % n, j % n)
+    if bi == 0 && bj == 0 {
+      z.cre
+    } else if bi == 0 && bj == 1 {
+      -z.cim
+    } else if bi == 1 && bj == 0 {
+      z.cim
+    } else {
+      z.cre
+    }
+  })
+}
+
+///|
+/// 隨機 Hermitian 正定複矩陣 H = M*M + nI
+pub fn rand_herm_pd(rng : Rng, n : Int) -> CMat {
+  let m : CMat = Mat::build(n, n, (_i, _j) => Cpx::mk(
+    (rng.next_below(7) - 3).to_double(),
+    (rng.next_below(7) - 3).to_double(),
+  ))
+  Mat::build(n, n, (i, j) => {
+    let mut sr = 0.0
+    let mut si = 0.0
+    for k in 0..<n {
+      // (conj m_ki) * m_kj
+      let u = m.at(k, i)
+      let v = m.at(k, j)
+      sr = sr + u.cre * v.cre + u.cim * v.cim
+      si = si + u.cre * v.cim - u.cim * v.cre
+    }
+    if i == j {
+      Cpx::mk(sr + n.to_double(), 0.0)
+    } else {
+      Cpx::mk(sr, si)
+    }
+  })
+}

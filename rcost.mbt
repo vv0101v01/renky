@@ -264,13 +264,38 @@ pub fn csvd_jacobi(
       s = s + u.at(i, j) * u.at(i, j)
     }
     cflop(c, 2L * m.to_int64())
-    let nrm = sqrt_newton(s)
-    sig[j] = nrm
-    if nrm > 1.0e-300 {
+    sig[j] = sqrt_newton(s)
+    if sig[j] > 1.0e-300 {
       for i in 0..<m {
-        u.put(i, j, u.at(i, j) / nrm)
+        u.put(i, j, u.at(i, j) / sig[j])
       }
       cflop(c, m.to_int64())
+    }
+  }
+  // 依慣例將奇異值遞減排序（同時置換 U、V 之對應行）——
+  // 此步不可省：省略後 U、V 之行序與原版不同，偽逆之累加次序隨之改變，
+  // 浮點結果會在 1e-17 量級上分歧，孿生體即不再忠實。
+  for p in 1..<n {
+    let key = sig[p]
+    let ucol = Array::makei(m, i => u.at(i, p))
+    let vcol = Array::makei(n, i => v.at(i, p))
+    let mut q = p - 1
+    while q >= 0 && sig[q] < key {
+      sig[q + 1] = sig[q]
+      for i in 0..<m {
+        u.put(i, q + 1, u.at(i, q))
+      }
+      for i in 0..<n {
+        v.put(i, q + 1, v.at(i, q))
+      }
+      q = q - 1
+    }
+    sig[q + 1] = key
+    for i in 0..<m {
+      u.put(i, q + 1, ucol[i])
+    }
+    for i in 0..<n {
+      v.put(i, q + 1, vcol[i])
     }
   }
   (u, sig, v)
@@ -393,4 +418,113 @@ pub fn vec_dev(x : Array[Double], y : Array[Double]) -> Double {
     }
   }
   d
+}
+
+// ---------------------------------------------------------------------------
+// 【演算法 183】受計量之 pinv / expm / sqrtm_spd（N-23、N-24 之量測基礎）
+// 同 177／179 之原則：逐行鏡射原版，只加 flop 計數；忠實性由義務驗證。
+// ---------------------------------------------------------------------------
+
+///|
+/// 受計量之 Moore–Penrose 偽逆
+pub fn cpinv(a : RMat, tol : Double, c : Cost) -> RMat {
+  let (u, s, v) = csvd_jacobi(a, 60, c)
+  let n = a.mcols
+  let m = a.mrows
+  let smax = {
+    let mut mx = 0.0
+    for x in s {
+      mx = maxd(mx, x)
+    }
+    mx
+  }
+  let thr = tol * maxd(1.0, smax)
+  let sp : RMat = Mat::zeros(n, m)
+  for k in 0..<n {
+    if s[k] > thr {
+      for i in 0..<n {
+        for j in 0..<m {
+          sp.put(i, j, sp.at(i, j) + v.at(i, k) * u.at(j, k) / s[k])
+        }
+      }
+      cflop(c, 3L * (n * m).to_int64())
+    }
+  }
+  sp
+}
+
+///|
+/// 受計量之矩陣指數（縮放–平方 + 20 階 Taylor）
+pub fn cexpm(a : RMat, c : Cost) -> RMat {
+  let n = a.mrows
+  let mut nrm = 0.0
+  for i in 0..<n {
+    let mut rs = 0.0
+    for j in 0..<n {
+      rs = rs + absd(a.at(i, j))
+    }
+    nrm = maxd(nrm, rs)
+  }
+  cflop(c, (n * n).to_int64())
+  let mut s = 0
+  let mut scale = 1.0
+  while nrm * scale > 0.5 {
+    scale = scale / 2.0
+    s = s + 1
+  }
+  let b = a.scale(scale)
+  let mut term : RMat = Mat::ident(n)
+  let mut acc : RMat = Mat::ident(n)
+  for k in 1..<21 {
+    term = term.times(b).scale(1.0 / k.to_double())
+    acc = acc.plus(term)
+    // 一次 n³ 矩陣乘 + n² 縮放 + n² 加
+    cflop(c, 2L * (n * n * n).to_int64() + 2L * (n * n).to_int64())
+  }
+  for _i in 0..<s {
+    acc = acc.times(acc)
+    cflop(c, 2L * (n * n * n).to_int64())
+  }
+  acc
+}
+
+///|
+/// 受計量之對稱正定方根
+pub fn csqrtm_spd(a : RMat, c : Cost) -> RMat {
+  let n = a.mrows
+  let (lam, q, _r) = cjacobi_eigen(a, 1.0e-12, 3000, c)
+  cflop(c, 2L * (n * n * n).to_int64())
+  Mat::build(n, n, (i, j) => {
+    let mut acc = 0.0
+    for k in 0..<n {
+      acc = acc + q.at(i, k) * sqrt_newton(maxd(0.0, lam[k])) * q.at(j, k)
+    }
+    acc
+  })
+}
+
+///|
+/// 兩矩陣之最大元素偏差
+pub fn mat_dev(x : RMat, y : RMat) -> Double {
+  if x.mrows != y.mrows || x.mcols != y.mcols {
+    return 1.0e30
+  }
+  let mut d = 0.0
+  for i in 0..<x.mrows {
+    for j in 0..<x.mcols {
+      let e = absd(x.at(i, j) - y.at(i, j))
+      if e > d {
+        d = e
+      }
+    }
+  }
+  d
+}
+
+///|
+/// Kronecker 和 A ⊞ B = A⊗I_m + I_n⊗B（N-24 之新組合子）
+pub fn kron_sum(a : RMat, b : RMat) -> RMat {
+  let n = a.mrows
+  let m = b.mrows
+  mkron(a, Mat::ident(m)).plus(mkron(Mat::ident(n), b))
 }

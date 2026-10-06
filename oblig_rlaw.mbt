@@ -248,9 +248,11 @@ pub fn ob_n22() -> Check {
       ok = false
     }
     let c2 = Cost::new()
-    let (_u1, s1, _v1) = csvd_jacobi(a, 40, c2)
-    let (_u2, s2, _v2) = svd_jacobi(a, 40)
-    if spec_dev(s1, s2) != 0.0 {
+    let (u1, s1, v1) = csvd_jacobi(a, 40, c2)
+    let (u2, s2, v2) = svd_jacobi(a, 40)
+    // 不可只比對譜（spec_dev 會排序，看不出行序差異）——
+    // U、V 亦須逐元素相同，否則孿生體對下游（如 pinv）並不忠實。
+    if spec_dev(s1, s2) != 0.0 || mat_dev(u1, u2) != 0.0 || mat_dev(v1, v2) != 0.0 {
       ok = false
     }
     n = n + 2
@@ -427,5 +429,215 @@ pub fn ob_n25() -> Check {
     "（恰為理論值 N/(2k) = 16），FWHT 蝶形再快一截達 ×" +
     fmt_d(g_fwht, 1) +
     "（H₂ 之元為 ±1，連乘法都省去）。結論：FWHT 不是一個獨立演算法，而是定理 181 在 Kronecker 樹上的實例，其 Θ(N log N) 相對 Θ(N²) 之優勢**就是結構律增益本身**。另驗非同構因子 A₂⊗B₃⊗C₂ 之一般情形亦成立",
+  )
+}
+
+///|
+/// N-23 偽逆與投影律：pinv(A⊗B) = pinv(A)⊗pinv(B)、P_{V⊗W} = P_V⊗P_W。
+pub fn ob_n23() -> Check {
+  let rng = ob_rng()
+  let mut ok = true
+  let mut n = 0
+  let mut tb = 0L
+  let mut tf = 0L
+  let mut dev = 0.0
+  let mut pdev = 0.0
+  let rows : Array[String] = []
+  let gains : Array[Double] = []
+  let mut twin_dev = 0.0
+  // 孿生體忠實性（含 U、V 之行序）
+  for sz in [3, 4] {
+    let a = rand_spd(rng, sz)
+    let c = Cost::new()
+    let d = mat_dev(cpinv(a, 1.0e-10, c), pinv(a, 1.0e-10))
+    if d != 0.0 {
+      ok = false
+    }
+    if d > twin_dev {
+      twin_dev = d
+    }
+    n = n + 1
+  }
+  for sz in [(2, 2), (3, 3), (4, 4), (5, 5)] {
+    let (p, q) = sz
+    let a = rand_spd(rng, p)
+    let b = rand_spd(rng, q)
+    let cd = Cost::new()
+    let pd = cpinv(mkron(a, b), 1.0e-10, cd)
+    let cf = Cost::new()
+    let pa = cpinv(a, 1.0e-10, cf)
+    let pb = cpinv(b, 1.0e-10, cf)
+    let k = rkron_cost(cf, pa, pb)
+    let d = mat_dev(pd, k)
+    if d > 1.0e-10 {
+      ok = false
+    }
+    if d > dev {
+      dev = d
+    }
+    // 投影律：P = A·pinv(A)，且 P_{A⊗B} = P_A ⊗ P_B
+    let pja = a.times(pa)
+    let pjb = b.times(pb)
+    let pjk = mkron(a, b).times(pd)
+    let e = mat_dev(pjk, mkron(pja, pjb))
+    if e > 1.0e-9 {
+      ok = false
+    }
+    if e > pdev {
+      pdev = e
+    }
+    tb = tb + cd.flops
+    tf = tf + cf.flops
+    gains.push(flop_ratio(cd, cf))
+    rows.push("dim" + (p * q).to_string() + " ×" + fmt_d(flop_ratio(cd, cf), 1))
+    n = n + 2
+  }
+  let g = tb.to_double() / tf.to_double()
+  if g <= 5.0 {
+    ok = false
+  }
+  // 掃描數是否隨尺寸單調 —— 由實測決定，不預先斷言
+  let mut mono = true
+  let mut prev = 0.0
+  for r in gains {
+    if r < prev {
+      mono = false
+    }
+    prev = r
+  }
+  mk_check(
+    "N-23 偽逆與投影律（⊗）",
+    ok,
+    n,
+    "孿生體 cpinv 與原版 pinv 輸出偏差恰為 " +
+    fmt_d(twin_dev, 1) +
+    "。定理 183-1 pinv(A⊗B) = pinv(A)⊗pinv(B) 逐例成立（最大偏差 " +
+    fmt_e(dev) +
+    "）；定理 183-2 投影子 P_{A⊗B} = P_A ⊗ P_B（最大偏差 " +
+    fmt_e(pdev) +
+    "）。成本：" +
+    rows.join("　") +
+    "，總增益 ×" +
+    fmt_d(g, 1) +
+    "。命題 183-3：本條**不作單調性斷言**（本次執行之增益序列" +
+    (if mono { "恰為遞增，但這是巧合而非保證" } else { "即非單調" }) +
+    "）—— 單邊 Jacobi SVD 之收斂掃描數依輸入而異，非尺寸之單調函數。此為迭代演算法套結構律時之固有現象，與 N-03、N-10 等掃描數固定之直接法不同。把迭代法的增益波動誤報為單調上升，是結構律量測中最易犯的錯，此處明文排除",
+  )
+}
+
+///|
+/// N-24 矩陣函數律：expm 於 ⊕ 與 Kronecker 和 ⊞ 下，sqrtm 於 ⊗ 下。
+pub fn ob_n24() -> Check {
+  let rng = ob_rng()
+  let mut ok = true
+  let mut n = 0
+  let mut dsum = 0.0
+  let mut dks = 0.0
+  let mut dsq = 0.0
+  let mut tb_ks = 0L
+  let mut tf_ks = 0L
+  let mut tb_sq = 0L
+  let mut tf_sq = 0L
+  let mut g_sum = 0.0
+  let rks : Array[String] = []
+  let rsq : Array[String] = []
+  // 孿生體忠實性
+  for sz in [3, 4] {
+    let a = rand_spd(rng, sz)
+    let c = Cost::new()
+    if mat_dev(cexpm(a, c), expm(a)) != 0.0 {
+      ok = false
+    }
+    let c2 = Cost::new()
+    if mat_dev(csqrtm_spd(a, c2), sqrtm_spd(a)) > 1.0e-12 {
+      ok = false
+    }
+    n = n + 2
+  }
+  for sz in [(2, 2), (3, 3), (4, 4), (5, 5)] {
+    let (p, q) = sz
+    let a : RMat = Mat::build(p, p, (_i, _j) => (rng.next_below(5) - 2).to_double() *
+      0.1)
+    let b : RMat = Mat::build(q, q, (_i, _j) => (rng.next_below(5) - 2).to_double() *
+      0.1)
+    // 定理 184-1：expm(A⊕B) = expm(A) ⊕ expm(B)
+    let cd = Cost::new()
+    let ed = cexpm(rblock_diag(a, b), cd)
+    let cf = Cost::new()
+    let ea = cexpm(a, cf)
+    let eb = cexpm(b, cf)
+    let d1 = mat_dev(ed, rblock_diag(ea, eb))
+    if d1 != 0.0 {
+      ok = false
+    }
+    if d1 > dsum {
+      dsum = d1
+    }
+    g_sum = flop_ratio(cd, cf)
+    // 定理 184-2（Lie 積律）：expm(A⊞B) = expm(A) ⊗ expm(B)
+    let cd2 = Cost::new()
+    let ek = cexpm(kron_sum(a, b), cd2)
+    let cf2 = Cost::new()
+    let ea2 = cexpm(a, cf2)
+    let eb2 = cexpm(b, cf2)
+    let d2 = mat_dev(ek, rkron_cost(cf2, ea2, eb2))
+    if d2 > 1.0e-10 {
+      ok = false
+    }
+    if d2 > dks {
+      dks = d2
+    }
+    tb_ks = tb_ks + cd2.flops
+    tf_ks = tf_ks + cf2.flops
+    rks.push("dim" + (p * q).to_string() + " ×" + fmt_d(flop_ratio(cd2, cf2), 1))
+    // 定理 184-3：sqrtm(A⊗B) = sqrtm(A) ⊗ sqrtm(B)
+    let sa0 = rand_spd(rng, p)
+    let sb0 = rand_spd(rng, q)
+    let cd3 = Cost::new()
+    let sd = csqrtm_spd(mkron(sa0, sb0), cd3)
+    let cf3 = Cost::new()
+    let sa = csqrtm_spd(sa0, cf3)
+    let sb = csqrtm_spd(sb0, cf3)
+    let d3 = mat_dev(sd, rkron_cost(cf3, sa, sb))
+    if d3 > 1.0e-9 {
+      ok = false
+    }
+    if d3 > dsq {
+      dsq = d3
+    }
+    tb_sq = tb_sq + cd3.flops
+    tf_sq = tf_sq + cf3.flops
+    rsq.push("dim" + (p * q).to_string() + " ×" + fmt_d(flop_ratio(cd3, cf3), 1))
+    n = n + 3
+  }
+  let gks = tb_ks.to_double() / tf_ks.to_double()
+  let gsq = tb_sq.to_double() / tf_sq.to_double()
+  // ⊞ 之增益須顯著高於 ⊕（後者僅省分塊，前者省整個 nm 階指數）
+  if gks <= g_sum * 2.0 {
+    ok = false
+  }
+  mk_check(
+    "N-24 矩陣函數律（expm 於 ⊕／⊞，sqrtm 於 ⊗）",
+    ok,
+    n,
+    "孿生體 cexpm／csqrtm_spd 與原版輸出相符。定理 184-1 expm(A⊕B) = expm(A)⊕expm(B) 逐例**精確**成立（偏差恰為 " +
+    fmt_d(dsum, 1) +
+    "），但增益僅 ×" +
+    fmt_d(g_sum, 1) +
+    " —— 與 N-04 同一現象。定理 184-2（Lie 積律）expm(A⊞B) = expm(A)⊗expm(B)，其中 A⊞B ≔ A⊗I+I⊗B 為 **Kronecker 和，一個 ⊗ 與 ⊕ 之外的新組合子**（最大偏差 " +
+    fmt_e(dks) +
+    "）：" +
+    rks.join("　") +
+    "，總增益 ×" +
+    fmt_d(gks, 1) +
+    "。定理 184-3 sqrtm(A⊗B) = sqrtm(A)⊗sqrtm(B)（最大偏差 " +
+    fmt_e(dsq) +
+    "）：" +
+    rsq.join("　") +
+    "，總增益 ×" +
+    fmt_d(gsq, 1) +
+    "。⊞ 之增益為 ⊕ 之 " +
+    fmt_d(gks / g_sum, 1) +
+    " 倍 —— ⊕ 只省下分塊之間的零乘，⊞ 卻把一個 nm 階的矩陣指數換成兩個小階的",
   )
 }

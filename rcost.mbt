@@ -167,3 +167,111 @@ pub fn spec_dev(x0 : Array[Double], y0 : Array[Double]) -> Double {
   }
   d
 }
+
+// ---------------------------------------------------------------------------
+// 【演算法 179】受計量之 Cholesky 與單邊 Jacobi SVD（N-22 之量測基礎）
+//
+// 與演算法 177 同一原則：逐行鏡射 realmat.mbt 之原版，只加 flop 計數。
+// 忠實性同由義務以「輸出恰好相等」驗證。
+// ---------------------------------------------------------------------------
+
+///|
+/// 受計量之 Cholesky（realmat.mbt cholesky 之孿生體）
+pub fn ccholesky(a : RMat, c : Cost) -> RMat? {
+  let n = a.mrows
+  let l : RMat = Mat::zeros(n, n)
+  for j in 0..<n {
+    let mut s = a.at(j, j)
+    for k in 0..<j {
+      s = s - l.at(j, k) * l.at(j, k)
+    }
+    cflop(c, 2L * j.to_int64())
+    if s <= 0.0 {
+      return None
+    }
+    let ljj = sqrt_newton(s)
+    l.put(j, j, ljj)
+    for i in (j + 1)..<n {
+      let mut t = a.at(i, j)
+      for k in 0..<j {
+        t = t - l.at(i, k) * l.at(j, k)
+      }
+      l.put(i, j, t / ljj)
+      cflop(c, 2L * j.to_int64() + 1L)
+    }
+  }
+  Some(l)
+}
+
+///|
+/// 受計量之單邊 Jacobi SVD（realmat.mbt svd_jacobi 之孿生體）
+pub fn csvd_jacobi(
+  a0 : RMat,
+  sweeps : Int,
+  c : Cost,
+) -> (RMat, Array[Double], RMat) {
+  let m = a0.mrows
+  let n = a0.mcols
+  let u = a0.clone()
+  let v : RMat = Mat::ident(n)
+  for _s in 0..<sweeps {
+    let mut off = 0.0
+    for i in 0..<n {
+      for j in (i + 1)..<n {
+        let mut alpha = 0.0
+        let mut beta = 0.0
+        let mut gamma = 0.0
+        for k in 0..<m {
+          alpha = alpha + u.at(k, i) * u.at(k, i)
+          beta = beta + u.at(k, j) * u.at(k, j)
+          gamma = gamma + u.at(k, i) * u.at(k, j)
+        }
+        // 三個內積，每個 m 次乘 + m 次加
+        cflop(c, 6L * m.to_int64())
+        off = off + absd(gamma)
+        if absd(gamma) < 1.0e-15 {
+          continue
+        }
+        let zeta = (beta - alpha) / (2.0 * gamma)
+        let t = (if zeta >= 0.0 { 1.0 } else { -1.0 }) /
+          (absd(zeta) + sqrt_newton(1.0 + zeta * zeta))
+        let cc = 1.0 / sqrt_newton(1.0 + t * t)
+        let s = cc * t
+        cflop(c, 8L)
+        for k in 0..<m {
+          let x = u.at(k, i)
+          let y = u.at(k, j)
+          u.put(k, i, cc * x - s * y)
+          u.put(k, j, s * x + cc * y)
+        }
+        for k in 0..<n {
+          let x = v.at(k, i)
+          let y = v.at(k, j)
+          v.put(k, i, cc * x - s * y)
+          v.put(k, j, s * x + cc * y)
+        }
+        cflop(c, 6L * (m + n).to_int64())
+      }
+    }
+    if off < 1.0e-15 {
+      break
+    }
+  }
+  let sig = Array::make(n, 0.0)
+  for j in 0..<n {
+    let mut s = 0.0
+    for i in 0..<m {
+      s = s + u.at(i, j) * u.at(i, j)
+    }
+    cflop(c, 2L * m.to_int64())
+    let nrm = sqrt_newton(s)
+    sig[j] = nrm
+    if nrm > 1.0e-300 {
+      for i in 0..<m {
+        u.put(i, j, u.at(i, j) / nrm)
+      }
+      cflop(c, m.to_int64())
+    }
+  }
+  (u, sig, v)
+}

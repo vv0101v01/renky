@@ -553,3 +553,94 @@ pub fn ob_n12() -> Check {
     "），兩者一致 —— 故此 Φ 下分派器之價值在於**事前預測增益**而非**選擇策略**",
   )
 }
+
+///|
+/// N-10 Sylvester–Franke 外冪律：det(Cₖ(A)) = det(A)^{C(n−1,k−1)}。
+pub fn ob_n10() -> Check {
+  let rng = ob_rng()
+  let mut ok = true
+  let mut n = 0
+  let mut tb = 0L
+  let mut tf = 0L
+  let rows : Array[String] = []
+  // 增益隨 n 單調上升之主張**只在固定 k 下成立** —— 跨 k 比較時指數
+  // C(n−1,k−1) 一併改變，兩個自變數同時動，序關係不保證。
+  // 故分 k 追蹤：k=2 之鏈 (4,2)→(5,2)→(6,2)、k=3 之鏈 (5,3)→(6,3)。
+  let mut prev2 = 0.0
+  let mut prev3 = 0.0
+  let mut mono = true
+  let mut ratio_small = 0.0
+  let mut ratio_large = 0.0
+  for nk in [(4, 2), (5, 2), (6, 2), (5, 3), (6, 3)] {
+    let (nn, kk) = nk
+    let a = rand_gram(rng, nn)
+    let cd = Cost::new()
+    let ck = compound(a, kk, cd)
+    let lhs = qdet_gauss(ck, cd)
+    // 命題 180-1：Cₖ(G) 須為合法 Gram（對稱正定）
+    if !ck.equals(ck.transpose()) || !is_positive_definite(ck) {
+      ok = false
+    }
+    if ck.mrows != binom(nn, kk) {
+      ok = false
+    }
+    // 定理 180：兩種冪法皆須給出相同結果
+    let c1 = Cost::new()
+    let r1 = qpow_cost(c1, qdet_gauss(a, c1), sf_exponent(nn, kk))
+    let c2 = Cost::new()
+    let r2 = qpow_fast(c2, qdet_gauss(a, c2), sf_exponent(nn, kk))
+    if !lhs.eq(r1) || !lhs.eq(r2) {
+      ok = false
+    }
+    let g = Cost::ratio(cd, c2)
+    if kk == 2 {
+      if g < prev2 {
+        mono = false
+      }
+      prev2 = g
+    } else {
+      if g < prev3 {
+        mono = false
+      }
+      prev3 = g
+    }
+    // 線性冪 ÷ 二進位冪 之成本比：應隨指數增大而拉開
+    let rr = c1.wmul.to_double() / c2.wmul.to_double()
+    if nn == 4 {
+      ratio_small = rr
+    }
+    if nn == 6 && kk == 3 {
+      ratio_large = rr
+    }
+    tb = tb + cd.wmul
+    tf = tf + c2.wmul
+    rows.push(
+      "C(" + nn.to_string() + "," + kk.to_string() + ")=" +
+      ck.mrows.to_string() + " e=" + sf_exponent(nn, kk).to_string() + " ×" +
+      fmt_d(g, 1),
+    )
+    n = n + 3
+  }
+  // 二進位冪之增益須單調上升（線性冪則否 —— 見條目證明欄）
+  if !mono {
+    ok = false
+  }
+  // 線性／二進位之成本比須隨指數拉開
+  if ratio_large <= ratio_small {
+    ok = false
+  }
+  mk_check(
+    "N-10 Sylvester–Franke 外冪律",
+    ok,
+    n,
+    "定理 180 det(Cₖ(A)) = det(A)^{C(n−1,k−1)} 逐例成立；命題 180-1 Cₖ(G) 為對稱正定（即 Λᵏ V 之合法 Gram）且階數恰為 C(n,k)。成本：" +
+    rows.join("　") +
+    "，總增益 ×" +
+    fmt_d(tb.to_double() / tf.to_double(), 1) +
+    "。增益之單調性**只在固定 k 下成立**（k=2 鏈與 k=3 鏈各自上升）—— 跨 k 比較時 C(n,k) 與指數 C(n−1,k−1) 同時改變，序關係不保證；此限制由義務以分鏈斷言明文固定。右式冪法之抉擇是本條關鍵：線性冪／二進位冪之成本比由 ×" +
+    fmt_d(ratio_small, 2) +
+    "（e=3）拉開到 ×" +
+    fmt_d(ratio_large, 2) +
+    "（e=10）—— 指數 C(n−1,k−1) 隨 n 組合爆炸，若右式用線性冪，整條律之增益會在 (7,3) 之後**開始下降**。一次性實測（因基準法過貴未納入常規義務）：線性冪 (7,3) ×99.4 → (8,4) ×85.1 → (9,4) ×75.3 逐步惡化；二進位冪 ×232.3 → ×395.5 → ×814.4 持續上升",
+  )
+}

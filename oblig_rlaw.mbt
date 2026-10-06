@@ -220,3 +220,129 @@ pub fn ob_n21() -> Check {
     " flops）。此時結構律給的已不是加速，而是「在給定預算下算得出 vs 算不出」",
   )
 }
+
+///|
+/// N-22 分解律族：Cholesky 與 SVD 在 ⊗ 下之行為。
+pub fn ob_n22() -> Check {
+  let rng = ob_rng()
+  let mut ok = true
+  let mut n = 0
+  // ---- 孿生體忠實性（定理 177 推廣至演算法 179）----
+  for sz in [3, 5, 6] {
+    let a = rand_spd(rng, sz)
+    let c = Cost::new()
+    let mut d = 0.0
+    match (ccholesky(a, c), cholesky(a)) {
+      (Some(x), Some(y)) =>
+        for i in 0..<sz {
+          for j in 0..<sz {
+            let e = absd(x.at(i, j) - y.at(i, j))
+            if e > d {
+              d = e
+            }
+          }
+        }
+      _ => d = 1.0e30
+    }
+    if d != 0.0 {
+      ok = false
+    }
+    let c2 = Cost::new()
+    let (_u1, s1, _v1) = csvd_jacobi(a, 40, c2)
+    let (_u2, s2, _v2) = svd_jacobi(a, 40)
+    if spec_dev(s1, s2) != 0.0 {
+      ok = false
+    }
+    n = n + 2
+  }
+  // ---- 定理 179-1：chol(A⊗B) = chol(A) ⊗ chol(B) ----
+  let mut tbc = 0L
+  let mut tfc = 0L
+  let mut devc = 0.0
+  let rowc : Array[String] = []
+  for sz in [(2, 2), (3, 3), (4, 4), (5, 5), (6, 6)] {
+    let (p, q) = sz
+    let a = rand_spd(rng, p)
+    let b = rand_spd(rng, q)
+    let cd = Cost::new()
+    let ld = ccholesky(mkron(a, b), cd)
+    let cf = Cost::new()
+    let la = ccholesky(a, cf)
+    let lb = ccholesky(b, cf)
+    match (ld, la, lb) {
+      (Some(x), Some(y), Some(z)) => {
+        let k = rkron_cost(cf, y, z)
+        for i in 0..<x.mrows {
+          for j in 0..<x.mcols {
+            let e = absd(x.at(i, j) - k.at(i, j))
+            if e > devc {
+              devc = e
+            }
+          }
+        }
+      }
+      _ => ok = false
+    }
+    tbc = tbc + cd.flops
+    tfc = tfc + cf.flops
+    rowc.push("dim" + (p * q).to_string() + " ×" + fmt_d(flop_ratio(cd, cf), 1))
+    n = n + 1
+  }
+  if devc > 1.0e-10 {
+    ok = false
+  }
+  // ---- 定理 179-2：σ(A⊗B) = {σᵢ·τⱼ} ----
+  let mut tbs = 0L
+  let mut tfs = 0L
+  let mut devs = 0.0
+  let rows : Array[String] = []
+  for sz in [(2, 2), (3, 3), (4, 4), (5, 5), (6, 6)] {
+    let (p, q) = sz
+    let a = rand_spd(rng, p)
+    let b = rand_spd(rng, q)
+    let cd = Cost::new()
+    let (_u, sd, _v) = csvd_jacobi(mkron(a, b), 60, cd)
+    let cf = Cost::new()
+    let (_ua, sa, _va) = csvd_jacobi(a, 60, cf)
+    let (_ub, sb, _vb) = csvd_jacobi(b, 60, cf)
+    let prod = Array::makei(p * q, i => sa[i / q] * sb[i % q])
+    cflop(cf, (p * q).to_int64())
+    let d = spec_dev(sd, prod)
+    if d > devs {
+      devs = d
+    }
+    tbs = tbs + cd.flops
+    tfs = tfs + cf.flops
+    rows.push("dim" + (p * q).to_string() + " ×" + fmt_d(flop_ratio(cd, cf), 1))
+    n = n + 1
+  }
+  if devs > 1.0e-8 {
+    ok = false
+  }
+  let gc = tbc.to_double() / tfc.to_double()
+  let gs = tbs.to_double() / tfs.to_double()
+  // SVD 之增益必須顯著高於 Cholesky（組裝成本佔比不同）
+  if gs <= gc {
+    ok = false
+  }
+  mk_check(
+    "N-22 分解律族（Cholesky 與 SVD 於 ⊗ 下）",
+    ok,
+    n,
+    "孿生體忠實性：ccholesky／csvd_jacobi 與 realmat.mbt 原版輸出偏差恰為 0（3 組尺寸）。定理 179-1 chol(A⊗B) = chol(A)⊗chol(B) 逐例成立（最大偏差 " +
+    fmt_e(devc) +
+    "），" +
+    rowc.join("　") +
+    "，總增益 ×" +
+    fmt_d(gc, 1) +
+    "。定理 179-2 σ(A⊗B) = {σᵢτⱼ} 逐例成立（最大偏差 " +
+    fmt_e(devs) +
+    "），" +
+    rows.join("　") +
+    "，總增益 ×" +
+    fmt_d(gs, 1) +
+    "。兩者增益相差 " +
+    fmt_d(gs / gc, 1) +
+    " 倍，成因為組裝成本佔比：Cholesky 本體僅 Θ(N³/3)，而 Kronecker 組裝為 Θ(N²)，小尺寸時組裝吃掉大半紅利；SVD 本體為 Θ(N³·掃描數) 故組裝可忽略。此即「結構律之增益取決於本體與組裝之比」之具體例證",
+  )
+}

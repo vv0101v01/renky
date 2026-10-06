@@ -1159,3 +1159,70 @@ pub fn fold_err(pred : Double, meas : Double) -> Double {
     meas / pred
   }
 }
+
+// ---------------------------------------------------------------------------
+// 【演算法 180】複合矩陣與 Sylvester–Franke 定理（N-10）
+//
+// 【定義】A 之第 k 複合矩陣 Cₖ(A)：列與行皆以 {1..n} 之 k 元子集依字典序
+//   索引，(I,J) 元為 A 之子式 det(A[I,J])。階數為 C(n,k)。
+//
+// 【命題 180-1】Cₖ(G) 即 Λᵏ V 之 Gram：
+//   ⟨e_I, e_J⟩_{Λᵏ} = det(⟨e_i, e_j⟩)_{i∈I, j∈J}（Gram 行列式公式）。
+//   故外冪空間之度量由複合矩陣給出，Λᵏ 成為 N 群之合法構造子。
+//
+// 【定理 180（Sylvester–Franke）】det(Cₖ(A)) = det(A)^{C(n−1, k−1)}。
+//   證明要點：A ↦ Cₖ(A) 為乘法同態（Cauchy–Binet：Cₖ(AB) = Cₖ(A)Cₖ(B)），
+//   故 det∘Cₖ 為 GL(n) 上之多項式特徵標，必為 det 之冪 det^e；
+//   以 A = diag(t,1,…,1) 代入：Cₖ(A) 之對角元中含 t 者恰為「I ∋ 1」之子集，
+//   共 C(n−1,k−1) 個，故 det Cₖ(A) = t^{C(n−1,k−1)} 而 det(A) = t，得 e = C(n−1,k−1)。∎
+//
+// 【成本】直接法須物化 Cₖ(A)（C(n,k)² 個 k 階子式）再做 C(n,k) 階消去；
+//   分解法只做一次 n 階 det 再取冪。兩者差距隨 C(n,k) 爆炸性拉開。
+// ---------------------------------------------------------------------------
+
+///|
+/// 第 k 複合矩陣 Cₖ(A)，階數 C(n,k)
+pub fn compound(a : Mat[Q], k : Int, c : Cost) -> Mat[Q] {
+  let n = a.mrows
+  let ss = subsets_k(n, k)
+  let m = ss.length()
+  Mat::build(m, m, (i, j) => {
+    let si = ss[i]
+    let sj = ss[j]
+    let sub = Mat::build(k, k, (r, s) => a.at(si[r], sj[s]))
+    qdet_gauss(sub, c)
+  })
+}
+
+///|
+/// Sylvester–Franke 之指數 C(n−1, k−1)
+pub fn sf_exponent(n : Int, k : Int) -> Int {
+  binom(n - 1, k - 1)
+}
+
+///|
+/// 二進位冪（平方–乘），用於 Sylvester–Franke 之右式
+///
+/// 【為何需要】線性冪 qpow_cost 對 x^e 做 e−1 次乘法，而累積量之位元數
+///   隨步數線性成長，故成本 ≈ Σ_{i<e} i·b²/64² = Θ(e²b²)。
+///   平方–乘只做 Θ(log e) 次乘法，成本由最後一次平方主導 ≈ Θ(e²b²/4)。
+///   在 Sylvester–Franke 中指數為 C(n−1,k−1)，隨 n 組合爆炸，
+///   此差異足以反轉整條律的划算與否 —— 見 N-10 之實測。
+pub fn qpow_fast(c : Cost, x : Q, e : Int) -> Q {
+  if e <= 0 {
+    return Q::one()
+  }
+  let mut base = x
+  let mut acc = Q::one()
+  let mut k = e
+  while k > 0 {
+    if k % 2 == 1 {
+      acc = cq_mul(c, acc, base)
+    }
+    k = k / 2
+    if k > 0 {
+      base = cq_mul(c, base, base)
+    }
+  }
+  acc
+}

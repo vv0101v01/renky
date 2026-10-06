@@ -16,10 +16,16 @@ moon check            # 型別檢查（0 error, 0 warning）
 moon test             # 單元測試（含整份目錄之迴歸測試）
 moon run cmd/main     # 逐條執行 168 條義務自證，列印結果表
 moon run cmd/accel    # 加速層實測：成本模型對照表 + 分派器決策網格
+moon run cmd/audit    # 逐條目掛鐘量測（TSV，供評估報告使用）
 moon run cmd/report > docs/評審報告.md   # 產生完整 Markdown 評審報告
 ```
 
-完整報告：[`docs/評審報告.md`](docs/評審報告.md)
+完整報告：[`docs/評審報告.md`](docs/評審報告.md)　|　
+品質稽核：[`docs/演算法評估與汰弱留強建議.md`](docs/演算法評估與汰弱留強建議.md)
+
+> **稽核結論摘要**：168 條平均 70.6/100。查出 2 條掛在加速層卻從未加速的敗筆
+> （L-05 ×0.15、L-08 ×0.6）、16 條重複計數、47 個無人呼叫的 `pub fn`。
+> 獨立演算法實數為 **149 條**（仍為要求的 1.86 倍）。詳見稽核報告。
 
 ## 為何「零依賴」
 
@@ -118,7 +124,7 @@ moon run cmd/report > docs/評審報告.md   # 產生完整 Markdown 評審報�
 | `accel.mbt` · `accelpoly.mbt` | 加速層 Λ2／Λ3：ℤ／ℚ／𝔽[x] 管、C 管憑證、成本模型、分派器 |
 | `oblig_core.mbt` · `oblig_space.mbt` · `oblig_num.mbt` · `oblig_accel.mbt` | 168 條可執行證明義務 |
 | `catalogue.mbt` | 評審準則目錄（定義／算式／定理／證明／義務） |
-| `cmd/main` · `cmd/report` · `cmd/accel` | 執行器、報告產生器、加速層實測 |
+| `cmd/main` · `cmd/report` · `cmd/accel` · `cmd/audit` | 執行器、報告產生器、加速層實測、逐條稽核量測 |
 
 ## 授權
 

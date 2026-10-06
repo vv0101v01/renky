@@ -1,0 +1,6 @@
+import {
+  "axiom/hilbert",
+  "moonbitlang/core/bench",
+}
+
+pkgtype(kind: "executable")

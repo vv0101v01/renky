@@ -1,0 +1,3089 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "axiom/hilbert"
+
+import {
+  "moonbitlang/core/bigint",
+}
+
+// Values
+pub fn absd(Double) -> Double
+
+pub fn acc_apriori_cell(Int, Int) -> (Int64, Int64, Bool)
+
+pub fn acc_cell_l05(Int, Int) -> AccCell
+
+pub fn acc_cell_l05p(Int, Int) -> AccCell
+
+pub fn acc_cell_l05p_def(Int, Int, Int) -> AccCell
+
+pub fn acc_cell_l08(Int, Int) -> AccCell
+
+pub fn acc_cell_l08p(Int, Int) -> AccCell
+
+pub fn acc_grid_small() -> Array[(Int, Int)]
+
+pub fn acc_nu_evidence(Int, Int) -> (Int, Int, Int64, Int64, Double)
+
+pub fn acc_pool() -> Array[Int64]
+
+pub fn acc_scan_counter() -> (Int, Int, Double, Double, Int)
+
+pub fn acc_scan_fixed() -> (Int, Int, Double, Double, Int)
+
+pub fn accel_bench_table() -> Array[AccelStat]
+
+pub let accel_margin_den : Int64
+
+pub let accel_margin_num : Int64
+
+pub fn[A, B, F : Scalar] adjoint_matrix(IPSpace[A, F], IPSpace[B, F], Mat[F]) -> Mat[F]
+
+pub fn[V, F : Scalar] angle_between(IPSpace[V, F], V, V) -> Double
+
+pub fn apply_synth_rule(SynthRule, (Mat[Q], Cost) -> Mat[Q]?, Mat[Q], Mat[Q]) -> (Bool, Int64, Int64)
+
+pub fn approx_eq(Double, Double) -> Bool
+
+pub fn apriori_verdict() -> (Int, Bool, Int, Int, Double, Double)
+
+pub fn apriori_verdict_table() -> Array[(String, Int, Int, Int64, Int64, Bool)]
+
+pub fn arnoldi(Mat[Double], Int) -> (Mat[Double], Mat[Double])
+
+pub fn[F : Scalar] arr_add(Array[F], Array[F]) -> Array[F]
+
+pub fn[F : Scalar] arr_dot(Array[F], Array[F]) -> F
+
+pub fn[F : Scalar] arr_e(Int, Int) -> Array[F]
+
+pub fn[F : Scalar] arr_eq(Array[F], Array[F]) -> Bool
+
+pub fn[F : Scalar] arr_neg(Array[F]) -> Array[F]
+
+pub fn[F : Scalar] arr_scale(F, Array[F]) -> Array[F]
+
+pub fn[F : Scalar] arr_sub(Array[F], Array[F]) -> Array[F]
+
+pub fn[F : Scalar] arr_text(Array[F]) -> String
+
+pub fn[F : Scalar] arr_zeros(Int) -> Array[F]
+
+pub fn assoc_balanced(Int) -> AssocTree
+
+pub fn assoc_dp(Array[Int]) -> (Int64, AssocTree)
+
+pub fn assoc_greedy(Array[Int]) -> AssocTree
+
+pub fn assoc_left(Int) -> AssocTree
+
+pub fn assoc_right(Int) -> AssocTree
+
+pub fn atan2_own(Double, Double) -> Double
+
+pub fn[V] axiom_suite(String, IPSpace[V, Q], Int) -> Check
+
+pub fn[V, F : Scalar] bessel_pair(IPSpace[V, F], Array[V], V) -> (Double, Double)
+
+pub fn big_abs(@bigint.BigInt) -> @bigint.BigInt
+
+pub fn big_bits(@bigint.BigInt) -> Int
+
+pub fn big_gcd(@bigint.BigInt, @bigint.BigInt) -> @bigint.BigInt
+
+pub fn big_isqrt(@bigint.BigInt) -> @bigint.BigInt
+
+pub fn big_lcm(@bigint.BigInt, @bigint.BigInt) -> @bigint.BigInt
+
+pub fn big_sign(@bigint.BigInt) -> Int
+
+pub fn big_sqrt_exact(@bigint.BigInt) -> @bigint.BigInt?
+
+pub fn big_words(@bigint.BigInt) -> Int64
+
+pub fn binom(Int, Int) -> Int
+
+pub fn binom_i(Int, Int) -> Int64
+
+pub fn bitrev_index(Int, Int) -> Int
+
+pub fn c7_blind_pred(Int, Mat[Q], Cost) -> Bool
+
+pub fn c7_braid_witness(Int, Int, Int, Mat[Q], Mat[Q]) -> Bool
+
+pub fn c7_closed(Int, Mat[Q], Mat[Q], Cost) -> Mat[Q]
+
+pub fn c7_commute(Int) -> Array[C7Pair]
+
+pub fn c7_half_blind(Mat[Q]) -> Bool
+
+pub fn c7_hodge_fixed(Mat[Q]) -> Bool
+
+pub fn c7_is_ident(Mat[Q]) -> Bool
+
+pub fn c7_is_scalar(Mat[Q]) -> Bool
+
+pub fn c7_naturality() -> (Int, Int, Int)
+
+pub fn c7_poison(Int, Mat[Q], Mat[Q], Cost) -> Mat[Q]
+
+pub fn c7_scan(Rng) -> C7Report
+
+pub fn c7_shuffle(Int, Int, Int) -> Mat[Q]
+
+pub fn canon_perm(SpaceExpr) -> (SpaceExpr, Array[Int])
+
+pub fn canon_scan(Rng) -> (Int, Int, Int, Int)
+
+pub fn canon_sound(SpaceExpr) -> Bool
+
+pub fn canon_stable(SpaceExpr) -> Bool
+
+pub fn canonicalize(SpaceExpr) -> SpaceExpr
+
+pub fn catalogue() -> Array[Algo]
+
+pub fn category_counts() -> Array[(String, Int)]
+
+pub fn[V, F : Scalar] cauchy_schwarz_slack(IPSpace[V, F], V, V) -> F
+
+pub fn[F : Scalar] cayley_transform(Mat[F]) -> Mat[F]?
+
+pub fn ccholesky(Mat[Double], Cost) -> Mat[Double]?
+
+pub fn cdet_spd(Mat[Double], Cost) -> Double
+
+pub fn cen_control_spec() -> CenSpec
+
+pub fn cen_demo_spec() -> CenSpec
+
+pub fn certify_ldlt_pub(Mat[Q], Mat[Q], Array[Q], Cost) -> Bool
+
+pub fn cexpm(Mat[Double], Cost) -> Mat[Double]
+
+pub fn cf_bidual(Mat[Q]) -> Mat[Q]
+
+pub fn cf_codim1(Mat[Q], Cost) -> Mat[Q]
+
+pub fn cf_codim1_opt(Mat[Q], Cost) -> Mat[Q]?
+
+pub fn cf_double(Mat[Q]) -> Mat[Q]
+
+pub fn cf_half(Mat[Q]) -> Mat[Q]
+
+pub fn cf_hom(Mat[Q], Mat[Q], Cost) -> Mat[Q]
+
+pub fn cf_twist_t(Mat[Q]) -> Mat[Q]
+
+pub fn cflop(Cost, Int64) -> Unit
+
+pub fn cfw_bidual(Mat[Q], Cost) -> Mat[Q]
+
+pub fn cfw_codim1(Mat[Q], Cost) -> Mat[Q]
+
+pub fn cfw_double(Mat[Q]) -> Mat[Q]
+
+pub fn cfw_half(Mat[Q]) -> Mat[Q]
+
+pub fn cfw_hom(Mat[Q], Mat[Q]) -> Mat[Q]
+
+pub fn cfw_twist_t(Mat[Q]) -> Mat[Q]
+
+pub fn cfwht(Array[Double], Cost) -> Array[Double]
+
+pub fn chain_build(String, AssocTree, Array[Mat[Q]], Cost) -> Mat[Q]
+
+pub fn[F : Scalar] char_poly(Mat[F]) -> Array[F]
+
+pub fn charpoly_bound(Array[Array[@bigint.BigInt]]) -> @bigint.BigInt
+
+pub fn[F : Scalar] chebyshev_rec(Int) -> Array[Poly[F]]
+
+pub fn check_all(String, Array[Check]) -> Check
+
+pub fn[V, F : Scalar] check_basis_iso(VSpace[V, F], Rng, Int) -> Array[Check]
+
+pub fn[V, F : Scalar] check_inner_axioms(IPSpace[V, F], Rng, Int) -> Array[Check]
+
+pub fn check_invariant(String, String, (Mat[Q], Cost) -> String, (Rng, Int, Mat[Q]) -> Mat[Q], Rng, Array[Int]) -> LawClaim
+
+pub fn check_law(String, (Mat[Q], Mat[Q]) -> Mat[Q], (Mat[Q], Cost) -> Mat[Q]?, (Mat[Q], Mat[Q], Cost) -> Mat[Q]?, Array[(Int, Int)], Rng) -> LawVerdict
+
+pub fn check_law1(String, (Mat[Q]) -> Mat[Q], (Mat[Q], Cost) -> Mat[Q]?, (Mat[Q], Cost) -> Mat[Q]?, Array[Int], Rng) -> LawVerdict
+
+pub fn check_law_dist(String, (Mat[Q], Mat[Q]) -> Mat[Q], (Mat[Q], Cost) -> Mat[Q]?, (Mat[Q], Mat[Q], Cost) -> Mat[Q]?, Array[(Int, Int)], Rng, (Rng, Int) -> Mat[Q]) -> LawVerdict
+
+pub fn check_law_k(String, String, String, Array[Mat[Q]], AssocTree) -> KVerdict?
+
+pub fn check_law_samples(String, (Mat[Q], Mat[Q]) -> Mat[Q], (Mat[Q], Cost) -> Mat[Q]?, (Mat[Q], Mat[Q], Cost) -> Mat[Q]?, Array[(Int, Int, (Rng, Int) -> Mat[Q])], Rng) -> LawVerdict
+
+pub fn check_law_samples_vac(String, (Mat[Q], Mat[Q]) -> Mat[Q], (Mat[Q], Cost) -> Mat[Q]?, (Mat[Q], Mat[Q], Cost) -> Mat[Q]?, Array[(Int, Int, (Rng, Int) -> Mat[Q])], Rng) -> (LawVerdict, Int)
+
+pub fn[V, F : Scalar] check_vector_space_axioms(VSpace[V, F], Rng, Int) -> Array[Check]
+
+pub fn cholesky(Mat[Double]) -> Mat[Double]?
+
+pub fn circulant(Array[Double]) -> Mat[Double]
+
+pub fn cjacobi_eigen(Mat[Double], Double, Int, Cost) -> (Array[Double], Mat[Double], Int)
+
+pub fn cmatvec(Cost, Mat[Double], Array[Double]) -> Array[Double]
+
+pub fn cmp_by_name(String) -> (() -> (Int, Int, Int64, Int64, Int, Int))?
+
+pub fn cmp_control_spec() -> CmpSpec
+
+pub fn cmp_demo_spec() -> CmpSpec
+
+pub fn cmp_registry() -> Array[(String, () -> (Int, Int, Int64, Int64, Int, Int))]
+
+pub fn[F : Scalar] column_space(Mat[F]) -> IPSpace[Array[F], F]
+
+pub fn comb14_prefix_ok() -> Bool
+
+pub fn comb14_registry() -> Array[CombRec]
+
+pub fn comb14_stats() -> (Int, Int, Int, Int, Int, Int, String)
+
+pub fn comb7_digest() -> String
+
+pub fn comb7_dim_stats() -> (Int, Int, Int)
+
+pub fn comb7_dim_table() -> Array[(String, Int)]
+
+pub fn comb7_dimok(SpaceRec, CombRec) -> Bool
+
+pub fn comb7_gram(SpaceRec, CombRec) -> Mat[Q]
+
+pub fn comb7_key(SpaceRec, CombRec) -> String
+
+pub fn comb7_moved() -> Array[(String, Int)]
+
+pub fn comb7_new() -> Array[CombRec]
+
+pub fn comb7_registry() -> Array[CombRec]
+
+pub fn comb7_space(SpaceRec, CombRec) -> IPSpace[Array[Q], Q]
+
+pub fn comb7_spd(SpaceRec, CombRec) -> Bool
+
+pub fn comb_by_name(String) -> ((Mat[Q], Mat[Q]) -> Mat[Q])?
+
+pub fn comb_embed(Int, Int) -> Mat[Q]
+
+pub fn comb_half_sel(Int) -> Mat[Q]
+
+pub fn comb_partner() -> SpaceExpr
+
+pub fn comb_registry() -> Array[(String, (Mat[Q], Mat[Q]) -> Mat[Q])]
+
+pub fn comb_src(String, String, String) -> String?
+
+pub fn comb_sym_sel(Int) -> Mat[Q]
+
+pub fn comb_unitri(Int) -> Mat[Q]
+
+pub fn comp_check(String, String, String, String, Array[(Int, Int, (Rng, Int) -> Mat[Q])], Rng) -> (LawVerdict, Int)?
+
+pub fn comp_check_with((String) -> ((Mat[Q], Cost) -> Mat[Q]?)?, String, String, String, String, Array[(Int, Int, (Rng, Int) -> Mat[Q])], Rng) -> (LawVerdict, Int)?
+
+pub fn comp_derived(Array[(String, String, String, String, String)], String, String, String, String) -> String?
+
+pub fn comp_find(Array[CompLaw], String, String, String, String) -> CompLaw?
+
+pub fn comp_is_constant((String) -> ((Mat[Q], Cost) -> Mat[Q]?)?, String, String, Rng) -> Bool
+
+pub fn comp_key(String, String, String, String) -> String
+
+pub fn comp_miss_count() -> Int
+
+pub fn comp_rng_of(String, String, String, String) -> Rng
+
+pub fn comp_seed_base() -> UInt64
+
+pub fn complement_of(Int, Array[Int]) -> Array[Int]
+
+pub fn completion_real_dev() -> (Int, Double)
+
+pub fn[V, F : Scalar] complex_structure_matrix(IPSpace[V, Cpx[F]]) -> Mat[F]
+
+pub fn compose_confusion(Array[CompLaw]) -> (Int, Int, Int, Int)
+
+pub fn compose_derive(Array[LawCand]) -> Array[(String, String, String, String, String)]
+
+pub fn compose_digest(Array[CompLaw]) -> String
+
+pub fn compose_phi_count(Array[CompLaw], Bool) -> Int
+
+pub fn compose_scan(Array[LawCand], Array[(Int, Int, (Rng, Int) -> Mat[Q])]) -> Array[CompLaw]
+
+pub fn compose_scan_derived(Array[LawCand], Array[(Int, Int, (Rng, Int) -> Mat[Q])]) -> Array[CompLaw]
+
+pub fn compose_scan_sel(Array[LawCand], Array[(Int, Int, (Rng, Int) -> Mat[Q])], Bool) -> Array[CompLaw]
+
+pub fn compose_scan_std(Rng) -> Array[CompLaw]
+
+pub fn compose_table(Array[CompLaw]) -> String
+
+pub fn compose_top(Array[CompLaw], Int) -> Array[CompLaw]
+
+pub fn compose_vacuous_count(Array[CompLaw]) -> Int
+
+pub fn compound(Mat[Q], Int, Cost) -> Mat[Q]
+
+pub fn cond2(Mat[Double]) -> Double
+
+pub fn congruence(Cost, Mat[Q], Mat[Q]) -> Mat[Q]
+
+pub fn conjugate_gradient(Mat[Double], Array[Double], Int) -> Array[Double]
+
+pub fn cont_miss_count() -> Int
+
+pub fn content_residual_bot(Array[Verdict47]) -> Int
+
+pub fn content_scan(Array[LawCand]) -> Array[Verdict47]
+
+pub fn content_scan_sel(Array[LawCand], Bool) -> Array[Verdict47]
+
+pub fn content_scan_std(Rng) -> Array[Verdict47]
+
+pub fn content_stats(Array[Verdict47]) -> (Int, Int, Int, Int, Int)
+
+pub fn content_suspects() -> Array[(String, String, String, String)]
+
+pub fn content_table(Array[Verdict47]) -> String
+
+pub fn[F : Scalar] coord_ipspace(String, Int, Mat[F]?) -> IPSpace[Array[F], F]
+
+pub fn[F : Scalar] coord_vspace(String, Int) -> VSpace[Array[F], F]
+
+pub fn cos_taylor(Double) -> Double
+
+pub fn[V, F : Scalar] cosine_similarity(IPSpace[V, F], V, V) -> Double
+
+pub fn cost_by_track(Cost, Track) -> Int64
+
+pub fn cpinv(Mat[Double], Double, Cost) -> Mat[Double]
+
+pub fn cq_add(Cost, Q, Q) -> Q
+
+pub fn cq_div(Cost, Q, Q) -> Q?
+
+pub fn cq_make(Cost, @bigint.BigInt, @bigint.BigInt) -> Q
+
+pub fn cq_mul(Cost, Q, Q) -> Q
+
+pub fn cq_sub(Cost, Q, Q) -> Q
+
+pub fn[F : Scalar] cramer(Mat[F], Array[F]) -> Array[F]?
+
+pub fn[F : Scalar] cross3(Array[F], Array[F]) -> Array[F]
+
+pub fn crt_breakeven_dim() -> Int
+
+pub fn csqrtm_spd(Mat[Double], Cost) -> Mat[Double]
+
+pub fn csvd_jacobi(Mat[Double], Int, Cost) -> (Mat[Double], Array[Double], Mat[Double])
+
+pub fn cz_add(Cost, @bigint.BigInt, @bigint.BigInt) -> @bigint.BigInt
+
+pub fn cz_div(Cost, @bigint.BigInt, @bigint.BigInt) -> @bigint.BigInt
+
+pub fn cz_gcd(Cost, @bigint.BigInt, @bigint.BigInt) -> @bigint.BigInt
+
+pub fn cz_mod(Cost, @bigint.BigInt, @bigint.BigInt) -> @bigint.BigInt
+
+pub fn cz_mul(Cost, @bigint.BigInt, @bigint.BigInt) -> @bigint.BigInt
+
+pub fn cz_sub(Cost, @bigint.BigInt, @bigint.BigInt) -> @bigint.BigInt
+
+pub fn d_registry() -> Array[DAlgo]
+
+pub fn dc_broken(Int) -> IPSpace[Array[Q], Q]
+
+pub fn dc_count(Array[Bool]) -> Int
+
+pub fn dc_cplx(IPSpace[Array[Q], Q]) -> IPSpace[Array[Cpx[Q]], Cpx[Q]]
+
+pub fn dc_default_judge(IPSpace[Array[Q], Q], Rng) -> Bool
+
+pub fn dc_fcoef(IPSpace[Array[Q], Q], Array[Array[Q]], Array[Q]) -> Array[Q]
+
+pub fn dc_ip(IPSpace[Array[Q], Q], Array[Q], Array[Q]) -> Q
+
+pub fn dc_is_zero(Array[Q]) -> Bool
+
+pub fn dc_onb_k(IPSpace[Array[Q], Q]) -> Int
+
+pub fn dc_ortho_set(IPSpace[Array[Q], Q]) -> Array[Array[Q]]
+
+pub fn dc_vec(IPSpace[Array[Q], Q], Rng) -> Array[Q]
+
+pub fn dc_vecs(IPSpace[Array[Q], Q], Rng, Int) -> Array[Array[Q]]
+
+pub fn dcell_key(String, String, String) -> String
+
+pub fn dcell_rng(String) -> Rng
+
+pub fn dcensus_axiom_profile() -> Array[(String, Bool, Bool, Bool, Bool)]
+
+pub fn dcensus_axiom_profile_n(Int) -> Array[(String, Bool, Bool, Bool, Bool)]
+
+pub fn dcensus_axiom_stats() -> (Int, Int, Int, Int, Int, Int)
+
+pub fn dcensus_axiom_stats_n(Int) -> (Int, Int, Int, Int, Int, Int)
+
+pub fn dcensus_by_algo(Int) -> Array[(String, Int, Int)]
+
+pub fn dcensus_by_comb(Int) -> Array[(String, Int, Int)]
+
+pub fn dcensus_by_family(Int) -> Array[(String, Int, Int)]
+
+pub fn dcensus_core(Int, Int, Array[String]) -> DCensus
+
+pub fn dcensus_report() -> (DCensus, Array[(String, Int, Int)], Array[(String, Int, Int)], Array[(String, Int, Int)])
+
+pub fn dcensus_scan(Int) -> DCensus
+
+pub fn dcensus_stratum(Int, Int) -> DCensus
+
+pub fn dcensus_subset(Array[String], Int) -> DCensus
+
+pub fn dense_solve_mat(SpaceExpr, Mat[Q], Cost) -> Mat[Q]?
+
+pub fn dense_sym_sq_gram_cost(Mat[Q], Mat[Q], Mat[Q], Cost) -> Mat[Q]
+
+pub fn[F : Scalar] deriv_matrix(Int) -> Mat[F]
+
+pub fn dft_matrix(Int) -> Mat[Cpx[Double]]
+
+pub fn[F : Scalar] diag_matrix_space(Int) -> IPSpace[Mat[F], F]
+
+pub fn[A, B, F : Scalar] direct_sum(IPSpace[A, F], IPSpace[B, F]) -> IPSpace[(A, B), F]
+
+pub fn[V, F : Scalar] distance_to_subspace(IPSpace[V, F], Array[V], V) -> Double
+
+pub fn[V, F] double_dual_embed(IPSpace[V, F], V) -> Array[F]
+
+pub fn[V, F : Scalar] dual_eval(IPSpace[V, F], Array[F], V) -> F
+
+pub fn[V, F : Scalar] dual_space(IPSpace[V, F]) -> IPSpace[Array[F], F]
+
+pub fn ek_by_shape(Rng) -> Array[(String, Int, Int64, Int64)]
+
+pub fn ek_control(Rng) -> (Int, Int)
+
+pub fn ek_corpus(Rng) -> Array[SpaceExpr]
+
+pub fn ek_digest(Rng) -> String
+
+pub fn ek_scan(Rng) -> (Int, Int, Int64, Int64, Int, Int)
+
+pub fn ensure_primes(Array[Int64], Int) -> Array[Int64]
+
+pub let eps_abs : Double
+
+pub let eps_num : Double
+
+pub let eps_rel : Double
+
+pub fn[F : Scalar] euclidean_space(Int) -> IPSpace[Array[F], F]
+
+pub fn exp_scalar(Double) -> Double
+
+pub fn expm(Mat[Double]) -> Mat[Double]
+
+pub fn ext_cauchy_binet(Rng) -> (Int, Int)
+
+pub fn[F : Scalar] exterior_algebra_space(Int) -> IPSpace[Array[F], F]
+
+pub fn[F : Scalar] exterior_power_space(Int, Int) -> IPSpace[Array[F], F]
+
+pub fn f_distrib_sigma(Int, Int, Int) -> (Int) -> Int
+
+pub fn f_family_reps() -> Array[SpaceRec]
+
+pub fn f_kron_at(Mat[Q], Mat[Q], Int, Int) -> Q
+
+pub fn f_law_scan(Int) -> FLaw
+
+pub fn f_perm_congruent(Mat[Q], Mat[Q], (Int) -> Int) -> Bool
+
+pub fn f_precompute() -> Array[FPre]
+
+pub fn f_shuffle_sigma(Int, Int) -> (Int) -> Int
+
+pub fn f_sum_scan(Rng, Int) -> FReport
+
+pub fn f_swap_sigma(Int, Int) -> (Int) -> Int
+
+pub fn f_tensor_fastpath_check() -> (Int, Int, Int, Int)
+
+pub fn f_tensor_scan(Rng, Int, Int) -> FReport
+
+pub fn fact_i(Int) -> Int64
+
+pub fn fft(Array[Cpx[Double]]) -> Array[Cpx[Double]]
+
+pub fn fit_affine(Array[(Int, Int, Int)]) -> (Int, Int, Int)?
+
+pub fn fit_affine_n(Array[(Int, Int)]) -> (Int, Int)?
+
+pub fn flop_ratio(Cost, Cost) -> Double
+
+pub fn fmt_d(Double, Int) -> String
+
+pub fn fmt_e(Double) -> String
+
+pub fn fold_err(Double, Double) -> Double
+
+pub fn fold_krule(String, (Mat[Q], Mat[Q], Int, Int, Q, Q, Cost) -> Mat[Q]?, Bool, AssocTree, Array[Mat[Q]?], Array[Mat[Q]], Cost) -> (Mat[Q]?, Int, Q)
+
+pub fn forget_destroys() -> (Int, Int)
+
+pub fn[V, F] fourier_coeffs(IPSpace[V, F], Array[V], V) -> Array[F]
+
+pub fn[V, F] fourier_synthesis(IPSpace[V, F], Array[V], Array[F]) -> V
+
+pub fn fourpath_compound(Rng, Int, Int, Int) -> FourPath
+
+pub fn fourpath_det(Rng, Int, Int, Int) -> FourPath
+
+pub fn fourpath_inv(Rng, Int, Int, Int) -> FourPath
+
+pub fn fp_batch_inv(Array[Int64], FpCtx) -> Array[Int64]?
+
+pub fn fp_charpoly(FpMat, FpCtx) -> Array[Int64]
+
+pub fn fp_det(FpMat, FpCtx) -> Int64
+
+pub fn fp_det_fast(FpMat, FpCtx) -> Int64
+
+pub fn fp_hessenberg(FpMat, FpCtx) -> FpMat
+
+pub fn fp_ident(Int) -> FpMat
+
+pub fn fp_inv(FpMat, FpCtx) -> FpMat?
+
+pub fn fp_ldlt(FpMat, FpCtx) -> (FpMat, Array[Int64])?
+
+pub fn fp_matmul(FpMat, FpMat, FpCtx) -> FpMat
+
+pub fn fp_matvec(FpMat, Array[Int64], FpCtx) -> Array[Int64]
+
+pub fn fp_ntt(Array[Int64], Int, Bool, Int64, FpCtx) -> Unit
+
+pub fn fp_of_big(Array[Array[@bigint.BigInt]], FpCtx) -> FpMat
+
+pub fn fp_of_q(Mat[Q], FpCtx) -> FpMat?
+
+pub fn fp_of_qvec(Array[Q], FpCtx) -> Array[Int64]?
+
+pub fn fp_rank(FpMat, FpCtx) -> Int
+
+pub fn fp_rref(FpMat, FpCtx) -> FpRref
+
+pub fn fp_solve(FpMat, Array[Int64], FpCtx) -> Array[Int64]?
+
+pub fn fpp_add(Array[Int64], Array[Int64], FpCtx) -> Array[Int64]
+
+pub fn fpp_deg(Array[Int64]) -> Int
+
+pub fn fpp_divmod(Array[Int64], Array[Int64], FpCtx) -> (Array[Int64], Array[Int64])?
+
+pub fn fpp_eval(Array[Int64], Int64, FpCtx) -> Int64
+
+pub fn fpp_from_roots(Array[Int64], FpCtx) -> Array[Int64]
+
+pub fn fpp_gcd(Array[Int64], Array[Int64], FpCtx) -> Array[Int64]
+
+pub fn fpp_interp(Array[Int64], Array[Int64], FpCtx) -> Array[Int64]?
+
+pub fn fpp_mul(Array[Int64], Array[Int64], FpCtx) -> Array[Int64]
+
+pub fn fpp_mul_auto(Array[Int64], Array[Int64], Int64, FpCtx) -> Array[Int64]
+
+pub fn fpp_mul_evalinterp(Array[Int64], Array[Int64], FpCtx) -> Array[Int64]?
+
+pub fn fpp_mul_ntt(Array[Int64], Array[Int64], Int64, FpCtx) -> Array[Int64]?
+
+pub fn fpp_norm(Array[Int64]) -> Array[Int64]
+
+pub fn fpp_scale(Array[Int64], Int64, FpCtx) -> Array[Int64]
+
+pub fn fpp_sub(Array[Int64], Array[Int64], FpCtx) -> Array[Int64]
+
+pub fn[F : Scalar] function_space(Array[String], Array[F]) -> IPSpace[Array[F], F]
+
+pub fn[F : Scalar] function_space_unit(Array[String]) -> IPSpace[Array[F], F]
+
+pub fn fwht(Array[Double]) -> Array[Double]
+
+pub fn gain_by_track(Cost, Cost, Track) -> Double
+
+pub fn gauss_seidel(Mat[Double], Array[Double], Int) -> Array[Double]
+
+pub fn gen_cat_row(OblSpec) -> String?
+
+pub fn gen_cat_row_r(OblSpec) -> String?
+
+pub fn gen_census_row(CenSpec) -> String?
+
+pub fn gen_census_src(CenSpec) -> String?
+
+pub fn gen_compare_row(CmpSpec) -> String?
+
+pub fn gen_compare_src(CmpSpec) -> String?
+
+pub fn gen_oblig_src(OblSpec) -> String?
+
+pub fn gen_oblig_src_r(OblSpec) -> String?
+
+pub fn[F : Scalar] generalized_cross(Int, Array[Array[F]]) -> Array[F]
+
+pub fn gram_apply_check(Rng) -> (Int, Int)
+
+pub fn[F : Scalar] gram_change_of_basis(Mat[F], Mat[F]) -> Mat[F]
+
+pub fn[V, F : Scalar] gram_det(IPSpace[V, F], Array[V]) -> F
+
+pub fn[V, F] gram_of(IPSpace[V, F], Array[V]) -> Mat[F]
+
+pub fn[V, F] gram_of_space(IPSpace[V, F]) -> Mat[F]
+
+pub fn[V, F : Scalar] gram_schmidt(IPSpace[V, F], Array[V]) -> GSOut[V, F]
+
+pub fn grlex_cmp(Array[Int], Array[Int]) -> Int
+
+pub fn h2() -> Mat[Double]
+
+pub fn haar_matrix(Int) -> Mat[Double]
+
+pub fn hadamard_bound(Array[Array[@bigint.BigInt]]) -> @bigint.BigInt
+
+pub fn hadamard_matrix(Int) -> Mat[Double]
+
+pub fn[F : Scalar] herm_matrix_space(Int) -> IPSpace[Mat[Cpx[F]], F]
+
+pub fn hessenberg(Mat[Double]) -> (Mat[Double], Mat[Double])
+
+pub fn[F : Scalar] hodge_star(Int, Int, Array[F]) -> Array[F]
+
+pub fn[A, B, F : Scalar] hom_space(IPSpace[A, F], IPSpace[B, F]) -> IPSpace[Array[F], F]
+
+pub fn[V, F : Scalar] householder(IPSpace[V, F], V, V) -> V
+
+pub fn hs_gram_ref(Mat[Q], Mat[Q], Cost) -> Mat[Q]
+
+pub fn inertia(Array[Double]) -> (Int, Int, Int)
+
+pub fn inertia_label((Int, Int, Int)) -> String
+
+pub fn[V, F] ip(IPSpace[V, F], V, V) -> F
+
+pub fn[V, F : Scalar] ip_dist(IPSpace[V, F], V, V) -> Double
+
+pub fn[V, F : Scalar] ip_norm(IPSpace[V, F], V) -> Double
+
+pub fn[V, F] ip_norm2(IPSpace[V, F], V) -> F
+
+pub fn[V, F : Scalar] ip_orth(IPSpace[V, F], V, V) -> Bool
+
+pub fn ipow_big(@bigint.BigInt, Int) -> @bigint.BigInt
+
+pub fn ipow_d(Double, Int) -> Double
+
+pub fn ipow_i(Int64, Int) -> Int64
+
+pub fn[F : Scalar] is_hermitian(Mat[F]) -> Bool
+
+pub fn[V, F : Scalar] is_isometry(IPSpace[V, F], Mat[F]) -> Bool
+
+pub fn[F : Scalar] is_normal(Mat[F]) -> Bool
+
+pub fn[V, F : Scalar] is_orthogonal_set(IPSpace[V, F], Array[V]) -> Bool
+
+pub fn[V, F : Scalar] is_orthonormal_set(IPSpace[V, F], Array[V]) -> Bool
+
+pub fn[F : Scalar] is_positive_definite(Mat[F]) -> Bool
+
+pub fn is_prime_i64(Int64) -> Bool
+
+pub fn is_prime_trial(Int64) -> Bool
+
+pub fn[F : Scalar] is_skew(Mat[F]) -> Bool
+
+pub fn is_sym_sel(Mat[Q], Int) -> Bool
+
+pub fn[F : Scalar] is_symmetric(Mat[F]) -> Bool
+
+pub fn[F : Scalar] is_unitary(Mat[F]) -> Bool
+
+pub fn[F : Scalar] is_upper(Mat[F]) -> Bool
+
+pub fn jacobi_eigen(Mat[Double], Int) -> (Array[Double], Mat[Double])
+
+pub fn karity_degenerate_diff(Array[(Int, Int, (Rng, Int) -> Mat[Q])]) -> Int
+
+pub fn[F : Scalar] kernel_space(Mat[F]) -> IPSpace[Array[F], F]
+
+pub fn klaw_scan(Array[Int], Rng, AssocTree) -> Array[KLaw]
+
+pub fn kron_matvec(Cost, Array[Mat[Double]], Array[Double]) -> Array[Double]
+
+pub fn kron_sum(Mat[Double], Mat[Double]) -> Mat[Double]
+
+pub fn krule_by_name(String) -> ((Mat[Q], Mat[Q], Int, Int, Q, Q, Cost) -> Mat[Q]?)?
+
+pub fn krule_needs_det(String) -> Bool
+
+pub fn krule_registry() -> Array[(String, (Mat[Q], Mat[Q], Int, Int, Q, Q, Cost) -> Mat[Q]?)]
+
+pub fn ks_assoc_law(Array[Int], Rng) -> (Int, Bool)
+
+pub fn ks_assoc_scan(Rng) -> (Int, Bool, Int, Double, Double)
+
+pub fn ks_chain_build(AssocTree, Array[Mat[Q]], Cost) -> Mat[Q]
+
+pub fn ks_digest(Rng) -> String
+
+pub fn ks_dp(Array[Int]) -> (Int64, AssocTree)
+
+pub fn ks_equality_case() -> (Bool, Bool)
+
+pub fn ks_model_check(Array[Int], AssocTree, Rng) -> (Int64, Int64, Bool)
+
+pub fn ks_named_counterexample(Int, Int, Int) -> (Array[Int], String, String, Int64, Int64)?
+
+pub fn ks_pair_cost(Int64, Int64) -> Int64
+
+pub fn ks_sparse_vs_dense(Array[Int], Rng) -> (Int64, Int64, Bool)
+
+pub fn ks_vs_kron_sweep(Int, Int, Int) -> (Int, Int, Double, Int)
+
+pub fn ksum_sylvester_check(Rng) -> (Int, Int)
+
+pub fn[F : Scalar] lagrange_interp(Array[F], Array[F]) -> Poly[F]
+
+pub fn lanczos(Mat[Double], Int) -> (Mat[Double], Mat[Double])
+
+pub fn law_cache_filled() -> Bool
+
+pub fn law_diff(Array[LawCand], Array[LawCand]) -> Array[(String, String, String, Bool, Bool)]
+
+pub fn law_digest(Array[LawCand]) -> String
+
+pub fn law_dual_inv(Rng, Array[Int]) -> LawVerdict
+
+pub fn law_find(Array[LawCand], String, String, String) -> Bool?
+
+pub fn law_find_gain(Array[LawCand], String, String, String) -> Double?
+
+pub fn law_grid_full() -> Array[(Int, Int)]
+
+pub fn law_grid_std() -> Array[(Int, Int)]
+
+pub fn law_kron_det(Rng, Array[(Int, Int)]) -> LawVerdict
+
+pub fn law_kron_gram(Rng, Array[(Int, Int)]) -> Bool
+
+pub fn law_kron_inv(Rng, Array[(Int, Int)]) -> LawVerdict
+
+pub fn law_miss_count() -> Int
+
+pub fn law_samples_dims() -> String
+
+pub fn law_samples_label() -> String
+
+pub fn law_samples_mixed() -> Array[(Int, Int, (Rng, Int) -> Mat[Q])]
+
+pub fn law_search(Rng, Array[(Int, Int)]) -> Array[LawCand]
+
+pub fn law_search_dist(Rng, Array[(Int, Int)], (Rng, Int) -> Mat[Q]) -> Array[LawCand]
+
+pub fn law_search_fixed(Rng) -> Array[LawCand]
+
+pub fn law_search_samples(Rng, Array[(Int, Int, (Rng, Int) -> Mat[Q])]) -> Array[LawCand]
+
+pub fn law_search_std(Rng) -> Array[LawCand]
+
+pub fn law_sum_det(Rng, Array[(Int, Int)]) -> LawVerdict
+
+pub fn law_sum_inv(Rng, Array[(Int, Int)]) -> LawVerdict
+
+pub fn law_table(Array[LawVerdict]) -> String
+
+pub fn law_vacuity_count(Array[LawCand], Array[(Int, Int, (Rng, Int) -> Mat[Q])]) -> Int
+
+pub fn ldlt(Mat[Double]) -> (Mat[Double], Array[Double])?
+
+pub fn[V, F : Scalar] least_squares(IPSpace[V, F], Array[V], V) -> (Array[F], Double)
+
+pub fn[F : Scalar] legendre_rec(Int) -> Array[Poly[F]]
+
+pub fn[V, F : Scalar] linearly_independent(IPSpace[V, F], Array[V]) -> Bool
+
+pub fn[F : Scalar] madj(Mat[F]) -> Mat[F]
+
+pub fn mask_of(Array[Int]) -> Int
+
+pub fn mat_bits(Mat[Q]) -> Int64
+
+pub fn mat_dev(Mat[Double], Mat[Double]) -> Double
+
+pub fn[F : Scalar] mat_poly_eval(Array[F], Mat[F]) -> Mat[F]
+
+pub fn[A, B, F] matrix_of_map(IPSpace[A, F], IPSpace[B, F], (A) -> B) -> Mat[F]
+
+pub fn[F : Scalar] matrix_space(Int, Int) -> IPSpace[Mat[F], F]
+
+pub fn maxd(Double, Double) -> Double
+
+pub fn[F : Scalar] mcolspace(Mat[F]) -> Array[Array[F]]
+
+pub fn[F : Scalar] mdet(Mat[F]) -> F
+
+pub fn[F : Scalar] mdet_laplace(Mat[F]) -> F
+
+pub fn measure_exponents((Mat[Q], Cost) -> Mat[Q]?, Rng, Int, Int) -> (Int, Int)?
+
+pub fn measure_uni((Mat[Q], Cost) -> Mat[Q]?, String, String, Int, Int, Rng) -> Int?
+
+pub fn merge_sign(Array[Int], Array[Int]) -> Int
+
+pub fn midend2_digest(Rng) -> String
+
+pub fn mind(Double, Double) -> Double
+
+pub fn[F : Scalar] minv(Mat[F]) -> Mat[F]?
+
+pub fn mk_check(String, Bool, Int, String) -> Check
+
+pub fn[F : Scalar] mkron(Mat[F], Mat[F]) -> Mat[F]
+
+pub fn[F : Scalar] mlu(Mat[F]) -> LU[F]
+
+pub fn[F : Scalar] mnullspace(Mat[F]) -> Array[Array[F]]
+
+pub fn[V, F : Scalar] modified_gram_schmidt(IPSpace[V, F], Array[V]) -> GSOut[V, F]
+
+pub fn monomials_upto(Int, Int) -> Array[Array[Int]]
+
+pub fn[F : Scalar] mp_normalize(Int, Array[Term[F]]) -> MPoly[F]
+
+pub fn[F : Scalar] mpoly_of(Int, Array[(Array[Int], F)]) -> MPoly[F]
+
+pub fn[F : Scalar] mpoly_space(Int, Int, Bool) -> IPSpace[MPoly[F], F]
+
+pub fn[F : Scalar] mpoly_subst(MPoly[F], Mat[F]) -> MPoly[F]
+
+pub fn[F : Scalar] mpow(Mat[F], Int) -> Mat[F]
+
+pub fn[F : Scalar] mrank(Mat[F]) -> Int
+
+pub fn[F : Scalar] mrowspace(Mat[F]) -> Array[Array[F]]
+
+pub fn[F : Scalar] mrref(Mat[F]) -> Rref[F]
+
+pub fn[F : Scalar] msolve(Mat[F], Array[F]) -> SolSet[F]
+
+pub fn[F : Scalar] mulx_matrix(Int) -> Mat[F]
+
+pub fn[F] munvec(Array[F], Int, Int) -> Mat[F]
+
+pub fn[F] mvec(Mat[F]) -> Array[F]
+
+pub fn nary_coverage(Array[TriTable], Int, Int) -> Array[Int]
+
+pub fn nary_product(Array[TriTable], Int, Int) -> TriCensus
+
+pub fn nary_reduces_to_tri(TriTable, TriTable, TriTable, Int, Int) -> (Bool, String, String)
+
+pub fn nary_scan() -> Array[(Int, Int, Int, Int, String)]
+
+pub fn negative_registry() -> Array[NegResult]
+
+pub fn nonctor_digest() -> String
+
+pub fn nonctor_registry() -> Array[NonCtor]
+
+pub fn nonctor_scan() -> Array[(String, Int, Int, Int, Int)]
+
+pub fn nonctor_verdict() -> (Int, Int, Int, Int)
+
+pub fn normalize(SpaceExpr) -> SpaceExpr
+
+pub fn normalize_dp(SpaceExpr) -> SpaceExpr
+
+pub fn normalize_rows(Mat[Double]) -> Mat[Double]
+
+pub fn normmod(Int64, Int64) -> Int64
+
+pub fn ntt_prime_pool(Int) -> Array[Int64]
+
+pub fn ob_a01() -> Check
+
+pub fn ob_a02() -> Check
+
+pub fn ob_a03() -> Check
+
+pub fn ob_a04() -> Check
+
+pub fn ob_a05() -> Check
+
+pub fn ob_a06() -> Check
+
+pub fn ob_a07() -> Check
+
+pub fn ob_a08() -> Check
+
+pub fn ob_a09() -> Check
+
+pub fn ob_a10() -> Check
+
+pub fn ob_b01() -> Check
+
+pub fn ob_b02() -> Check
+
+pub fn ob_b03() -> Check
+
+pub fn ob_b04() -> Check
+
+pub fn ob_b05() -> Check
+
+pub fn ob_b06() -> Check
+
+pub fn ob_b07() -> Check
+
+pub fn ob_b08() -> Check
+
+pub fn ob_b09() -> Check
+
+pub fn ob_b10() -> Check
+
+pub fn ob_b11() -> Check
+
+pub fn ob_b12() -> Check
+
+pub fn ob_b13() -> Check
+
+pub fn ob_b14() -> Check
+
+pub fn ob_b15() -> Check
+
+pub fn ob_c01() -> Check
+
+pub fn ob_c02() -> Check
+
+pub fn ob_c03() -> Check
+
+pub fn ob_c04() -> Check
+
+pub fn ob_c05() -> Check
+
+pub fn ob_c07() -> Check
+
+pub fn ob_c08() -> Check
+
+pub fn ob_c09() -> Check
+
+pub fn ob_c10() -> Check
+
+pub fn ob_c12() -> Check
+
+pub fn ob_c13() -> Check
+
+pub fn ob_c14() -> Check
+
+pub fn ob_c15() -> Check
+
+pub fn ob_c16() -> Check
+
+pub fn ob_c18() -> Check
+
+pub fn ob_c20() -> Check
+
+pub fn ob_d01() -> Check
+
+pub fn ob_d02() -> Check
+
+pub fn ob_d03() -> Check
+
+pub fn ob_d04() -> Check
+
+pub fn ob_d05() -> Check
+
+pub fn ob_d06() -> Check
+
+pub fn ob_d07() -> Check
+
+pub fn ob_d08() -> Check
+
+pub fn ob_d09() -> Check
+
+pub fn ob_d10() -> Check
+
+pub fn ob_d11() -> Check
+
+pub fn ob_d13() -> Check
+
+pub fn ob_d14() -> Check
+
+pub fn ob_d15() -> Check
+
+pub fn ob_d16() -> Check
+
+pub fn ob_d18() -> Check
+
+pub fn ob_d19() -> Check
+
+pub fn ob_d20() -> Check
+
+pub fn ob_d21() -> Check
+
+pub fn ob_d22() -> Check
+
+pub fn ob_d23() -> Check
+
+pub fn ob_e01() -> Check
+
+pub fn ob_e02() -> Check
+
+pub fn ob_e03() -> Check
+
+pub fn ob_e04() -> Check
+
+pub fn ob_e05() -> Check
+
+pub fn ob_e06() -> Check
+
+pub fn ob_e07() -> Check
+
+pub fn ob_e08() -> Check
+
+pub fn ob_e09() -> Check
+
+pub fn ob_e10() -> Check
+
+pub fn ob_e11() -> Check
+
+pub fn ob_e12() -> Check
+
+pub fn ob_e13() -> Check
+
+pub fn ob_e14() -> Check
+
+pub fn ob_e15() -> Check
+
+pub fn ob_e16() -> Check
+
+pub fn ob_f01() -> Check
+
+pub fn ob_f02() -> Check
+
+pub fn ob_f03() -> Check
+
+pub fn ob_f04() -> Check
+
+pub fn ob_f05() -> Check
+
+pub fn ob_f06() -> Check
+
+pub fn ob_f07() -> Check
+
+pub fn ob_f08() -> Check
+
+pub fn ob_f09() -> Check
+
+pub fn ob_g01() -> Check
+
+pub fn ob_g02() -> Check
+
+pub fn ob_g03() -> Check
+
+pub fn ob_g04() -> Check
+
+pub fn ob_g05() -> Check
+
+pub fn ob_g06() -> Check
+
+pub fn ob_g07() -> Check
+
+pub fn ob_g08() -> Check
+
+pub fn ob_g09() -> Check
+
+pub fn ob_h01() -> Check
+
+pub fn ob_h02() -> Check
+
+pub fn ob_h03() -> Check
+
+pub fn ob_h04() -> Check
+
+pub fn ob_h05() -> Check
+
+pub fn ob_h06() -> Check
+
+pub fn ob_h07() -> Check
+
+pub fn ob_h08() -> Check
+
+pub fn ob_h09() -> Check
+
+pub fn ob_h10() -> Check
+
+pub fn ob_h11() -> Check
+
+pub fn ob_h12() -> Check
+
+pub fn ob_h13() -> Check
+
+pub fn ob_h14() -> Check
+
+pub fn ob_h15() -> Check
+
+pub fn ob_h16() -> Check
+
+pub fn ob_h17() -> Check
+
+pub fn ob_h18() -> Check
+
+pub fn ob_h19() -> Check
+
+pub fn ob_h20() -> Check
+
+pub fn ob_h21() -> Check
+
+pub fn ob_h22() -> Check
+
+pub fn ob_h23() -> Check
+
+pub fn ob_h24() -> Check
+
+pub fn ob_h25() -> Check
+
+pub fn ob_i01() -> Check
+
+pub fn ob_i02() -> Check
+
+pub fn ob_i03() -> Check
+
+pub fn ob_i04() -> Check
+
+pub fn ob_i05() -> Check
+
+pub fn ob_i06() -> Check
+
+pub fn ob_i07() -> Check
+
+pub fn ob_j01() -> Check
+
+pub fn ob_j02() -> Check
+
+pub fn ob_j03() -> Check
+
+pub fn ob_j04() -> Check
+
+pub fn ob_j05() -> Check
+
+pub fn ob_j06() -> Check
+
+pub fn ob_k01() -> Check
+
+pub fn ob_k02() -> Check
+
+pub fn ob_k03() -> Check
+
+pub fn ob_k04() -> Check
+
+pub fn ob_k05() -> Check
+
+pub fn ob_k06() -> Check
+
+pub fn ob_k07() -> Check
+
+pub fn ob_k08() -> Check
+
+pub fn ob_k09() -> Check
+
+pub fn ob_k10() -> Check
+
+pub fn ob_l01() -> Check
+
+pub fn ob_l02() -> Check
+
+pub fn ob_l03() -> Check
+
+pub fn ob_l04() -> Check
+
+pub fn ob_l05() -> Check
+
+pub fn ob_l06() -> Check
+
+pub fn ob_l07() -> Check
+
+pub fn ob_l08() -> Check
+
+pub fn ob_l09() -> Check
+
+pub fn ob_l10() -> Check
+
+pub fn ob_m01() -> Check
+
+pub fn ob_m02() -> Check
+
+pub fn ob_m03() -> Check
+
+pub fn ob_m04() -> Check
+
+pub fn ob_m05() -> Check
+
+pub fn ob_m06() -> Check
+
+pub fn ob_m07() -> Check
+
+pub fn ob_m08() -> Check
+
+pub fn ob_n01() -> Check
+
+pub fn ob_n02() -> Check
+
+pub fn ob_n03() -> Check
+
+pub fn ob_n04() -> Check
+
+pub fn ob_n05() -> Check
+
+pub fn ob_n06() -> Check
+
+pub fn ob_n07() -> Check
+
+pub fn ob_n08() -> Check
+
+pub fn ob_n09() -> Check
+
+pub fn ob_n10() -> Check
+
+pub fn ob_n11() -> Check
+
+pub fn ob_n12() -> Check
+
+pub fn ob_n13() -> Check
+
+pub fn ob_n14() -> Check
+
+pub fn ob_n20() -> Check
+
+pub fn ob_n21() -> Check
+
+pub fn ob_n22() -> Check
+
+pub fn ob_n23() -> Check
+
+pub fn ob_n24() -> Check
+
+pub fn ob_n25() -> Check
+
+pub fn ob_n26() -> Check
+
+pub fn ob_n30() -> Check
+
+pub fn ob_n31() -> Check
+
+pub fn ob_n32() -> Check
+
+pub fn ob_n33() -> Check
+
+pub fn ob_n34() -> Check
+
+pub fn ob_n35() -> Check
+
+pub fn ob_n36() -> Check
+
+pub fn ob_n40() -> Check
+
+pub fn ob_n41() -> Check
+
+pub fn ob_n42() -> Check
+
+pub fn ob_n43() -> Check
+
+pub fn ob_n44() -> Check
+
+pub fn ob_n45() -> Check
+
+pub fn ob_n46() -> Check
+
+pub fn ob_n47() -> Check
+
+pub fn ob_n48() -> Check
+
+pub fn ob_n49() -> Check
+
+pub fn ob_n50() -> Check
+
+pub fn ob_n51() -> Check
+
+pub fn ob_n52() -> Check
+
+pub fn ob_n53() -> Check
+
+pub fn ob_n54() -> Check
+
+pub fn ob_n55() -> Check
+
+pub fn ob_n56() -> Check
+
+pub fn ob_n57() -> Check
+
+pub fn ob_n58() -> Check
+
+pub fn ob_n59() -> Check
+
+pub fn ob_n60() -> Check
+
+pub fn ob_n61() -> Check
+
+pub fn ob_n62() -> Check
+
+pub fn ob_n62g() -> Check
+
+pub fn ob_n63() -> Check
+
+pub fn ob_n64() -> Check
+
+pub fn ob_n65() -> Check
+
+pub fn ob_n66() -> Check
+
+pub fn ob_n67() -> Check
+
+pub fn ob_n68() -> Check
+
+pub fn ob_n69() -> Check
+
+pub fn ob_n70() -> Check
+
+pub fn ob_n71() -> Check
+
+pub fn ob_n72() -> Check
+
+pub fn ob_n73() -> Check
+
+pub fn ob_n74() -> Check
+
+pub fn ob_n74g() -> Check
+
+pub fn ob_n75() -> Check
+
+pub fn ob_n76() -> Check
+
+pub fn ob_n77() -> Check
+
+pub fn ob_n78() -> Check
+
+pub fn ob_n79() -> Check
+
+pub fn ob_n80() -> Check
+
+pub fn ob_n81() -> Check
+
+pub fn ob_n82() -> Check
+
+pub fn ob_n83() -> Check
+
+pub fn ob_n84() -> Check
+
+pub fn ob_n85() -> Check
+
+pub fn ob_rng() -> Rng
+
+pub fn obl_demo_spec() -> OblSpec
+
+pub fn obl_demo_spec_r() -> OblSpec
+
+pub fn obl_measure(OblSpec) -> (Bool, Double, Int)?
+
+pub fn obl_measure_full(OblSpec) -> (Bool, Double, Int, Int64, Int64)?
+
+pub fn obl_measure_r(OblSpec) -> (Bool, Double, Double, Int, Int)?
+
+pub fn obl_placeholder() -> String
+
+pub fn ok1(String, Bool, String) -> Check
+
+pub fn op_compare(SpaceExpr, (Mat[Q], Cost) -> Mat[Q]?, SynthRule) -> (Bool, Int64, Int64)
+
+pub fn op_compare_gated(SpaceExpr, (Mat[Q], Cost) -> Mat[Q]?, SynthRule, Bool) -> (Bool, Int64, Int64)
+
+pub fn op_control(Rng) -> (Int, Int)
+
+pub fn op_corpus(Rng) -> Array[SpaceExpr]
+
+pub fn op_digest(Rng) -> String
+
+pub fn op_direct(SpaceExpr, (Mat[Q], Cost) -> Mat[Q]?, Cost) -> Mat[Q]?
+
+pub fn op_eval(OpTree, (Mat[Q], Cost) -> Mat[Q]?, Cost) -> Mat[Q]?
+
+pub fn op_gate_table(Rng) -> Array[(String, Bool)]
+
+pub fn op_rewrite(SpaceExpr, SynthRule) -> OpTree
+
+pub fn op_rewrite_gated(SpaceExpr, SynthRule, Bool) -> OpTree
+
+pub fn op_rule_provenance(Rng) -> (Int, Int, Int)
+
+pub fn op_rule_table(Rng) -> Array[(String, String)]
+
+pub fn op_scan(Rng) -> (Int, Int, Int, Int, Int64, Int64, Int)
+
+pub fn op_scan_gated(Rng) -> (Int, Int, Int, Int, Int, Int64, Int64, Int)
+
+pub fn op_sum_valid((Mat[Q], Cost) -> Mat[Q]?, Rng) -> Bool
+
+pub fn[V, F : Scalar] orthogonal_complement(IPSpace[V, F], Array[V]) -> Array[V]
+
+pub fn[V, F : Scalar] orthonormalize(IPSpace[V, F], Array[V]) -> Array[V]?
+
+pub fn pad_l(String, Int) -> String
+
+pub fn pad_r(String, Int) -> String
+
+pub fn[V, F : Scalar] parallelogram_defect(IPSpace[V, F], V, V) -> F
+
+pub fn[F : Scalar] partial_trace2(Mat[F], Int, Int) -> Mat[F]
+
+pub fn perm_ident(Int) -> Array[Int]
+
+pub fn perm_mat(Array[Int]) -> Mat[Q]
+
+pub fn[F : Scalar] perm_matrix(Array[Int]) -> Mat[F]
+
+pub fn perm_rows(Array[Int], Mat[Q]) -> Mat[Q]
+
+pub fn perm_unrows(Array[Int], Mat[Q]) -> Mat[Q]
+
+pub fn phi_by_name(String) -> ((Mat[Q], Cost) -> Mat[Q]?)?
+
+pub fn phi_by_name_full(String) -> ((Mat[Q], Cost) -> Mat[Q]?)?
+
+pub fn phi_by_name_total(String) -> ((Mat[Q], Cost) -> Mat[Q]?)?
+
+pub fn phi_content((String) -> ((Mat[Q], Cost) -> Mat[Q]?)?, String, String, Array[Int], Rng) -> Content
+
+pub fn phi_is_scalar(String) -> Bool
+
+pub fn phi_leaf_of(String) -> ((Mat[Q], Cost) -> Mat[Q]?)?
+
+pub fn phi_mat_registry() -> Array[(String, (Mat[Q], Cost) -> Mat[Q]?)]
+
+pub fn phi_sca_registry() -> Array[(String, (Mat[Q], Cost) -> Mat[Q]?)]
+
+pub fn phi_src(String, String, String) -> String?
+
+pub fn phispec_from_law(Array[LawCand], String) -> PhiSpec?
+
+pub let pi_const : Double
+
+pub fn pick_control_rule(OblSpec) -> String?
+
+pub fn pick_control_rule_r(OblSpec) -> String?
+
+pub fn pick_path(Int) -> String
+
+pub fn pinv(Mat[Double], Double) -> Mat[Double]
+
+pub fn plan_qsolve(Int, Int) -> AccelPlan
+
+pub fn plan_synth(SpaceExpr) -> Bool
+
+pub fn plan_zadj(Int, Int) -> AccelPlan
+
+pub fn plan_zdet(Int, Int) -> AccelPlan
+
+pub fn plan_zpolymul(Int, Int) -> AccelPlan
+
+pub fn polar_decomposition(Mat[Double]) -> (Mat[Double], Mat[Double])
+
+pub fn[V, F : Scalar] polarization_complex(IPSpace[V, Cpx[F]], V, V) -> Cpx[F]
+
+pub fn[V, F : Scalar] polarization_real(IPSpace[V, F], V, V) -> F
+
+pub fn[F : Scalar] poly_from_roots(Array[F]) -> Poly[F]
+
+pub fn poly_prod_bound(Array[@bigint.BigInt], Array[@bigint.BigInt]) -> @bigint.BigInt
+
+pub fn[F : Scalar] poly_space_hilbert(Int) -> IPSpace[Poly[F], F]
+
+pub fn[F : Scalar] poly_space_l2(Int) -> IPSpace[Poly[F], F]
+
+pub fn[F : Scalar] poly_space_nodes(Int, Array[F]) -> IPSpace[Poly[F], F]
+
+pub fn power_iteration(Mat[Double], Int) -> (Double, Array[Double])
+
+pub fn powi(Double, Int) -> Double
+
+pub fn prime_pool(Int) -> Array[Int64]
+
+pub fn primes_needed(@bigint.BigInt, Array[Int64]) -> Int
+
+pub fn primitive_root(Int64) -> Int64
+
+pub fn[V, F : Scalar] project_onto(IPSpace[V, F], Array[V], V) -> V
+
+pub fn[V, F : Scalar] projection_coeffs(IPSpace[V, F], Array[V], V) -> Array[F]
+
+pub fn[V, F : Scalar] projection_matrix(IPSpace[V, F], Array[V]) -> Mat[F]
+
+pub fn q_scalar_mat(Q) -> Mat[Q]
+
+pub fn qadj(Cost, Mat[Q]) -> Mat[Q]?
+
+pub fn qadj_cof(Cost, Mat[Q]) -> Mat[Q]
+
+pub fn qbil(Mat[Q], Array[Q], Array[Q]) -> Q
+
+pub fn qbits(Q) -> Int64
+
+pub fn qblock_diag(Mat[Q], Mat[Q]) -> Mat[Q]
+
+pub fn qcharpoly_faddeev(Mat[Q], Cost) -> Array[Q]
+
+pub fn qdet_gauss(Mat[Q], Cost) -> Q
+
+pub fn qgram_bitwidth(Rng, Int, Int) -> Mat[Q]
+
+pub fn qinertia(Mat[Q], Cost) -> (Int, Int, Int)
+
+pub fn qinterp_crt(Array[Q], Array[Q], Array[Int64], Cost) -> QInterpLift?
+
+pub fn qinterp_lagrange(Array[Q], Array[Q], Cost) -> Array[Q]
+
+pub fn qinv_crt(Mat[Q], Array[Int64], Cost) -> (Mat[Q]?, Int, Bool)
+
+pub fn qinv_crt_ap(Mat[Q], Array[Int64], Cost) -> (Mat[Q]?, Int, Bool)
+
+pub fn qinv_gauss(Mat[Q], Cost) -> Mat[Q]?
+
+pub fn qkron_cost(Cost, Mat[Q], Mat[Q]) -> Mat[Q]
+
+pub fn qkron_sum(Mat[Q], Mat[Q]) -> Mat[Q]
+
+pub fn qkron_sum_cost(Cost, Mat[Q], Mat[Q]) -> Mat[Q]
+
+pub fn qkron_sum_dense_cost(Cost, Mat[Q], Mat[Q]) -> Mat[Q]
+
+pub fn qldlt_crt(Mat[Q], Array[Int64], Cost) -> QLdlt?
+
+pub fn qldlt_crt_ap(Mat[Q], Array[Int64], Cost) -> QLdlt?
+
+pub fn qldlt_gauss(Mat[Q], Cost) -> (Mat[Q], Array[Q])?
+
+pub fn qldlt_minors_crt(Mat[Q], Array[Int64], Cost) -> QMinors?
+
+pub fn qlsq_crt(Mat[Q], Array[Q], Array[Int64], Cost) -> QLift
+
+pub fn qmat_bits(Mat[Q]) -> Int
+
+pub fn qmat_bitwidth(Rng, Int, Int, Int) -> Mat[Q]
+
+pub fn qmat_clear_denom(Mat[Q]) -> (@bigint.BigInt, Array[Array[@bigint.BigInt]])
+
+pub fn qmat_to_zrows(Mat[Q]) -> Array[Array[@bigint.BigInt]]
+
+pub fn qminor(Mat[Q], Int, Int) -> Mat[Q]
+
+pub fn qminors_bareiss(Mat[Q]) -> Array[Q]
+
+pub fn qmul_cost(Cost, Mat[Q], Mat[Q]) -> Mat[Q]
+
+pub fn qpinv(Cost, Mat[Q]) -> Mat[Q]
+
+pub fn qpinv_penrose(Mat[Q]) -> (Bool, Bool, Bool, Bool)
+
+pub fn qpoly_divmod(Array[Q], Array[Q], Cost) -> (Array[Q], Array[Q])?
+
+pub fn qpoly_gcd_euclid(Array[Q], Array[Q], Cost) -> Array[Q]
+
+pub fn qpoly_mul(Array[Q], Array[Q], Cost) -> Array[Q]
+
+pub fn qpoly_mul_crt(Array[Q], Array[Q], Array[Int64], Cost) -> (Array[Q], Int)
+
+pub fn qpoly_norm(Array[Q]) -> Array[Q]
+
+pub fn qpow_cost(Cost, Q, Int) -> Q
+
+pub fn qpow_fast(Cost, Q, Int) -> Q
+
+pub fn qpow_int(Cost, Q, Int) -> Q?
+
+pub fn qr_givens(Mat[Double]) -> (Mat[Double], Mat[Double])
+
+pub fn qr_householder(Mat[Double]) -> (Mat[Double], Mat[Double])
+
+pub fn qr_iteration(Mat[Double], Int) -> Mat[Double]
+
+pub fn qrank_modp(Mat[Q], Array[Int64], Int, Cost) -> RankCert
+
+pub fn qrank_modp2(Mat[Q], Array[Int64], Int, Cost) -> RankCert
+
+pub fn qrref_crt(Mat[Q], Array[Int64], Cost) -> QRrefLift?
+
+pub fn qrref_gauss(Mat[Q], Cost) -> (Mat[Q], Int, Array[Int])
+
+pub fn qsmul_cost(Cost, Q, Mat[Q]) -> Mat[Q]
+
+pub fn qsolve_crt(Mat[Q], Array[Q], Array[Int64], Cost) -> QLift
+
+pub fn qsolve_crt_ap(Mat[Q], Array[Q], Array[Int64], Cost) -> QLift
+
+pub fn qsolve_gauss(Mat[Q], Array[Q], Cost) -> Array[Q]?
+
+pub fn qtrace(Cost, Mat[Q]) -> Q
+
+pub fn[F : Scalar] quat_left_matrix(Quat[F]) -> Mat[F]
+
+pub fn[F : Scalar] quat_to_c2(Quat[F]) -> Mat[Cpx[F]]
+
+pub fn[F : Scalar] quat_to_rot3(Quat[F]) -> Mat[F]
+
+pub fn[F : Scalar] quaternion_space(Int) -> IPSpace[Array[Quat[F]], F]
+
+pub fn quotient_gram(Mat[Q]) -> Mat[Q]?
+
+pub fn quotient_metric_check(Rng) -> (Int, Int)
+
+pub fn quotient_not_a_rule(Rng) -> (Int, Int)
+
+pub fn qvec_clear_denom(Array[Q]) -> (@bigint.BigInt, Array[@bigint.BigInt])
+
+pub fn qvec_eq(Array[Q], Array[Q]) -> Bool
+
+pub fn rand_expr(Rng, Int, Int) -> SpaceExpr
+
+pub fn rand_expr_ext(Rng, Int, Int) -> SpaceExpr
+
+pub fn rand_expr_nodual(Rng, Int, Int) -> SpaceExpr
+
+pub fn rand_gram(Rng, Int) -> Mat[Q]
+
+pub fn rand_herm_pd(Rng, Int) -> Mat[Cpx[Double]]
+
+pub fn rand_invertible(Rng, Int) -> Mat[Q]
+
+pub fn rand_spd(Rng, Int) -> Mat[Double]
+
+pub fn rand_sym_q(Rng, Int) -> Mat[Q]
+
+pub fn rand_tall(Rng, Int, Int) -> Mat[Q]
+
+pub fn rand_zmat_dense(Rng, Int, Int) -> Mat[Q]
+
+pub fn rank_cert_compare(Int, Int, Int) -> (Int64, Int64, Int64, Bool)
+
+pub fn rank_cert_control() -> Bool
+
+pub fn rank_cert_scan() -> (Int, Bool, Int64, Int64, Int)
+
+pub fn rank_factor_cert(Array[Array[@bigint.BigInt]], Array[Int], Array[Int], Array[Int64], Cost) -> (Bool, Int)
+
+pub fn rat_recon(@bigint.BigInt, @bigint.BigInt) -> Q?
+
+pub fn rat_recon_bnd(@bigint.BigInt, @bigint.BigInt, @bigint.BigInt, @bigint.BigInt) -> Q?
+
+pub fn rat_recon_vec(Array[@bigint.BigInt], @bigint.BigInt) -> Array[Q]?
+
+pub fn rayleigh_quotient(Mat[Double], Array[Double]) -> Double
+
+pub fn rblock_diag(Mat[Double], Mat[Double]) -> Mat[Double]
+
+pub fn rcolumn(Array[Double]) -> Mat[Double]
+
+pub fn rcomb_by_name(String) -> ((Mat[Double], Mat[Double], Cost) -> Mat[Double])?
+
+pub fn rcomb_registry() -> Array[(String, (Mat[Double], Mat[Double], Cost) -> Mat[Double])]
+
+pub fn rcomb_src(String, String, String, String) -> String?
+
+pub fn rcomp_check(String, String, String, String, Array[(Int, Int)], Rng) -> (Bool, Double, Double, Int, Int, Int)?
+
+pub fn rcomp_find(Array[RCompLaw], String) -> RCompLaw?
+
+pub fn rcomp_miss_count() -> Int
+
+pub fn rcomp_valid(RCompLaw) -> Bool
+
+pub fn rcompose_confusion_dom(Array[RCompLaw]) -> (Int, Int, Int, Int)
+
+pub fn rcompose_confusion_syn(Array[RCompLaw]) -> (Int, Int, Int, Int)
+
+pub fn rcompose_degen_count(Array[RCompLaw]) -> Int
+
+pub fn rcompose_derive(Array[LawCand], Bool) -> Array[(String, String, String, String, String)]
+
+pub fn rcompose_scan(Array[LawCand], Array[(Int, Int)]) -> Array[RCompLaw]
+
+pub fn rcompose_scan_sel(Array[LawCand], Array[(Int, Int)], Bool) -> Array[RCompLaw]
+
+pub fn rcompose_scan_std(Rng) -> Array[RCompLaw]
+
+pub fn rcompose_table(Array[RCompLaw]) -> String
+
+pub fn rcompose_top(Array[RCompLaw], Int) -> Array[RCompLaw]
+
+pub fn rcompound(Mat[Double], Int, Cost) -> Mat[Double]
+
+pub fn rdense_solve(SpaceExpr, Mat[Double], Cost) -> Mat[Double]?
+
+pub fn rdev(Mat[Double], Mat[Double], Bool) -> Double
+
+pub fn[V, F : Scalar] realify(IPSpace[V, Cpx[F]]) -> IPSpace[V, F]
+
+pub fn realify_mat(Mat[Cpx[Double]]) -> Mat[Double]
+
+pub fn rep_str(String, Int) -> String
+
+pub fn[V, F : Scalar] retwist(IPSpace[V, F], Mat[F]) -> IPSpace[V, F]
+
+pub fn rgrid_label() -> String
+
+pub fn[V, F : Scalar] riesz_vector(IPSpace[V, F], Array[F]) -> V
+
+pub fn rkron_cost(Cost, Mat[Double], Mat[Double]) -> Mat[Double]
+
+pub fn rlaw_grid_std() -> Array[(Int, Int)]
+
+pub fn rlaw_miss_count() -> Int
+
+pub fn rlaw_search(Rng, Array[(Int, Int)]) -> Array[LawCand]
+
+pub fn rlaw_search_std(Rng) -> Array[LawCand]
+
+pub fn rlaw_table(Array[LawCand]) -> String
+
+pub fn rmat_finite(Mat[Double]) -> Bool
+
+pub fn rmat_is_sym(Mat[Double], Double) -> Bool
+
+pub fn rmat_is_zero(Mat[Double], Double) -> Bool
+
+pub fn rmid_cell(SpaceExpr) -> (Double, Double, Int64, Int64, Double)
+
+pub fn rmid_control(Rng) -> (Double, Double)
+
+pub fn rmid_digest(Rng) -> String
+
+pub fn rmid_scan(Rng) -> (Int, Int, Int, Int, Double, Double, Int64, Int64, Double)
+
+pub fn rmid_solve_scan(Rng) -> (Int, Int, Int, Int, Double, Double, Int64, Int64)
+
+pub fn[F : Scalar] row_space(Mat[F]) -> IPSpace[Array[F], F]
+
+pub fn rphi_by_name(String) -> RPhi?
+
+pub fn rphi_mat_registry() -> Array[RPhi]
+
+pub fn rphi_needs_sym(String) -> Bool
+
+pub fn rphi_preserves_spd(String) -> Bool
+
+pub fn rphi_sca_registry() -> Array[RPhi]
+
+pub fn rphi_spec_registry() -> Array[RPhi]
+
+pub fn rphi_src(String, String, String) -> String?
+
+pub fn rq_mat(Mat[Q]) -> Mat[Double]
+
+pub fn rrel_dev(Mat[Double], Mat[Double]) -> Double
+
+pub fn rrule_by_name(String) -> RRule?
+
+pub fn rrule_is_comb(String) -> Bool
+
+pub fn rrule_mat_registry() -> Array[RRule]
+
+pub fn rrule_sca_registry() -> Array[RRule]
+
+pub fn rrule_spec_registry() -> Array[RRule]
+
+pub fn rrule_src(String, String, String, String) -> String?
+
+pub fn rscalar(Double) -> Mat[Double]
+
+pub fn rsgram(SpaceExpr, Cost) -> Mat[Double]
+
+pub fn rspec_solve(SpaceExpr, Mat[Double], Cost) -> Mat[Double]?
+
+pub fn rule_by_name(String) -> ((Mat[Q], Mat[Q], Mat[Q], Mat[Q], Cost) -> Mat[Q]?)?
+
+pub fn rule_is_comb(String) -> Bool
+
+pub fn rule_mat_registry() -> Array[(String, (Mat[Q], Mat[Q], Mat[Q], Mat[Q], Cost) -> Mat[Q]?)]
+
+pub fn rule_of(String) -> ((Mat[Q], Mat[Q], Int, Int, Q, Q, Cost) -> Mat[Q]?)?
+
+pub fn rule_sca_registry() -> Array[(String, (Mat[Q], Mat[Q], Mat[Q], Mat[Q], Cost) -> Mat[Q]?)]
+
+pub fn rule_src(String, String, String, String, String, String) -> String?
+
+pub fn run_catalogue() -> (Array[Check], Verdict)
+
+pub fn rw_a10_regression(Rng) -> (Int, Int64, Int64, Int64, Bool)
+
+pub fn rw_chain_gain(Rng) -> (Int, Int64, Int64, Double)
+
+pub fn rw_confluent(SpaceExpr) -> Bool
+
+pub fn rw_corpus(Rng) -> Array[SpaceExpr]
+
+pub fn rw_cost_pair(SpaceExpr) -> (Int64, Int64, Bool)
+
+pub fn rw_cost_profile(Rng) -> (Int, Int, Int)
+
+pub fn rw_cost_triple(SpaceExpr) -> (Int64, Int64, Int64, Bool)
+
+pub fn rw_digest(Rng) -> String
+
+pub fn rw_dp_scan(Rng) -> (Int, Bool, Int, Int, Int, Int64, Int64)
+
+pub fn rw_dualw(SpaceExpr) -> Int
+
+pub fn rw_flatten_tensor(SpaceExpr) -> Array[SpaceExpr]
+
+pub fn rw_idempotent(SpaceExpr) -> Bool
+
+pub fn rw_is_ident(Mat[Q]) -> Bool
+
+pub fn rw_is_normal(SpaceExpr) -> Bool
+
+pub fn rw_leftw(SpaceExpr) -> Int
+
+pub fn rw_measure(SpaceExpr) -> (Int, Int, Int)
+
+pub fn rw_mlt((Int, Int, Int), (Int, Int, Int)) -> Bool
+
+pub fn rw_normalize(SpaceExpr, Array[RwRule], Bool, Int) -> (SpaceExpr, Int)
+
+pub fn rw_rebuild_tensor(AssocTree, Array[SpaceExpr]) -> SpaceExpr
+
+pub fn rw_registry_a() -> Array[RwRule]
+
+pub fn rw_registry_b() -> Array[RwRule]
+
+pub fn rw_rule_check(Rng) -> Array[(String, Bool, Bool, Bool)]
+
+pub fn rw_scan(Rng) -> (Int, Int, Int, Int, Int, Int, Int, Int64, Int64)
+
+pub fn rw_size(SpaceExpr) -> Int
+
+pub fn rw_sound_a(SpaceExpr) -> Bool
+
+pub fn rw_sound_b(SpaceExpr) -> Bool
+
+pub fn rw_step_in(SpaceExpr, Array[RwRule]) -> SpaceExpr?
+
+pub fn rw_step_out(SpaceExpr, Array[RwRule]) -> SpaceExpr?
+
+pub fn rw_step_root(SpaceExpr, Array[RwRule]) -> (SpaceExpr, String)?
+
+pub fn[F : Scalar] sabs2(F) -> F
+
+pub fn samp_gram(Rng, Int) -> Mat[Q]
+
+pub fn samp_indef(Rng, Int) -> Mat[Q]
+
+pub fn samp_mixed(Rng, Int) -> Mat[Q]
+
+pub fn samp_reset() -> Unit
+
+pub fn samp_singular(Rng, Int) -> Mat[Q]
+
+pub fn scalar_between(Mat[Q], Mat[Q]) -> Q?
+
+pub fn[F : Scalar] schur_complement(Mat[F], Int) -> Mat[F]?
+
+pub fn screen_matmul(Array[Array[@bigint.BigInt]], Array[Array[@bigint.BigInt]], Array[Array[@bigint.BigInt]], Int64, Rng, Cost) -> Bool
+
+pub fn screen_poly_mul(Array[@bigint.BigInt], Array[@bigint.BigInt], Array[@bigint.BigInt], Int64, Int, Rng, Cost) -> Bool
+
+pub fn screen_zeq(Array[Array[@bigint.BigInt]], Array[Array[@bigint.BigInt]], Int64, Cost) -> Bool
+
+pub fn[F : Scalar] sdiv(F, F) -> F?
+
+pub fn sf_exponent(Int, Int) -> Int
+
+pub fn[F : Scalar] shalf() -> F
+
+pub fn shape_count(Int, Int, Int) -> Int64
+
+pub fn shom(SpaceExpr, SpaceExpr) -> SpaceExpr
+
+pub fn[F : Scalar] simag_unit() -> F?
+
+pub fn sin_taylor(Double) -> Double
+
+pub fn[F : Scalar] sis_nonneg(F) -> Bool
+
+pub fn[F : Scalar] sis_pos(F) -> Bool
+
+pub fn[F : Scalar] sis_real(F) -> Bool
+
+pub fn[F : Scalar] skew_matrix_space(Int) -> IPSpace[Mat[F], F]
+
+pub fn[F : Scalar] sntimes(Int, F) -> F
+
+pub fn solve_exponent(Q, Q) -> Int?
+
+pub fn solve_exponents(Q, Q, Q) -> (Int, Int)?
+
+pub fn sort_doubles(Array[Double]) -> Unit
+
+pub fn space_registry() -> Array[SpaceRec]
+
+pub fn space_registry_digest() -> String
+
+pub fn space_registry_dims() -> (Int, Int, Int)
+
+pub fn space_registry_families() -> Array[(String, Int)]
+
+pub fn space_registry_new() -> Array[SpaceRec]
+
+pub fn space_registry_x() -> Array[SpaceRec]
+
+pub fn spd_bareiss(Mat[Q]) -> Bool
+
+pub fn spd_bareiss_cost(Mat[Q], Cost) -> Bool
+
+pub fn spd_compare(Mat[Q]) -> SpdCmp
+
+pub fn spd_naive_cost(Mat[Q], Cost) -> Bool
+
+pub fn spec_by_shape(Rng) -> Array[(String, Int, Int64, Int64)]
+
+pub fn spec_compare(SpaceExpr, Mat[Q]) -> (Bool, Int64, Int64)
+
+pub fn spec_confusion(Rng) -> (Int, Int, Int, Int)
+
+pub fn spec_confusion_pair(Rng) -> ((Int, Int, Int, Int), (Int, Int, Int, Int), Int)
+
+pub fn spec_corpus(Rng) -> Array[SpaceExpr]
+
+pub fn spec_dev(Array[Double], Array[Double]) -> Double
+
+pub fn spec_digest(Rng) -> String
+
+pub fn spec_ext_solve(SpaceExpr, Int, Mat[Q], Cost) -> Mat[Q]?
+
+pub fn spec_gram_apply(SpaceExpr, Mat[Q], Cost) -> Mat[Q]?
+
+pub fn spec_has_path(SpaceExpr) -> Bool
+
+pub fn spec_has_path2(SpaceExpr) -> Bool
+
+pub fn spec_has_path3(SpaceExpr) -> Bool
+
+pub fn spec_ksum_solve(SpaceExpr, SpaceExpr, Mat[Q], Cost) -> Mat[Q]?
+
+pub fn spec_norm_effect(Rng) -> (Int, Int, Int64, Int64, Int)
+
+pub fn spec_report(Rng) -> SpecReport
+
+pub fn spec_riesz_agrees(SpaceExpr, Array[Q]) -> Bool
+
+pub fn spec_scan(Rng) -> (Int, Int, Int, Int64, Int64, Int, Int)
+
+pub fn spec_shape(SpaceExpr) -> String
+
+pub fn spec_should(SpaceExpr) -> Bool
+
+pub fn spec_should_k(SpaceExpr, Int) -> Bool
+
+pub fn spec_solve_mat(SpaceExpr, Mat[Q], Cost) -> Mat[Q]?
+
+pub fn spec_solve_mat2(SpaceExpr, Mat[Q], Cost) -> Mat[Q]?
+
+pub fn spec_solve_mat3(SpaceExpr, Mat[Q], Cost) -> Mat[Q]?
+
+pub fn spec_sub_solve(SpaceExpr, Mat[Q], Mat[Q], Cost) -> Mat[Q]?
+
+pub fn spec_sym_sq_gram(Mat[Q], Mat[Q]) -> Mat[Q]
+
+pub fn spec_sym_sq_gram_cost(Mat[Q], Mat[Q], Cost) -> Mat[Q]
+
+pub fn spectral_radius_sym(Mat[Double]) -> Double
+
+pub fn[F : Scalar] spow(F, Int) -> F
+
+pub fn[F : Scalar] sprod(Array[F]) -> F
+
+pub fn sqrt_newton(Double) -> Double
+
+pub fn sqrtm_spd(Mat[Double]) -> Mat[Double]
+
+pub fn sreg_mat_a() -> Mat[Q]
+
+pub fn sreg_mat_b() -> Mat[Q]
+
+pub fn sreg_refaithful(SpaceRec) -> Bool
+
+pub fn sreg_spd(SpaceRec) -> Bool
+
+pub fn sreg_twist3() -> Mat[Q]
+
+pub fn sreg_twist_gen() -> Mat[Q]
+
+pub fn sregx_prefix_ok() -> Bool
+
+pub fn sregx_stats() -> (Int, Int, Int, Int, String)
+
+pub fn[F : Scalar] ssub(F, F) -> F
+
+pub fn[F : Scalar] ssum(Array[F]) -> F
+
+pub fn str_count(String, String) -> Int
+
+pub fn str_has(String, String) -> Bool
+
+pub fn str_hash64(String) -> UInt64
+
+pub fn str_lines(String) -> Int
+
+pub fn sub_control(Rng) -> (Int, Int)
+
+pub fn sub_corpus(Rng) -> Array[SpaceExpr]
+
+pub fn sub_digest(Rng) -> String
+
+pub fn sub_scan(Rng) -> (Int, Int, Int64, Int64, Int, Int)
+
+pub fn subset_index_table(Int, Int) -> Array[Int]
+
+pub fn subset_label(Array[Int]) -> String
+
+pub fn subsets_k(Int, Int) -> Array[Array[Int]]
+
+pub fn[V, F : Scalar] subspace_of(String, IPSpace[V, F], Array[V]) -> IPSpace[V, F]
+
+pub fn svd_jacobi(Mat[Double], Int) -> (Mat[Double], Array[Double], Mat[Double])
+
+pub fn sylvester_solve(Mat[Q], Mat[Q], Mat[Q], Cost) -> Mat[Q]?
+
+pub fn[F : Scalar] sym_matrix_space(Int) -> IPSpace[Mat[F], F]
+
+pub fn sym_pair_col(Int, Int, Int) -> Int
+
+pub fn sym_sq_bilinear_ref(Mat[Q], Mat[Q], Mat[Q], Array[Q], Array[Q]) -> Q
+
+pub fn synth_compare(SpaceExpr) -> (Bool, Int64, Int64, String, Int)
+
+pub fn synth_det(SpaceExpr, Cost) -> Q?
+
+pub fn synth_flat(PhiSpec, SpaceExpr, Cost) -> Mat[Q]?
+
+pub fn synth_inv(SpaceExpr, Cost) -> Mat[Q]?
+
+pub fn synth_rule_kron((Mat[Q], Cost) -> Mat[Q]?, Rng) -> SynthRule?
+
+pub fn synth_rule_uni(String, (Mat[Q], Cost) -> Mat[Q]?, String, String, Int, Rng) -> UniRule
+
+pub fn synth_spec(PhiSpec, SpaceExpr, Cost) -> Mat[Q]?
+
+pub fn synth_spec_aux(PhiSpec, SpaceExpr, Cost) -> (Mat[Q]?, Q)
+
+pub fn synth_spec_compare(PhiSpec, SpaceExpr) -> (Bool, Int64, Int64, String, Int)
+
+pub fn[F : Scalar] tensor_operator(Mat[F], Mat[F]) -> Mat[F]
+
+pub fn[A, B, F : Scalar] tensor_pure(IPSpace[A, F], IPSpace[B, F], A, B) -> Array[F]
+
+pub fn[A, B, F : Scalar] tensor_space(IPSpace[A, F], IPSpace[B, F]) -> IPSpace[Array[F], F]
+
+pub fn[A, B, F : Scalar] tensor_space_g(IPSpace[A, F], IPSpace[B, F], Mat[F], Mat[F]) -> IPSpace[Array[F], F]
+
+pub fn tinv_best(SpaceExpr) -> Int64
+
+pub fn tinv_best2(SpaceExpr) -> (Int64, Int64)
+
+pub fn tinv_dec(SpaceExpr) -> Int64
+
+pub fn tinv_dec2(SpaceExpr) -> (Int64, Int64)
+
+pub fn tinv_flat(SpaceExpr) -> Int64
+
+pub fn tinv_flat2(SpaceExpr) -> Int64
+
+pub fn tinv_gain(SpaceExpr) -> Double
+
+pub fn tinv_gain2(SpaceExpr) -> Double
+
+pub fn tinv_gain3(SpaceExpr) -> Double
+
+pub fn tkappa() -> Int64
+
+pub fn tlambda() -> Int64
+
+pub fn tmat(SpaceExpr) -> Int64
+
+pub fn tmat2(SpaceExpr) -> (Int64, Int64)
+
+pub fn to_complex(Mat[Double]) -> Mat[Cpx[Double]]
+
+pub fn[F : Scalar] traceless_space(Int) -> IPSpace[Mat[F], F]
+
+pub fn tri_axis_sensitivity(TriTable, TriTable, TriTable, Int, Int) -> ((Int, Int), (Int, Int), (Int, Int))
+
+pub fn tri_broken_items() -> Array[TriItem]
+
+pub fn tri_by_name(String) -> TriTable?
+
+pub fn tri_label(TriItem) -> String
+
+pub fn tri_letter_items() -> Array[TriItem]
+
+pub fn tri_memo_key(TriTable, TriTable, TriTable, Int, Int) -> String
+
+pub fn tri_memo_poison(TriTable, TriTable, TriTable, Int, Int, TriCensus) -> Unit
+
+pub fn tri_memo_reset() -> Unit
+
+pub fn tri_memo_stats() -> (Int, Int, Int)
+
+pub fn tri_product(TriTable, TriTable, TriTable, Int, Int) -> TriCensus
+
+pub fn tri_product_memo(TriTable, TriTable, TriTable, Int, Int) -> TriCensus
+
+pub fn tri_table_tag(TriTable) -> String
+
+pub fn tri_tables() -> Array[TriTable]
+
+pub fn trial_floor(String) -> Int
+
+pub fn trial_governed(String) -> Bool
+
+pub fn trial_policy(String) -> Int
+
+pub fn trial_target(String) -> Int
+
+pub fn[V, F : Scalar] triangle_holds(IPSpace[V, F], V, V) -> Bool
+
+pub fn uni_adj_ext_k2(Rng) -> UniRule
+
+pub fn uni_apply(UniRule, (Mat[Q], Cost) -> Mat[Q]?, Mat[Q], Int, Cost) -> Mat[Q]?
+
+pub fn uni_control(Rng) -> (Int, Int)
+
+pub fn uni_digest(Rng) -> String
+
+pub fn uni_direct(String, (Mat[Q], Cost) -> Mat[Q]?, Mat[Q], Int, Cost) -> Mat[Q]?
+
+pub fn uni_rule_table(Rng) -> Array[UniRule]
+
+pub fn uni_scan(Rng) -> (Int, Int, Int, Int, Int64, Int64, Int)
+
+pub fn[F : Scalar] unitary_space(Int) -> IPSpace[Array[Cpx[F]], Cpx[F]]
+
+pub fn[V, F] vadd(VSpace[V, F], V, V) -> V
+
+pub fn[F : Scalar] vandermonde(Array[F], Int) -> Mat[F]
+
+pub fn[F : Scalar] vandermonde_det_formula(Array[F]) -> F
+
+pub fn[V, F] vaxpy(VSpace[V, F], F, V, V) -> V
+
+pub fn[V, F] vcoord(VSpace[V, F], V) -> Array[F]
+
+pub fn vec_dev(Array[Double], Array[Double]) -> Double
+
+pub fn[V, F] veq_(VSpace[V, F], V, V) -> Bool
+
+pub fn[V, F] vexpand(VSpace[V, F], Array[F]) -> V
+
+pub fn[V, F] vlincomb(VSpace[V, F], Array[F], Array[V]) -> V
+
+pub fn vmax_dev(Array[Double], Array[Double]) -> Double
+
+pub fn[V, F] vneg(VSpace[V, F], V) -> V
+
+pub fn vnorm2(Array[Double]) -> Double
+
+pub fn[V, F : Scalar] volume_k(IPSpace[V, F], Array[V]) -> Double
+
+pub fn[V, F] vsample(VSpace[V, F], Rng) -> V
+
+pub fn[V, F] vshow_(VSpace[V, F], V) -> String
+
+pub fn[V, F] vsmul(VSpace[V, F], F, V) -> V
+
+pub fn[V, F] vsub(VSpace[V, F], V, V) -> V
+
+pub fn[V, F] vsum(VSpace[V, F], Array[V]) -> V
+
+pub fn[F : Scalar] wedge(Int, Int, Int, Array[F], Array[F]) -> Array[F]
+
+pub fn[F : Scalar] wedge_full(Int, Array[F], Array[F]) -> Array[F]
+
+pub fn[F : Scalar] wedge_vectors(Int, Array[Array[F]]) -> Array[F]
+
+pub fn wrong_sym_sq_gram(Mat[Q], Mat[Q]) -> Mat[Q]
+
+pub fn wwords(Int64) -> Int64
+
+pub fn zadj_crt(Array[Array[@bigint.BigInt]], Array[Int64], Cost) -> (Array[Array[@bigint.BigInt]], Int, Int)
+
+pub fn zcharpoly_crt(Array[Array[@bigint.BigInt]], Array[Int64], Cost) -> (Array[@bigint.BigInt], Int)
+
+pub fn zcharpoly_interp(Array[Array[@bigint.BigInt]], Array[Int64], Cost) -> (Array[@bigint.BigInt], Int)
+
+pub fn zdet_bareiss(Array[Array[@bigint.BigInt]], Cost) -> @bigint.BigInt
+
+pub fn zdet_crt(Array[Array[@bigint.BigInt]], Array[Int64], Cost) -> (@bigint.BigInt, Int)
+
+pub fn zminors_bareiss(Array[Array[@bigint.BigInt]], Cost) -> Array[@bigint.BigInt]
+
+pub fn zpoly_from_roots_linear(Array[@bigint.BigInt], Cost) -> Array[@bigint.BigInt]
+
+pub fn zpoly_from_roots_tree(Array[@bigint.BigInt], Cost) -> Array[@bigint.BigInt]
+
+pub fn zpoly_gcd_crt(Array[@bigint.BigInt], Array[@bigint.BigInt], Array[Int64], Cost) -> QGcdLift?
+
+pub fn zpoly_mul_crt(Array[@bigint.BigInt], Array[@bigint.BigInt], Array[Int64], Cost) -> (Array[@bigint.BigInt], Int)
+
+pub fn zpoly_mul_school(Array[@bigint.BigInt], Array[@bigint.BigInt], Cost) -> Array[@bigint.BigInt]
+
+pub fn zpow_cost(Cost, @bigint.BigInt, Int) -> @bigint.BigInt
+
+pub fn zrand_fine(Rng, Int) -> @bigint.BigInt
+
+pub fn zrank_crt(Array[Array[@bigint.BigInt]], Array[Int64], Cost, Int) -> Int
+
+pub fn zrows_bits(Array[Array[@bigint.BigInt]]) -> Int
+
+pub fn zrows_maxbits(Array[Array[@bigint.BigInt]]) -> Int
+
+pub fn zrows_mul(Array[Array[@bigint.BigInt]], Array[Array[@bigint.BigInt]]) -> Array[Array[@bigint.BigInt]]
+
+pub fn zrows_mulvec(Array[Array[@bigint.BigInt]], Array[@bigint.BigInt]) -> Array[@bigint.BigInt]
+
+pub fn zrows_to_qmat(Array[Array[@bigint.BigInt]]) -> Mat[Q]
+
+// Errors
+
+// Types and methods
+pub struct AccCell {
+  accode : String
+  acn : Int
+  acbits : Int
+  acbase : Int64
+  acfast : Int64
+  acmid : Int
+  acnu : Int
+  ack : Int
+  acok : Bool
+}
+pub fn AccCell::gain(Self) -> Double
+
+pub struct AccelPlan {
+  pname : String
+  use_fast : Bool
+  pred_base : Int64
+  pred_fast : Int64
+  why : String
+}
+
+pub struct AccelStat {
+  aname : String
+  base_wmul : Int64
+  fast_wmul : Int64
+  base_bits : Int
+  fast_bits : Int
+  nprimes : Int
+  certified : Bool
+}
+pub fn AccelStat::gain(Self) -> Double
+pub fn AccelStat::line(Self) -> String
+
+pub struct Algo {
+  code : String
+  zh : String
+  cat : String
+  spaces : String
+  deff : String
+  formula : String
+  thm : String
+  proof : String
+  track : String
+  run : () -> Check
+}
+
+pub enum AssocTree {
+  ALeaf(Int)
+  ANode(AssocTree, AssocTree)
+}
+pub fn AssocTree::acost(Self, Array[Int]) -> Int64
+pub fn AssocTree::alabel(Self) -> String
+pub fn AssocTree::anodes(Self) -> Int
+pub fn AssocTree::aprod(Self, Array[Int]) -> Int64
+pub fn AssocTree::kscost(Self, Array[Int]) -> Int64
+
+pub struct C7Cell {
+  k7c : String
+  k7s : String
+  k7d : Int
+  k7sym : Bool
+  k7dim : Bool
+  k7spd : Bool
+  k7cf : Bool
+  k7ctl : Bool
+  k7blind : Bool
+  k7cs : Bool
+  k7rz : Bool
+}
+
+pub struct C7Pair {
+  p7a : String
+  p7b : String
+  p7dim : Int
+  p7eq : Int
+  p7iso : Int
+  p7ne : Int
+  p7skip : Int
+}
+
+pub struct C7Report {
+  r7cells : Int
+  r7sym : Int
+  r7dim : Int
+  r7spd : Int
+  r7cf : Int
+  r7ctl : Int
+  r7blind : Int
+  r7cs : Int
+  r7rz : Int
+  r7inst : Int
+  r7dmax : Int
+  r7dsum : Int
+  r7digest : String
+  r7rows : Array[C7Cell]
+}
+
+pub struct CenSpec {
+  cscode : String
+  csfn : String
+  csa : String
+  csb : String
+  csc : String
+  csstep : Int
+  csmax : Int
+  cszh : String
+}
+
+pub struct Check {
+  cname : String
+  ok : Bool
+  trials : Int
+  detail : String
+}
+
+pub struct CmpSpec {
+  mscode : String
+  msfn : String
+  msscan : String
+  mszh : String
+}
+
+pub struct CombRec {
+  cname : String
+  csym : String
+  cari : Int
+  capply : (SpaceExpr) -> SpaceExpr
+  cdim : (Int) -> Int
+}
+
+pub struct CompLaw {
+  xouter : String
+  xinner : String
+  xcomb : String
+  xrule : String
+  xmid : String
+  xderived : Bool
+  xholds : Bool
+  xgain : Double
+  xvac : Int
+}
+pub fn CompLaw::xname(Self) -> String
+pub fn CompLaw::xphi(Self) -> String
+
+pub struct Content {
+  cdistinct : Int
+  cbot : Int
+}
+
+pub struct Cost {
+  mut wmul : Int64
+  mut wadd : Int64
+  mut bigops : Int64
+  mut maxbits : Int
+  mut flops : Int64
+  mut qmul : Int64
+}
+pub fn Cost::absorb_fp(Self, FpCtx) -> Unit
+pub fn Cost::new() -> Self
+pub fn Cost::note(Self, Int) -> Unit
+pub fn Cost::ratio(Self, Self) -> Double
+pub fn Cost::words_mul(Self, Int64) -> Unit
+
+pub struct Cpx[F] {
+  cre : F
+  cim : F
+}
+pub fn[F : Scalar] Cpx::imag_unit() -> Self[F]
+pub fn[F : Scalar] Cpx::ints(Int, Int) -> Self[F]
+pub fn[F] Cpx::mk(F, F) -> Self[F]
+pub fn[F : Scalar] Cpx::norm2(Self[F]) -> F
+pub fn[F : Scalar] Cpx::of_real(F) -> Self[F]
+pub fn[F : Scalar] Cpx::output(Self[F], &Logger) -> Unit
+pub fn[F : Scalar] Cpx::to_string(Self[F]) -> String
+pub impl[F : Scalar] Scalar for Cpx[F]
+pub impl[F : Scalar] Show for Cpx[F]
+
+pub struct Crt {
+  mut cmod : @bigint.BigInt
+  mut cval : @bigint.BigInt
+  mut steps : Int
+}
+pub fn Crt::absorb(Self, Int64, Int64) -> Unit
+pub fn Crt::modulus(Self) -> @bigint.BigInt
+pub fn Crt::new() -> Self
+pub fn Crt::sym(Self) -> @bigint.BigInt
+pub fn Crt::value(Self) -> @bigint.BigInt
+
+pub struct DAlgo {
+  dcode : String
+  dname : String
+  drun : (IPSpace[Array[Q], Q], Rng) -> Bool
+}
+
+pub struct DCensus {
+  cells : Int
+  pass : Int
+  fail : Int
+  dmax : Int
+  cov : (Int, Int, Int)
+  misses : Array[String]
+  digest : String
+}
+
+pub struct FLaw {
+  l7triples : Int
+  l7dist : Int
+  l7wrong : Int
+  l7wrongable : Int
+  l7blindok : Int
+  l7blind : Int
+  l7assoc_sum : Int
+  l7assoc_ten : Int
+  l7assoc_run : Int
+}
+
+pub struct FPre {
+  pdet : Q
+  ptr : Q
+  pspd : Bool
+}
+
+pub struct FReport {
+  q7op : String
+  q7pairs : Int
+  q7dim : Int
+  q7det : Int
+  q7detrun : Int
+  q7tr : Int
+  q7spd : Int
+  q7spdrun : Int
+  q7comm : Int
+  q7ip : Int
+  q7iprun : Int
+  q7inst : Int
+  q7dmax : Int
+  q7dsum : Int
+  q7digest : String
+}
+
+pub struct FourPath {
+  tname : String
+  tdims : String
+  ca : Int64
+  cb : Int64
+  cc : Int64
+  cd : Int64
+  agree : Bool
+}
+pub fn FourPath::best(Self) -> String
+pub fn FourPath::defect(Self) -> Double
+pub fn FourPath::g_crt_dec(Self) -> Double
+pub fn FourPath::g_crt_mono(Self) -> Double
+pub fn FourPath::g_law_crt(Self) -> Double
+pub fn FourPath::g_law_exact(Self) -> Double
+pub fn FourPath::g_total(Self) -> Double
+pub fn FourPath::identity_ok(Self) -> Bool
+pub fn FourPath::line(Self) -> String
+
+pub struct FpCtx {
+  pmod : Int64
+  mut ops : Int64
+  mut adds : Int64
+}
+pub fn FpCtx::add(Self, Int64, Int64) -> Int64
+pub fn FpCtx::inv(Self, Int64) -> Int64?
+pub fn FpCtx::make(Int64) -> Self
+pub fn FpCtx::mul(Self, Int64, Int64) -> Int64
+pub fn FpCtx::neg(Self, Int64) -> Int64
+pub fn FpCtx::pow(Self, Int64, Int64) -> Int64
+pub fn FpCtx::sub(Self, Int64, Int64) -> Int64
+
+pub struct FpMat {
+  fr : Int
+  fc : Int
+  fd : Array[Int64]
+}
+pub fn FpMat::copy(Self) -> Self
+pub fn FpMat::get(Self, Int, Int) -> Int64
+pub fn FpMat::make(Int, Int) -> Self
+pub fn FpMat::set(Self, Int, Int, Int64) -> Unit
+
+pub struct FpRref {
+  rmat : FpMat
+  rank : Int
+  pivots : Array[Int]
+  det : Int64
+}
+
+pub struct GSOut[V, F] {
+  ortho : Array[V]
+  rmat : Mat[F]
+  dependent : Array[Int]
+}
+
+pub struct IPSpace[V, F] {
+  vs : VSpace[V, F]
+  ipname : String
+  inner : (V, V) -> F
+}
+
+pub struct KLaw {
+  kname : String
+  kk : Int
+  kverd : Bool
+  kg : Double
+  kasmfrac : Double
+}
+
+pub struct KVerdict {
+  kholds : Bool
+  kbase : Int64
+  kfast : Int64
+  kasm : Int64
+  kqasm : Int64
+  kqfast : Int64
+}
+pub fn KVerdict::kgain(Self) -> Double
+
+pub struct LU[F] {
+  lmat : Mat[F]
+  umat : Mat[F]
+  perm : Array[Int]
+  swaps : Int
+  singular : Bool
+}
+
+pub struct LawCand {
+  cphi : String
+  ccomb : String
+  crule : String
+  cholds : Bool
+  cgain : Double
+}
+pub fn LawCand::cname(Self) -> String
+
+pub struct LawClaim {
+  clname : String
+  clholds : Bool
+  cltrials : Int
+  clpayoff : Payoff
+  cldetail : String
+}
+
+pub struct LawVerdict {
+  lname : String
+  holds : Bool
+  ltrials : Int
+  base_cost : Int64
+  fast_cost : Int64
+  ldetail : String
+  ltrack : Track
+}
+pub fn LawVerdict::cost(Self) -> Int64
+pub fn LawVerdict::lgain(Self) -> Double
+pub fn LawVerdict::unit(Self) -> String
+
+pub struct MPoly[F] {
+  nvars : Int
+  terms : Array[Term[F]]
+}
+pub fn[F : Scalar] MPoly::mpadd(Self[F], Self[F]) -> Self[F]
+pub fn[F] MPoly::mpdeg(Self[F]) -> Int
+pub fn[F : Scalar] MPoly::mpeq(Self[F], Self[F]) -> Bool
+pub fn[F : Scalar] MPoly::mpeval(Self[F], Array[F]) -> F
+pub fn[F : Scalar] MPoly::mpmul(Self[F], Self[F]) -> Self[F]
+pub fn[F : Scalar] MPoly::mpneg(Self[F]) -> Self[F]
+pub fn[F : Scalar] MPoly::mpscale(Self[F], F) -> Self[F]
+pub fn[F : Scalar] MPoly::text(Self[F]) -> String
+
+pub struct Mat[F] {
+  mrows : Int
+  mcols : Int
+  data : Array[F]
+}
+pub fn[F : Scalar] Mat::adjointm(Self[F]) -> Self[F]
+pub fn[F : Scalar] Mat::apply(Self[F], Array[F]) -> Array[F]
+pub fn[F] Mat::at(Self[F], Int, Int) -> F
+pub fn[F] Mat::build(Int, Int, (Int, Int) -> F) -> Self[F]
+pub fn[F] Mat::clone(Self[F]) -> Self[F]
+pub fn[F] Mat::col(Self[F], Int) -> Array[F]
+pub fn[F : Scalar] Mat::conjm(Self[F]) -> Self[F]
+pub fn[F : Scalar] Mat::diagm(Array[F]) -> Self[F]
+pub fn[F : Scalar] Mat::equals(Self[F], Self[F]) -> Bool
+pub fn[F : Scalar] Mat::frob2(Self[F]) -> Double
+pub fn[F] Mat::hcat(Self[F], Self[F]) -> Self[F]
+pub fn[F : Scalar] Mat::ident(Int) -> Self[F]
+pub fn[F : Scalar] Mat::max_dev(Self[F], Self[F]) -> Double
+pub fn[F] Mat::minor_mat(Self[F], Int, Int) -> Self[F]
+pub fn[F : Scalar] Mat::minus(Self[F], Self[F]) -> Self[F]
+pub fn[F : Scalar] Mat::negm(Self[F]) -> Self[F]
+pub fn[F] Mat::of_cols(Array[Array[F]]) -> Self[F]
+pub fn[F] Mat::of_rows(Array[Array[F]]) -> Self[F]
+pub fn[F : Scalar] Mat::plus(Self[F], Self[F]) -> Self[F]
+pub fn[F] Mat::put(Self[F], Int, Int, F) -> Unit
+pub fn[F] Mat::row(Self[F], Int) -> Array[F]
+pub fn[F : Scalar] Mat::scale(Self[F], F) -> Self[F]
+pub fn[F] Mat::sub(Self[F], Int, Int, Int, Int) -> Self[F]
+pub fn[F : Scalar] Mat::text(Self[F]) -> String
+pub fn[F : Scalar] Mat::times(Self[F], Self[F]) -> Self[F]
+pub fn[F : Scalar] Mat::trace(Self[F]) -> F
+pub fn[F] Mat::transpose(Self[F]) -> Self[F]
+pub fn[F] Mat::vcat(Self[F], Self[F]) -> Self[F]
+pub fn[F : Scalar] Mat::zeros(Int, Int) -> Self[F]
+
+pub struct NegResult {
+  nsrc : String
+  nclaim : String
+  nmeasured : Double
+  nbound : Double
+  nholds : Bool
+}
+
+pub struct NonCtor {
+  ncname : String
+  ncsym : String
+  ncapply : (Mat[Q]) -> Mat[Q]?
+  ncdim : (Int) -> Int
+  ncclaim : Bool
+}
+
+pub struct OblSpec {
+  ocode : String
+  ofn : String
+  oouter : String
+  oinner : String
+  ocomb : String
+  orule : String
+  ozh : String
+  otrack : String
+}
+
+pub enum OpTree {
+  OpLeaf(SpaceExpr)
+  OpKron(OpTree, OpTree, Int, Int)
+  OpSum(OpTree, OpTree)
+}
+pub fn OpTree::oplabel(Self) -> String
+
+pub enum Payoff {
+  Speedup(Double)
+  Invariant(String)
+  Feasibility(String)
+}
+pub fn Payoff::pdescribe(Self) -> String
+pub fn Payoff::psame_kind(Self, Self) -> Bool
+
+pub struct PhiSpec {
+  pname : String
+  pleaf : (Mat[Q], Cost) -> Mat[Q]?
+  pkname : String
+  pkron : ((Mat[Q], Mat[Q], Int, Int, Q, Q, Cost) -> Mat[Q]?)?
+  psname : String
+  psum : ((Mat[Q], Mat[Q], Int, Int, Q, Q, Cost) -> Mat[Q]?)?
+  pdual_phi : Bool
+  pdual : (SpaceExpr, Mat[Q]?, Cost) -> Mat[Q]?
+  paux : Bool
+  pxname : String
+  pext : ((Mat[Q], Int, Int, Q, Cost) -> Mat[Q]?)?
+  ptname : String
+  ptwist : ((Mat[Q], Mat[Q], Int, Q, Cost) -> Mat[Q]?)?
+}
+
+pub struct Poly[F] {
+  coef : Array[F]
+}
+pub fn[F : Scalar] Poly::compose(Self[F], Self[F]) -> Self[F]
+pub fn[F : Scalar] Poly::degree(Self[F]) -> Int
+pub fn[F : Scalar] Poly::deriv(Self[F]) -> Self[F]
+pub fn[F : Scalar] Poly::eval(Self[F], F) -> F
+pub fn[F : Scalar] Poly::integ(Self[F]) -> Self[F]
+pub fn[F : Scalar] Poly::mono(Int, Int) -> Self[F]
+pub fn[F] Poly::of(Array[F]) -> Self[F]
+pub fn[F : Scalar] Poly::padd(Self[F], Self[F]) -> Self[F]
+pub fn[F : Scalar] Poly::peq(Self[F], Self[F]) -> Bool
+pub fn[F : Scalar] Poly::pmul(Self[F], Self[F]) -> Self[F]
+pub fn[F : Scalar] Poly::pneg(Self[F]) -> Self[F]
+pub fn[F : Scalar] Poly::pscale(Self[F], F) -> Self[F]
+pub fn[F : Scalar] Poly::psub(Self[F], Self[F]) -> Self[F]
+pub fn[F : Scalar] Poly::resize(Self[F], Int) -> Self[F]
+pub fn[F : Scalar] Poly::text(Self[F]) -> String
+pub fn[F : Scalar] Poly::zeros(Int) -> Self[F]
+
+pub struct Q {
+  num : @bigint.BigInt
+  den : @bigint.BigInt
+}
+pub fn Q::abs(Self) -> Self
+pub fn Q::add(Self, Self) -> Self
+pub fn Q::cmp(Self, Self) -> Int
+pub fn Q::div(Self, Self) -> Self?
+pub fn Q::eq(Self, Self) -> Bool
+pub fn Q::frac(Int, Int) -> Self
+pub fn Q::inv(Self) -> Self?
+pub fn Q::is_zero(Self) -> Bool
+pub fn Q::make(@bigint.BigInt, @bigint.BigInt) -> Self
+pub fn Q::mul(Self, Self) -> Self
+pub fn Q::neg(Self) -> Self
+pub fn Q::of_int(Int) -> Self
+pub fn Q::one() -> Self
+pub fn Q::output(Self, &Logger) -> Unit
+pub fn Q::sqrt_exact(Self) -> Self?
+pub fn Q::sub(Self, Self) -> Self
+pub fn Q::text(Self) -> String
+pub fn Q::to_double(Self) -> Double
+pub fn Q::to_string(Self) -> String
+pub fn Q::zero() -> Self
+pub impl Scalar for Q
+pub impl Show for Q
+
+pub struct QGcdLift {
+  gcd : Array[Q]
+  degmin : Int
+  used : Int
+  certified : Bool
+}
+
+pub struct QInterpLift {
+  poly : Array[Q]
+  used : Int
+  certified : Bool
+}
+
+pub struct QLdlt {
+  lmat : Mat[Q]
+  dvec : Array[Q]
+  used : Int
+  certified : Bool
+}
+
+pub struct QLift {
+  sol : Array[Q]?
+  used : Int
+  bad : Int
+  certified : Bool
+}
+
+pub struct QMinors {
+  qmdelta : Array[@bigint.BigInt]
+  qmd : Array[Q]
+  qmdet : Q
+  qmspd : Bool
+  qmused : Int
+}
+
+pub struct QRrefLift {
+  rmat : Mat[Q]
+  tmat : Mat[Q]
+  rank : Int
+  pivots : Array[Int]
+  used : Int
+  certified : Bool
+}
+
+pub struct Quat[F] {
+  qw : F
+  qx : F
+  qy : F
+  qz : F
+}
+pub fn[F] Quat::mk(F, F, F, F) -> Self[F]
+pub fn[F : Scalar] Quat::qadd(Self[F], Self[F]) -> Self[F]
+pub fn[F : Scalar] Quat::qconj(Self[F]) -> Self[F]
+pub fn[F : Scalar] Quat::qdot(Self[F], Self[F]) -> F
+pub fn[F : Scalar] Quat::qeq(Self[F], Self[F]) -> Bool
+pub fn[F : Scalar] Quat::qi() -> Self[F]
+pub fn[F : Scalar] Quat::qinv(Self[F]) -> Self[F]?
+pub fn[F : Scalar] Quat::qj() -> Self[F]
+pub fn[F : Scalar] Quat::qk() -> Self[F]
+pub fn[F : Scalar] Quat::qmul(Self[F], Self[F]) -> Self[F]
+pub fn[F : Scalar] Quat::qneg(Self[F]) -> Self[F]
+pub fn[F : Scalar] Quat::qnorm2(Self[F]) -> F
+pub fn[F : Scalar] Quat::qone() -> Self[F]
+pub fn[F : Scalar] Quat::qsmul(Self[F], F) -> Self[F]
+pub fn[F : Scalar] Quat::qsub(Self[F], Self[F]) -> Self[F]
+pub fn[F : Scalar] Quat::qzero() -> Self[F]
+pub fn[F : Scalar] Quat::text(Self[F]) -> String
+
+pub struct RCompLaw {
+  youter : String
+  yinner : String
+  ycomb : String
+  yrule : String
+  ymid : String
+  ysyn : Bool
+  ydom : Bool
+  yholds : Bool
+  ygain : Double
+  ydev : Double
+  ydegen : Int
+  yovf : Int
+  ypre : Int
+}
+pub fn RCompLaw::yname(Self) -> String
+
+pub struct RPhi {
+  rpname : String
+  rpfn : (Mat[Double], Cost) -> Mat[Double]?
+  rpspec : Bool
+}
+
+pub struct RRule {
+  rrname : String
+  rrfn : (Mat[Double], Mat[Double], Int, Int, Cost) -> Mat[Double]?
+}
+
+pub struct RankCert {
+  rcrank : Int
+  rcpiv : Array[Int]
+  rclow : Bool
+  rcup : Bool
+  rcused : Int
+}
+
+pub struct Rng {
+  mut state : UInt64
+}
+pub fn Rng::new(UInt64) -> Self
+pub fn Rng::next_below(Self, Int) -> Int
+pub fn Rng::next_double(Self) -> Double
+pub fn Rng::next_range(Self, Int, Int) -> Int
+pub fn Rng::next_small(Self, Int) -> Int
+pub fn Rng::next_u64(Self) -> UInt64
+
+pub struct Rref[F] {
+  rmat : Mat[F]
+  rank : Int
+  pivots : Array[Int]
+  pivprod : F
+  sign : Int
+}
+
+pub struct RwRule {
+  rname : String
+  rkind : Int
+  rstep : (SpaceExpr) -> SpaceExpr?
+}
+
+pub struct SolSet[F] {
+  solvable : Bool
+  particular : Array[F]
+  nullbasis : Array[Array[F]]
+}
+
+pub enum SpaceExpr {
+  SLeaf(String, Mat[Q])
+  STensor(SpaceExpr, SpaceExpr)
+  SSum(SpaceExpr, SpaceExpr)
+  SDual(SpaceExpr)
+  SExt(SpaceExpr, Int)
+  STwist(SpaceExpr, Mat[Q])
+  SSub(SpaceExpr, Mat[Q])
+  SKSum(SpaceExpr, SpaceExpr)
+}
+pub fn SpaceExpr::sdepth(Self) -> Int
+pub fn SpaceExpr::sdim(Self) -> Int
+pub fn SpaceExpr::sgram(Self) -> Mat[Q]
+pub fn SpaceExpr::sgram_cost(Self, Cost) -> Mat[Q]
+pub fn SpaceExpr::slabel(Self) -> String
+pub fn SpaceExpr::sspace(Self) -> IPSpace[Array[Q], Q]
+
+pub struct SpaceRec {
+  sname : String
+  fam : String
+  sdim : Int
+  sg : Mat[Q]
+}
+pub fn SpaceRec::leaf(Self) -> SpaceExpr
+pub fn SpaceRec::space(Self) -> IPSpace[Array[Q], Q]
+
+pub struct SpdCmp {
+  scn : Int
+  snaive : Bool
+  sbare : Bool
+  scost_naive : Int64
+  scost_bare : Int64
+}
+
+pub struct SpecReport {
+  trials : Int
+  same : Int
+  haspath : Int
+  dense : Int64
+  spec : Int64
+  win : Int
+  lose : Int
+  shapes : Array[(String, Int, Int64, Int64)]
+  cs : (Int, Int, Int, Int)
+  cr : (Int, Int, Int, Int)
+}
+
+pub struct SynthRule {
+  sp0 : Int
+  sp1 : Int
+  sp2 : Int
+  sq0 : Int
+  sq1 : Int
+  sq2 : Int
+}
+pub fn SynthRule::describe(Self) -> String
+pub fn SynthRule::is_plain(Self) -> Bool
+
+pub struct Term[F] {
+  expo : Array[Int]
+  tc : F
+}
+
+pub enum Track {
+  TQ
+  TR
+}
+pub fn Track::teq(Self, Self) -> Bool
+pub fn Track::tlabel(Self) -> String
+pub fn Track::tunit(Self) -> String
+
+pub struct TriCensus {
+  tcells : Int
+  tpass : Int
+  tdmax : Int
+  tcov : (Int, Int, Int)
+  tmisses : Array[String]
+  tdigest : String
+}
+
+pub enum TriItem {
+  TiSpace(SpaceRec)
+  TiComb(CombRec)
+  TiAlgo(DAlgo)
+  TiOblig(String, () -> Check)
+}
+
+pub struct TriMemo {
+  mkeys : Array[String]
+  mvals : Array[TriCensus]
+  mut mhits : Int
+  mut mmiss : Int
+}
+
+pub struct TriTable {
+  ttname : String
+  ttitems : Array[TriItem]
+}
+
+pub struct UniRule {
+  uctor : String
+  uphi : String
+  uholds : Bool
+  udual : String
+  ue0 : Int
+  ue1 : Int
+  ue2 : Int
+}
+pub fn UniRule::describe(Self) -> String
+
+pub struct VSpace[V, F] {
+  vname : String
+  dim : Int
+  zero : V
+  add : (V, V) -> V
+  neg : (V) -> V
+  smul : (F, V) -> V
+  veq : (V, V) -> Bool
+  basis : Array[V]
+  coord : (V) -> Array[F]
+  expand : (Array[F]) -> V
+  vshow : (V) -> String
+  sample : (Rng) -> V
+}
+
+pub struct Verdict {
+  entries : Int
+  passed : Int
+  failed : Int
+  instances : Int
+  failures : Array[String]
+}
+
+pub struct Verdict47 {
+  vname : String
+  vold : Bool
+  vnew : Bool
+  vbot : Int
+  vbotn : Int
+  vconst : Bool
+}
+
+// Type aliases
+pub type CMat = Mat[Cpx[Double]]
+
+pub type RMat = Mat[Double]
+
+// Traits
+pub(open) trait Scalar {
+  fn s_zero() -> Self
+  fn s_one() -> Self
+  fn s_add(Self, Self) -> Self
+  fn s_mul(Self, Self) -> Self
+  fn s_neg(Self) -> Self
+  fn s_inv(Self) -> Self?
+  fn s_conj(Self) -> Self
+  fn s_eq(Self, Self) -> Bool
+  fn s_is_zero(Self) -> Bool
+  fn s_mag(Self) -> Double
+  fn s_re_part(Self) -> Self
+  fn s_im_part(Self) -> Self
+  fn s_from_int(Int) -> Self
+  fn s_from_frac(Int, Int) -> Self
+  fn s_rand(Rng) -> Self
+  fn s_text(Self) -> String
+  fn s_sqrt(Self) -> Self?
+  fn s_is_exact() -> Bool
+  fn s_name() -> String
+  fn s_cmp_re(Self, Self) -> Int
+  fn s_to_double(Self) -> Double
+}
+pub impl Scalar for Double

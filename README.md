@@ -17,6 +17,7 @@
 moon check            # 型別檢查（0 error, 0 warning）
 moon test             # 單元測試（含整份目錄之迴歸測試）
 moon run cmd/main     # 逐條執行 242 條義務自證，列印結果表
+moon run cmd/main -- --only K      # 子集模式：僅跑 K 群（秒級；亦可 HILBERT_ONLY=K）
 moon run cmd/accel    # 加速層實測：成本模型對照表 + 分派器決策網格
 moon run cmd/audit    # 逐條目掛鐘量測 + 取樣政策對帳（TSV，第 8 欄 policy）
 moon run cmd/report > docs/評審報告.md   # 產生完整 Markdown 評審報告
@@ -26,6 +27,12 @@ moon run cmd/midend   > docs/中端報表.md   # 重寫規則 · 範式 · 派�
 moon run cmd/accelfix > docs/加速層重構.md # L-05／L-08 反例之全網格量測與兩條改寫
 moon run cmd/genoblig | diff - oblig_auto.mbt   # 驗證自動生成之義務可重現（N-45）
 ```
+
+**CI 閘門（本機與 CI 一致，共九道）**：`AGENTS.md` §6 列出逐條指令與
+`.github/workflows/ci.yml`；另有每日之工具鏈漂移探測。
+`moon check --target all --warn-list "+all" --deny-warn` 為最強形式——**全部提示零警告**。
+`moon run cmd/main -- --help` 印子集模式用法；`moon prove` 之接入評估見
+[`docs/形式驗證接入評估.md`](docs/形式驗證接入評估.md)。
 
 完整報告：[`docs/評審報告.md`](docs/評審報告.md)　|　
 空間普查：[`docs/空間普查表.md`](docs/空間普查表.md)　|　
@@ -46,9 +53,10 @@ moon run cmd/genoblig | diff - oblig_auto.mbt   # 驗證自動生成之義務可
 ## 為何「零依賴」
 
 `moon.mod` 之依賴區為空，函式庫本體（root `moon.pkg`）之 import 區亦為空，
-連 `@math` 都未使用。（唯一例外：`cmd/accel` 這支**執行檔**為了量掛鐘時間而 import
-`moonbitlang/core/bench` —— 那是編譯器自帶之標準庫而非第三方套件，且函式庫本體與
-全部 242 條義務自證皆不依賴它。）
+連 `@math` 都未使用。（例外僅限兩支**執行檔**，皆為編譯器自帶之標準庫而非第三方套件：
+`cmd/accel` 為了量掛鐘時間 import `moonbitlang/core/bench`；
+`cmd/main` 為了讀取 `--only` 之子集前綴 import `moonbitlang/core/env`。
+函式庫本體與全部 242 條義務自證皆不依賴兩者。）
 
 | 需求 | 自建實作 |
 | --- | --- |

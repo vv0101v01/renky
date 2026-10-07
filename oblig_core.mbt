@@ -49,7 +49,7 @@ fn qmat_invertible(rng : Rng, n : Int) -> Mat[Q] {
 ///|
 /// A-01 xorshift64* 偽亂數：確定性可重現、狀態非零、低階位元非退化。
 pub fn ob_a01() -> Check {
-  let n = 24 // 取樣政策：A-01 = 24
+  let n = 64 // 取樣政策：A-01 為便宜層，目標 64
   let r1 = Rng::new(42UL)
   let r2 = Rng::new(42UL)
   let r3 = Rng::new(7UL)
@@ -76,12 +76,20 @@ pub fn ob_a01() -> Check {
     let bk = r3.next_below(8)
     buckets[bk] = buckets[bk] + 1
   }
-  // n = 24 抽樣所能支撐的判準（事前依分佈設定，非看了結果再湊）：
-  //   (1) 空桶 ≤ 2      E[空桶] = 8·(7/8)²⁴ = 0.32
-  //   (2) 最大桶 ≤ 9    Binom(24, 1/8)：μ = 3、σ = 1.62，μ+3σ = 7.9
-  //   (3) 位元平衡      24×64 = 1536 位元：μ = 768、σ = 19.6，±3σ ⇒ [709, 827]
-  // 原判準「8 桶皆有樣本」在 n = 24 下本就不該成立（漏桶機率約 0.27），
-  // 它之所以從前會過，只是因為當時跑了 2000 次 —— 那是用抽樣量掩蓋判準不當。
+  // 判準事前依分佈設定（非看了結果再湊），且**隨 n 參數化** ——
+  // 第十六輪把 n 由 24 提到 64 時，原本寫死的三組界限全部失效：
+  // 寫死的界限等於把「抽樣量」偷偷編進判準裡，抽樣量一改就壞。
+  //   (1) 空桶     E[空桶] = 8·(7/8)ⁿ；n = 24 時 0.32、n = 64 時 0.0016
+  //   (2) 最大桶   Binom(n, 1/8)：μ = n/8、σ = √(7n)/8，界限 μ + 3σ
+  //   (3) 位元平衡 64n 個位元：μ = 32n、σ = 4√n，界限 μ ± 3σ = 32n ± 12√n
+  let nd = n.to_double()
+  let bucket_hi = (nd / 8.0 + 3.0 * (7.0 * nd).sqrt() / 8.0).ceil().to_int()
+  // E[空桶] = 8·(7/8)ⁿ ≥ 1 ⟺ n ≤ ln 8 / ln(8/7) ≈ 15.6，故以 n ≤ 15 判斷
+  let empty_hi = if n <= 15 { 2 } else { 1 }
+  let bits_mu = 32.0 * nd
+  let bits_rad = 12.0 * nd.sqrt()
+  let bits_lo = (bits_mu - bits_rad).floor().to_int()
+  let bits_hi = (bits_mu + bits_rad).ceil().to_int()
   let mut empty = 0
   let mut mx = 0
   for k in 0..<8 {
@@ -92,8 +100,8 @@ pub fn ob_a01() -> Check {
       mx = buckets[k]
     }
   }
-  let spread = empty <= 2 && mx <= 9
-  let balanced = bits >= 709 && bits <= 827
+  let spread = empty <= empty_hi && mx <= bucket_hi
+  let balanced = bits >= bits_lo && bits <= bits_hi
   // 反面對照：退化產生器（常數流 0）必須被同一組判準否決
   let dg = Array::make(8, 0)
   dg[3] = n
@@ -107,16 +115,24 @@ pub fn ob_a01() -> Check {
       dmx = dg[k]
     }
   }
-  let d_spread = dempty <= 2 && dmx <= 9
-  let d_balanced = 0 >= 709 && 0 <= 827
+  let d_spread = dempty <= empty_hi && dmx <= bucket_hi
+  let d_balanced = 0 >= bits_lo && 0 <= bits_hi
   let rejects = !d_spread && !d_balanced
   let det = "24 次抽樣：同種子序列逐位相同、輸出皆非零；8 桶中空桶 " +
     empty.to_string() +
     " ≤ 2、最大桶 " +
     mx.to_string() +
-    " ≤ 9；1536 個位元中 1 的個數 " +
+    " ≤ " +
+    bucket_hi.to_string() +
+    "；" +
+    (64 * n).to_string() +
+    " 個位元中 1 的個數 " +
     bits.to_string() +
-    " ∈ [709,827]（μ±3σ）；同一組判準對常數流必否決"
+    " ∈ [" +
+    bits_lo.to_string() +
+    "," +
+    bits_hi.to_string() +
+    "]（μ±3σ，隨 n 參數化）；同一組判準對常數流必否決"
   mk_check(
     "A-01 PRNG 確定性與非退化",
     same && nonzero && spread && balanced && rejects,
@@ -130,7 +146,7 @@ pub fn ob_a01() -> Check {
 pub fn ob_a02() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<8 {
+  for _t in 0..<64 {
     let a = BigInt::from_int(rng.next_range(-100000, 100000))
     let b = BigInt::from_int(rng.next_range(1, 100000))
     let g = big_gcd(a, b)
@@ -146,7 +162,7 @@ pub fn ob_a02() -> Check {
       ok = false
     }
   }
-  mk_check("A-02 Euclid gcd", ok, 8, "g | a, g | b, gcd·lcm = |ab|")
+  mk_check("A-02 Euclid gcd", ok, 64, "g | a, g | b, gcd·lcm = |ab|")
 }
 
 ///|
@@ -154,7 +170,7 @@ pub fn ob_a02() -> Check {
 pub fn ob_a03() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<8 {
+  for _t in 0..<64 {
     let a = qr(rng)
     let b = qr(rng)
     let c = qr(rng)
@@ -178,7 +194,7 @@ pub fn ob_a03() -> Check {
   if Q::zero().eq(Q::one()) {
     ok = false
   }
-  mk_check("A-03 ℚ 體公理", ok, 8, "結合/交換/分配/逆元/0≠1")
+  mk_check("A-03 ℚ 體公理", ok, 64, "結合/交換/分配/逆元/0≠1")
 }
 
 ///|
@@ -186,7 +202,7 @@ pub fn ob_a03() -> Check {
 pub fn ob_a04() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<8 {
+  for _t in 0..<64 {
     let a = BigInt::from_int(rng.next_range(0, 1000000)) *
       BigInt::from_int(rng.next_range(1, 1000))
     let r = big_isqrt(a)
@@ -194,7 +210,7 @@ pub fn ob_a04() -> Check {
       ok = false
     }
   }
-  mk_check("A-04 整數平方根 ⌊√a⌋", ok, 8, "r² ≤ a < (r+1)²")
+  mk_check("A-04 整數平方根 ⌊√a⌋", ok, 64, "r² ≤ a < (r+1)²")
 }
 
 ///|
@@ -203,7 +219,7 @@ pub fn ob_a05() -> Check {
   let rng = ob_rng()
   let mut ok = true
   let mut worst = 0.0
-  for _t in 0..<8 {
+  for _t in 0..<64 {
     let a = absd(rng.next_double()) * ipow_d(10.0, rng.next_below(7))
     let r = sqrt_newton(a)
     let dev = absd(r * r - a) / maxd(1.0, a)
@@ -212,7 +228,7 @@ pub fn ob_a05() -> Check {
       ok = false
     }
   }
-  mk_check("A-05 Newton √", ok, 8, "最差相對殘差 " + fmt_e(worst))
+  mk_check("A-05 Newton √", ok, 64, "最差相對殘差 " + fmt_e(worst))
 }
 
 ///|
@@ -221,7 +237,7 @@ pub fn ob_a06() -> Check {
   let rng = ob_rng()
   let mut ok = true
   let mut worst = 0.0
-  for _t in 0..<8 {
+  for _t in 0..<64 {
     let x = rng.next_double() * 20.0
     let y = rng.next_double() * 20.0
     let s = sin_taylor(x)
@@ -236,7 +252,7 @@ pub fn ob_a06() -> Check {
   mk_check(
     "A-06 Taylor sin/cos",
     ok,
-    8,
+    64,
     "sin²+cos²=1、加法定理，最差 " + fmt_e(worst),
   )
 }
@@ -247,7 +263,7 @@ pub fn ob_a07() -> Check {
   let rng = ob_rng()
   let mut ok = true
   let mut worst = 0.0
-  for _t in 0..<8 {
+  for _t in 0..<64 {
     let x = rng.next_double() * 10.0
     let y = rng.next_double() * 10.0
     if absd(x) < 1.0e-9 && absd(y) < 1.0e-9 {
@@ -261,7 +277,7 @@ pub fn ob_a07() -> Check {
       ok = false
     }
   }
-  mk_check("A-07 atan2 四象限", ok, 8, "最差偏差 " + fmt_e(worst))
+  mk_check("A-07 atan2 四象限", ok, 64, "最差偏差 " + fmt_e(worst))
 }
 
 ///|
@@ -269,7 +285,7 @@ pub fn ob_a07() -> Check {
 pub fn ob_a08() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<8 {
+  for _t in 0..<64 {
     let a = qr(rng)
     let m = rng.next_below(6)
     let n = rng.next_below(6)
@@ -277,7 +293,7 @@ pub fn ob_a08() -> Check {
       ok = false
     }
   }
-  mk_check("A-08 快速冪", ok, 8, "a^{m+n} = a^m a^n")
+  mk_check("A-08 快速冪", ok, 64, "a^{m+n} = a^m a^n")
 }
 
 ///|
@@ -285,7 +301,7 @@ pub fn ob_a08() -> Check {
 pub fn ob_a09() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<8 {
+  for _t in 0..<64 {
     let z : Cpx[Q] = Cpx::mk(qr(rng), qr(rng))
     let w : Cpx[Q] = Cpx::mk(qr(rng), qr(rng))
     let zw = Scalar::s_mul(z, w)
@@ -310,7 +326,7 @@ pub fn ob_a09() -> Check {
     }
   }
   mk_check(
-    "A-09 ℚ(i) 體與範數乘性", ok, 8, "‾(zw)=‾z‾w，N(zw)=N(z)N(w)",
+    "A-09 ℚ(i) 體與範數乘性", ok, 64, "‾(zw)=‾z‾w，N(zw)=N(z)N(w)",
   )
 }
 
@@ -333,7 +349,7 @@ pub fn ob_a10() -> Check {
   if i.qmul(j).qeq(j.qmul(i)) {
     ok = false // 必須非交換
   }
-  for _t in 0..<8 {
+  for _t in 0..<24 {
     let p : Quat[Q] = Quat::mk(qr(rng), qr(rng), qr(rng), qr(rng))
     let q : Quat[Q] = Quat::mk(qr(rng), qr(rng), qr(rng), qr(rng))
     let r : Quat[Q] = Quat::mk(qr(rng), qr(rng), qr(rng), qr(rng))
@@ -346,7 +362,7 @@ pub fn ob_a10() -> Check {
     }
   }
   mk_check(
-    "A-10 ℍ Hamilton 關係", ok, 8, "i²=j²=k²=ijk=−1，結合、分配、非交換",
+    "A-10 ℍ Hamilton 關係", ok, 24, "i²=j²=k²=ijk=−1，結合、分配、非交換",
   )
 }
 
@@ -672,7 +688,7 @@ pub fn ob_b15() -> Check {
 pub fn ob_c01() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<10 {
+  for _t in 0..<24 {
     let a = qmat(rng, 3, 4)
     let b = qmat(rng, 4, 2)
     let c = qmat(rng, 2, 3)
@@ -688,7 +704,7 @@ pub fn ob_c01() -> Check {
     }
   }
   mk_check(
-    "C-01 矩陣乘法結合/分配/單位元", ok, 10, "(AB)C=A(BC)，A(B+D)=AB+AD",
+    "C-01 矩陣乘法結合/分配/單位元", ok, 24, "(AB)C=A(BC)，A(B+D)=AB+AD",
   )
 }
 
@@ -697,7 +713,7 @@ pub fn ob_c01() -> Check {
 pub fn ob_c02() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<10 {
+  for _t in 0..<24 {
     let a = qmat(rng, 3, 4)
     let b = qmat(rng, 4, 3)
     if !a.times(b).transpose().equals(b.transpose().times(a.transpose())) {
@@ -713,7 +729,7 @@ pub fn ob_c02() -> Check {
       ok = false
     }
   }
-  mk_check("C-02 (AB)ᵀ=BᵀAᵀ，(AB)*=B*A*", ok, 10, "實與複皆驗")
+  mk_check("C-02 (AB)ᵀ=BᵀAᵀ，(AB)*=B*A*", ok, 24, "實與複皆驗")
 }
 
 ///|
@@ -721,7 +737,7 @@ pub fn ob_c02() -> Check {
 pub fn ob_c03() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<10 {
+  for _t in 0..<24 {
     let a = qmat(rng, 4, 5)
     let rr = mrref(a)
     let rr2 = mrref(rr.rmat)
@@ -747,7 +763,7 @@ pub fn ob_c03() -> Check {
     }
   }
   mk_check(
-    "C-03 RREF 冪等且保零空間", ok, 10, "RREF²=RREF，A·ker = 0",
+    "C-03 RREF 冪等且保零空間", ok, 24, "RREF²=RREF，A·ker = 0",
   )
 }
 
@@ -756,7 +772,7 @@ pub fn ob_c03() -> Check {
 pub fn ob_c04() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<10 {
+  for _t in 0..<24 {
     let a = qmat(rng, 4, 3)
     let r1 = mrank(a)
     let r2 = mrank(a.transpose())
@@ -770,7 +786,7 @@ pub fn ob_c04() -> Check {
     }
   }
   mk_check(
-    "C-04 rank A = rank Aᵀ = rank AᵀA；秩–零化度", ok, 10, "rank + nullity = n",
+    "C-04 rank A = rank Aᵀ = rank AᵀA；秩–零化度", ok, 24, "rank + nullity = n",
   )
 }
 
@@ -779,7 +795,7 @@ pub fn ob_c04() -> Check {
 pub fn ob_c05() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<10 {
+  for _t in 0..<24 {
     let n = rng.next_range(1, 5)
     let a = qmat(rng, n, n)
     if !mdet(a).eq(mdet_laplace(a)) {
@@ -787,7 +803,7 @@ pub fn ob_c05() -> Check {
     }
   }
   mk_check(
-    "C-05/06 行列式：消去法 ≡ Laplace 展開", ok, 10, "兩獨立演算法交叉驗證",
+    "C-05/06 行列式：消去法 ≡ Laplace 展開", ok, 24, "兩獨立演算法交叉驗證",
   )
 }
 
@@ -796,7 +812,7 @@ pub fn ob_c05() -> Check {
 pub fn ob_c07() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<10 {
+  for _t in 0..<24 {
     let a = qmat(rng, 3, 3)
     let b = qmat(rng, 3, 3)
     if !mdet(a.times(b)).eq(mdet(a).mul(mdet(b))) {
@@ -807,7 +823,7 @@ pub fn ob_c07() -> Check {
     }
   }
   mk_check(
-    "C-07 行列式乘性", ok, 10, "det(AB)=detA·detB，det Aᵀ=det A",
+    "C-07 行列式乘性", ok, 24, "det(AB)=detA·detB，det Aᵀ=det A",
   )
 }
 
@@ -816,7 +832,7 @@ pub fn ob_c07() -> Check {
 pub fn ob_c08() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<10 {
+  for _t in 0..<24 {
     let a = qmat_invertible(rng, 4)
     let b = qmat_invertible(rng, 4)
     let ai = match minv(a) {
@@ -841,7 +857,7 @@ pub fn ob_c08() -> Check {
       ok = false
     }
   }
-  mk_check("C-08 反矩陣", ok, 10, "AA⁻¹=I，(AB)⁻¹=B⁻¹A⁻¹")
+  mk_check("C-08 反矩陣", ok, 24, "AA⁻¹=I，(AB)⁻¹=B⁻¹A⁻¹")
 }
 
 ///|
@@ -849,7 +865,7 @@ pub fn ob_c08() -> Check {
 pub fn ob_c09() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<10 {
+  for _t in 0..<24 {
     let a = qmat(rng, 4, 3)
     let xtrue = Array::makei(3, _ => qr(rng))
     let b = a.apply(xtrue)
@@ -886,7 +902,7 @@ pub fn ob_c09() -> Check {
     }
   }
   mk_check(
-    "C-09 線性系統與 Rouché–Capelli", ok, 10, "通解 = 特解 + ker A",
+    "C-09 線性系統與 Rouché–Capelli", ok, 24, "通解 = 特解 + ker A",
   )
 }
 
@@ -895,7 +911,7 @@ pub fn ob_c09() -> Check {
 pub fn ob_c10() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<10 {
+  for _t in 0..<24 {
     let a = qmat(rng, 4, 5)
     let r = mrank(a)
     let rows = mrowspace(a)
@@ -924,7 +940,7 @@ pub fn ob_c10() -> Check {
     }
   }
   mk_check(
-    "C-10/11 四基本子空間正交分解", ok, 10, "row⊥ker，col⊥ker(Aᵀ)，維數 r,(n−r),(m−r)",
+    "C-10/11 四基本子空間正交分解", ok, 24, "row⊥ker，col⊥ker(Aᵀ)，維數 r,(n−r),(m−r)",
   )
 }
 
@@ -933,7 +949,7 @@ pub fn ob_c10() -> Check {
 pub fn ob_c12() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<10 {
+  for _t in 0..<24 {
     let n = 4
     let a = qmat_invertible(rng, n)
     let lu = mlu(a)
@@ -956,7 +972,7 @@ pub fn ob_c12() -> Check {
       ok = false
     }
   }
-  mk_check("C-12 LU 分解 PA=LU", ok, 10, "並由樞軸乘積重算 det")
+  mk_check("C-12 LU 分解 PA=LU", ok, 24, "並由樞軸乘積重算 det")
 }
 
 ///|
@@ -964,7 +980,7 @@ pub fn ob_c12() -> Check {
 pub fn ob_c13() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<10 {
+  for _t in 0..<24 {
     let a = qmat(rng, 2, 2)
     let b = qmat(rng, 3, 3)
     let c = qmat(rng, 2, 2)
@@ -982,7 +998,7 @@ pub fn ob_c13() -> Check {
       ok = false
     }
   }
-  mk_check("C-13 Kronecker 積恆等式", ok, 10, "混合積律、tr、det")
+  mk_check("C-13 Kronecker 積恆等式", ok, 24, "混合積律、tr、det")
 }
 
 ///|
@@ -990,7 +1006,7 @@ pub fn ob_c13() -> Check {
 pub fn ob_c14() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<10 {
+  for _t in 0..<24 {
     let a = qmat(rng, 3, 2)
     let x = qmat(rng, 2, 4)
     let b = qmat(rng, 4, 3)
@@ -1003,7 +1019,7 @@ pub fn ob_c14() -> Check {
       ok = false
     }
   }
-  mk_check("C-14 vec(AXB) = (Bᵀ⊗A)vec X", ok, 10, "並驗 unvec∘vec = id")
+  mk_check("C-14 vec(AXB) = (Bᵀ⊗A)vec X", ok, 24, "並驗 unvec∘vec = id")
 }
 
 ///|
@@ -1012,8 +1028,8 @@ pub fn ob_c15() -> Check {
   let rng = ob_rng()
   let mut ok = true
   let mut cnt = 0
-  for _t in 0..<14 {
-    if cnt >= 10 {
+  for _t in 0..<34 {
+    if cnt >= 24 {
       continue
     }
     let m = qmat(rng, 4, 4)
@@ -1037,7 +1053,7 @@ pub fn ob_c15() -> Check {
 pub fn ob_c16() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<10 {
+  for _t in 0..<24 {
     let n = rng.next_range(2, 4)
     let a = qmat(rng, n, n)
     let cp = char_poly(a)
@@ -1057,7 +1073,7 @@ pub fn ob_c16() -> Check {
     }
   }
   mk_check(
-    "C-16/17 特徵多項式與 Cayley–Hamilton", ok, 10, "χ_A(A)=0，χ(0)=(−1)ⁿdetA，c_{n−1}=−trA",
+    "C-16/17 特徵多項式與 Cayley–Hamilton", ok, 24, "χ_A(A)=0，χ(0)=(−1)ⁿdetA，c_{n−1}=−trA",
   )
 }
 
@@ -1066,7 +1082,7 @@ pub fn ob_c16() -> Check {
 pub fn ob_c18() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<10 {
+  for _t in 0..<24 {
     let n = 3
     let a = qmat_invertible(rng, n)
     let adj : Mat[Q] = madj(a)
@@ -1084,7 +1100,7 @@ pub fn ob_c18() -> Check {
     }
   }
   mk_check(
-    "C-18/19 伴隨矩陣與 Cramer 法則", ok, 10, "A·adjA = (det A)I；xⱼ = detAⱼ/detA",
+    "C-18/19 伴隨矩陣與 Cramer 法則", ok, 24, "A·adjA = (det A)I；xⱼ = detAⱼ/detA",
   )
 }
 
@@ -1093,7 +1109,7 @@ pub fn ob_c18() -> Check {
 pub fn ob_c20() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<10 {
+  for _t in 0..<24 {
     let a = qmat(rng, 3, 3)
     if !mpow(a, 5).equals(mpow(a, 2).times(mpow(a, 3))) {
       ok = false
@@ -1114,6 +1130,6 @@ pub fn ob_c20() -> Check {
     }
   }
   mk_check(
-    "C-20 矩陣冪與 Cayley 變換", ok, 10, "A^{m+n}=A^mA^n；Cayley(S) ∈ SO(n)",
+    "C-20 矩陣冪與 Cayley 變換", ok, 24, "A^{m+n}=A^mA^n；Cayley(S) ∈ SO(n)",
   )
 }

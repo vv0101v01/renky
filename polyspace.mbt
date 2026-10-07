@@ -267,8 +267,23 @@ fn[F : Scalar] poly_vspace(name : String, n : Int) -> VSpace[Poly[F], F] {
 pub fn[F : Scalar] poly_space_l2(n : Int) -> IPSpace[Poly[F], F] {
   let vs = poly_vspace("P_" + n.to_string() + "，L²[−1,1]", n)
   // 矩 m_k = ∫_{−1}^{1} x^k dx
-  let moment = (k : Int) => {
+  //
+  // 【第十六輪】預先建表。原寫法每一項都呼叫 s_from_frac(2, k+1)，
+  // 而 ℚ 的 s_from_frac 帶一次 gcd 約分；一次內積有 n² 項，
+  // 於是每次內積做 n² 次 gcd 去算同樣的 2n−1 個常數。
+  // 建表後 gcd 總數由 n²·(呼叫次數) 降為 2n−1 次（一次性）。
+  // 數值完全相同 —— 這是共用子式消去。
+  let mtab : Array[F] = Array::makei(2 * n + 1, k => {
     if k % 2 == 1 {
+      F::s_zero()
+    } else {
+      F::s_from_frac(2, k + 1)
+    }
+  })
+  let moment = (k : Int) => {
+    if k < mtab.length() {
+      mtab[k]
+    } else if k % 2 == 1 {
       F::s_zero()
     } else {
       F::s_from_frac(2, k + 1)

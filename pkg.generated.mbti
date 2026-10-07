@@ -2226,7 +2226,15 @@ pub fn trial_governed(String) -> Bool
 
 pub fn trial_policy(String) -> Int
 
+pub fn trial_structural(String) -> Int
+
 pub fn trial_target(String) -> Int
+
+pub fn trial_tier(String) -> Int
+
+pub fn trial_tier_band(Int) -> (Double, Double)
+
+pub fn trial_tier_ok(String, Double) -> Bool
 
 pub fn[V, F : Scalar] triangle_holds(IPSpace[V, F], V, V) -> Bool
 

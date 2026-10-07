@@ -221,8 +221,26 @@ pub fn[V, F : Scalar] projection_matrix(
   basis : Array[V],
 ) -> Mat[F] {
   let n = s.vs.dim
+  let k = basis.length()
+  if k == 0 {
+    return Mat::zeros(n, n)
+  }
+  // 【第十六輪】Gram 提到迴圈外。
+  //
+  // 原寫法對每個基底向量呼叫一次 project_onto，而 project_onto →
+  // projection_coeffs 每次都**重建**同一個 k × k Gram：n 次呼叫做了
+  // n·k² 次內積，其中只有 k² 次是必要的。在 L² 多項式空間上單次內積
+  // 約 59 µs（ℚ 乘法帶 gcd），這個 n 倍冗餘是 D-07／E-14 的主要成本。
+  //
+  // 本版只建一次 Gram，右端項逐行換，解法與 projection_coeffs 相同
+  // （msolve），故**結果逐元不變** —— 這是共用子式消去，不是演算法替換。
+  let a : Mat[F] = Mat::build(k, k, (i, j) => (s.inner)(basis[j], basis[i]))
   let cols : Array[Array[F]] = Array::makei(n, j => {
-    (s.vs.coord)(project_onto(s, basis, s.vs.basis[j]))
+    let x = s.vs.basis[j]
+    let b : Array[F] = Array::makei(k, i => (s.inner)(x, basis[i]))
+    let sol = msolve(a, b)
+    let c = if sol.solvable { sol.particular } else { arr_zeros(k) }
+    (s.vs.coord)(vlincomb(s.vs, c, basis))
   })
   Mat::build(n, n, (i, j) => cols[j][i])
 }

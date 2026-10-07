@@ -116,7 +116,25 @@ pub fn SpaceExpr::sgram(self : SpaceExpr) -> Mat[Q] {
         None => Mat::ident(g.mrows)
       }
     }
-    SExt(a, k) => compound(a.sgram(), k, Cost::new())
+    SExt(a, k) => {
+      // 【N-79】按形狀派工：k = n−1 時有封閉式
+      //   C_{n−1}(G)[p][q] = (−1)^{p+q}·det(G)·G⁻¹[n−1−p][n−1−q]
+      // （Λ^{n−1}V ≅ V* ⊗ det V）。泛型 compound 物化 n² 個 (n−1) 階子式
+      // ⇒ Θ(n⁵)；封閉式只做一次反矩陣與一次行列式 ⇒ Θ(n³)。
+      // 兩路逐元相等已由 N-79 在全部 45 個空間上對帳。
+      let g = a.sgram()
+      // 封閉式之定義域比 compound 小：它要 G 可逆。擾動表 空間⊥ 內
+      // 刻意放了奇異 Gram，故此處必須真的檢查，不能假設「Gram 都正定」。
+      let fast = if k == g.mrows - 1 && k >= 1 {
+        cf_codim1_opt(g, Cost::new())
+      } else {
+        None
+      }
+      match fast {
+        Some(m) => m
+        None => compound(g, k, Cost::new())
+      }
+    }
     STwist(a, m) => {
       let g = a.sgram()
       m.transpose().times(g).times(m)

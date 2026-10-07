@@ -168,10 +168,10 @@ pub fn Q::make(n : BigInt, d : BigInt) -> Q {
       b = -b
     }
     if a == 0L {
-      return { num: 0N, den: 1N }
+      return { num: 0N, den: 1N, }
     }
     let g = gcd64(a, b)
-    return { num: BigInt::from_int64(a / g), den: BigInt::from_int64(b / g) }
+    return { num: BigInt::from_int64(a / g), den: BigInt::from_int64(b / g), }
   }
   if d == 0N {
     abort("Q::make 前置條件違反：分母為 0（ℚ 中 0 不可逆）")

@@ -111,8 +111,9 @@ pub fn rkron_cost(c : Cost, a : RMat, b : RMat) -> RMat {
   let m = b.mrows
   let p = b.mcols
   cflop(c, (a.mrows * a.mcols * m * p).to_int64())
-  Mat::build(a.mrows * m, a.mcols * p, (i, j) => a.at(i / m, j / p) *
-    b.at(i % m, j % p))
+  Mat::build(a.mrows * m, a.mcols * p, (i, j) => {
+    a.at(i / m, j / p) * b.at(i % m, j % p)
+  })
 }
 
 ///|
@@ -120,20 +121,23 @@ pub fn rkron_cost(c : Cost, a : RMat, b : RMat) -> RMat {
 pub fn rblock_diag(a : RMat, b : RMat) -> RMat {
   let ra = a.mrows
   let ca = a.mcols
-  Mat::build(ra + b.mrows, ca + b.mcols, (i, j) => if i < ra && j < ca {
-    a.at(i, j)
-  } else if i >= ra && j >= ca {
-    b.at(i - ra, j - ca)
-  } else {
-    0.0
+  Mat::build(ra + b.mrows, ca + b.mcols, (i, j) => {
+    if i < ra && j < ca {
+      a.at(i, j)
+    } else if i >= ra && j >= ca {
+      b.at(i - ra, j - ca)
+    } else {
+      0.0
+    }
   })
 }
 
 ///|
 /// 隨機實對稱正定矩陣 G = MᵀM + nI
 pub fn rand_spd(rng : Rng, n : Int) -> RMat {
-  let m : RMat = Mat::build(n, n, (_i, _j) => rng.next_below(9).to_double() -
-    4.0)
+  let m : RMat = Mat::build(n, n, (_i, _j) => {
+    rng.next_below(9).to_double() - 4.0
+  })
   let g : RMat = Mat::build(n, n, (i, j) => {
     let mut s = 0.0
     for k in 0..<n {
@@ -568,10 +572,12 @@ pub fn realify_mat(h : CMat) -> RMat {
 ///|
 /// 隨機 Hermitian 正定複矩陣 H = M*M + nI
 pub fn rand_herm_pd(rng : Rng, n : Int) -> CMat {
-  let m : CMat = Mat::build(n, n, (_i, _j) => Cpx::mk(
-    (rng.next_below(7) - 3).to_double(),
-    (rng.next_below(7) - 3).to_double(),
-  ))
+  let m : CMat = Mat::build(n, n, (_i, _j) => {
+    Cpx::mk(
+      (rng.next_below(7) - 3).to_double(),
+      (rng.next_below(7) - 3).to_double(),
+    )
+  })
   Mat::build(n, n, (i, j) => {
     let mut sr = 0.0
     let mut si = 0.0

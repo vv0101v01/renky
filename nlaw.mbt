@@ -59,6 +59,14 @@ pub enum SpaceExpr {
   SSum(SpaceExpr, SpaceExpr)
   /// 對偶 A*
   SDual(SpaceExpr)
+  /// 外冪 Λᵏ：Gram 為複合矩陣 Cₖ(G)，維數 C(n,k)（N-10 命題 180-1 已證保正定）
+  SExt(SpaceExpr, Int)
+  /// 度量扭曲（同餘）：Gram 為 AᵀGA，A 為同階可逆方陣，維數不變（N-08）
+  STwist(SpaceExpr, Mat[Q])
+  /// 子空間限制：Gram 為 SᵀGS，S 為 n×m 滿列秩（m ≤ n），維數降為 m（N-09）
+  SSub(SpaceExpr, Mat[Q])
+  /// Kronecker 和 ⊞：Gram 為 A⊗I + I⊗B，譜為 {λᵢ+μⱼ} 故保正定（N-24）
+  SKSum(SpaceExpr, SpaceExpr)
 }
 
 ///|
@@ -66,12 +74,14 @@ pub enum SpaceExpr {
 pub fn qblock_diag(a : Mat[Q], b : Mat[Q]) -> Mat[Q] {
   let ra = a.mrows
   let ca = a.mcols
-  Mat::build(ra + b.mrows, ca + b.mcols, (i, j) => if i < ra && j < ca {
-    a.at(i, j)
-  } else if i >= ra && j >= ca {
-    b.at(i - ra, j - ca)
-  } else {
-    Q::zero()
+  Mat::build(ra + b.mrows, ca + b.mcols, (i, j) => {
+    if i < ra && j < ca {
+      a.at(i, j)
+    } else if i >= ra && j >= ca {
+      b.at(i - ra, j - ca)
+    } else {
+      Q::zero()
+    }
   })
 }
 
@@ -83,6 +93,10 @@ pub fn SpaceExpr::sdim(self : SpaceExpr) -> Int {
     STensor(a, b) => a.sdim() * b.sdim()
     SSum(a, b) => a.sdim() + b.sdim()
     SDual(a) => a.sdim()
+    SExt(a, k) => binom(a.sdim(), k)
+    STwist(a, _) => a.sdim()
+    SSub(_, sm) => sm.mcols
+    SKSum(a, b) => a.sdim() * b.sdim()
   }
 }
 
@@ -102,6 +116,34 @@ pub fn SpaceExpr::sgram(self : SpaceExpr) -> Mat[Q] {
         None => Mat::ident(g.mrows)
       }
     }
+    SExt(a, k) => compound(a.sgram(), k, Cost::new())
+    STwist(a, m) => {
+      let g = a.sgram()
+      m.transpose().times(g).times(m)
+    }
+    SSub(a, sm) =>
+      // 【N-75】按形狀派工：SSub(STensor(x,y), 對稱選擇矩陣) 有封閉式。
+      // 只在逐元認出選擇矩陣時才走快路；認錯形狀會算出錯的 Gram，
+      // 故判準是 is_sym_sel 的逐元比對，不是維數相符。
+      match a {
+        STensor(x, y) => {
+          let n = x.sdim()
+          if y.sdim() == n &&
+            sm.mrows == n * n &&
+            sm.mcols == n * (n + 1) / 2 &&
+            is_sym_sel(sm, n) {
+            spec_sym_sq_gram(x.sgram(), y.sgram())
+          } else {
+            let g = a.sgram()
+            sm.transpose().times(g).times(sm)
+          }
+        }
+        _ => {
+          let g = a.sgram()
+          sm.transpose().times(g).times(sm)
+        }
+      }
+    SKSum(a, b) => qkron_sum(a.sgram(), b.sgram())
   }
 }
 
@@ -113,6 +155,10 @@ pub fn SpaceExpr::slabel(self : SpaceExpr) -> String {
     STensor(a, b) => "(" + a.slabel() + "⊗" + b.slabel() + ")"
     SSum(a, b) => "(" + a.slabel() + "⊕" + b.slabel() + ")"
     SDual(a) => a.slabel() + "*"
+    SExt(a, k) => "Λ" + k.to_string() + a.slabel()
+    STwist(a, _) => "T[" + a.slabel() + "]"
+    SSub(a, _) => "U[" + a.slabel() + "]"
+    SKSum(a, b) => "(" + a.slabel() + "⊞" + b.slabel() + ")"
   }
 }
 
@@ -124,6 +170,10 @@ pub fn SpaceExpr::sdepth(self : SpaceExpr) -> Int {
     STensor(a, b) => 1 + maxi(a.sdepth(), b.sdepth())
     SSum(a, b) => 1 + maxi(a.sdepth(), b.sdepth())
     SDual(a) => 1 + a.sdepth()
+    SExt(a, _) => 1 + a.sdepth()
+    STwist(a, _) => 1 + a.sdepth()
+    SSub(a, _) => 1 + a.sdepth()
+    SKSum(a, b) => 1 + maxi(a.sdepth(), b.sdepth())
   }
 }
 
@@ -137,10 +187,9 @@ pub fn SpaceExpr::sspace(self : SpaceExpr) -> IPSpace[Array[Q], Q] {
 /// 隨機正定 Gram：取可逆 M，G = MᵀM（必正定）
 pub fn rand_gram(rng : Rng, n : Int) -> Mat[Q] {
   for _t in 0..<80 {
-    let m : Mat[Q] = Mat::build(n, n, (_i, _j) => Q::frac(
-      rng.next_small(5),
-      rng.next_range(1, 4),
-    ))
+    let m : Mat[Q] = Mat::build(n, n, (_i, _j) => {
+      Q::frac(rng.next_small(5), rng.next_range(1, 4))
+    })
     if !Q::is_zero(mdet(m)) {
       return m.transpose().times(m)
     }
@@ -175,6 +224,66 @@ pub fn rand_gram(rng : Rng, n : Int) -> Mat[Q] {
 
 ///|
 /// 一條結構律之判決
+/// 計量軌道。
+///
+/// 本庫有兩套互不相通的成本計量器，而它們**完全互斥**（定理 193-1）：
+/// 精確 ℚ 軌只記字乘法 `wmul`，ℝ 軌只記浮點運算 `flops`。
+/// 任何跨軌的增益比較都沒有定義 —— 這不是精度問題，是量綱問題。
+pub enum Track {
+  /// 精確 ℚ／ℤ 軌：以機器字乘法計量
+  TQ
+  /// ℝ 軌：以浮點運算計量
+  TR
+}
+
+///|
+pub fn Track::tlabel(self : Track) -> String {
+  match self {
+    TQ => "精確 ℚ"
+    TR => "ℝ 軌"
+  }
+}
+
+///|
+pub fn Track::tunit(self : Track) -> String {
+  match self {
+    TQ => "字乘法"
+    TR => "flop"
+  }
+}
+
+///|
+pub fn Track::teq(self : Track, other : Track) -> Bool {
+  match (self, other) {
+    (TQ, TQ) => true
+    (TR, TR) => true
+    _ => false
+  }
+}
+
+///|
+/// 依軌道取出對應之計數器。用錯軌道會得到 0，而不是一個「比較小的數」——
+/// 這正是定理 193-1 所要凸顯的：兩者不是同一個量的不同單位。
+pub fn cost_by_track(c : Cost, t : Track) -> Int64 {
+  match t {
+    TQ => c.wmul
+    TR => c.flops
+  }
+}
+
+///|
+/// 同軌增益。跨軌請勿使用 —— 無定義。
+pub fn gain_by_track(base : Cost, fast : Cost, t : Track) -> Double {
+  let b = cost_by_track(base, t).to_double()
+  let f = cost_by_track(fast, t).to_double()
+  if f <= 0.0 {
+    0.0
+  } else {
+    b / f
+  }
+}
+
+///|
 pub struct LawVerdict {
   /// 律之名稱
   lname : String
@@ -183,20 +292,34 @@ pub struct LawVerdict {
   /// 試驗數
   ltrials : Int
   /// 直接法之字乘法總數
-  base_wmul : Int64
+  base_cost : Int64
   /// 分解法之字乘法總數
-  fast_wmul : Int64
+  fast_cost : Int64
   /// 逐尺寸之增益明細
   ldetail : String
+  /// 計量軌道（N-30）。增益只在同軌內可比。
+  ltrack : Track
+}
+
+///|
+/// 本判決之基準成本（依軌道取對應計數器）。
+pub fn LawVerdict::cost(self : LawVerdict) -> Int64 {
+  self.base_cost
+}
+
+///|
+/// 本判決之計量單位名稱。
+pub fn LawVerdict::unit(self : LawVerdict) -> String {
+  self.ltrack.tunit()
 }
 
 ///|
 /// 增益 = 直接法成本 / 分解法成本
 pub fn LawVerdict::lgain(self : LawVerdict) -> Double {
-  if self.fast_wmul <= 0L {
+  if self.fast_cost <= 0L {
     0.0
   } else {
-    self.base_wmul.to_double() / self.fast_wmul.to_double()
+    self.base_cost.to_double() / self.fast_cost.to_double()
   }
 }
 
@@ -217,21 +340,89 @@ pub fn check_law(
   sizes : Array[(Int, Int)],
   rng : Rng,
 ) -> LawVerdict {
+  check_law_dist(lname, comb, direct, fact, sizes, rng, rand_gram)
+}
+
+///|
+/// 帶取樣分布的版本（N-36）。
+///
+/// 原 `check_law` 把取樣器寫死成 `rand_gram`（恆正定）。N-26 已證明這會
+/// 製造假陽性：正定矩陣恆滿秩，於是任何關於 rank 的錯誤規則都無從被推翻。
+/// 取樣分布不是實作細節，它決定了哪些律推不翻 —— 故提為參數。
+pub fn check_law_dist(
+  lname : String,
+  comb : (Mat[Q], Mat[Q]) -> Mat[Q],
+  direct : (Mat[Q], Cost) -> Mat[Q]?,
+  fact : (Mat[Q], Mat[Q], Cost) -> Mat[Q]?,
+  sizes : Array[(Int, Int)],
+  rng : Rng,
+  sampler : (Rng, Int) -> Mat[Q],
+) -> LawVerdict {
+  let sm : Array[(Int, Int, (Rng, Int) -> Mat[Q])] = []
+  for sz in sizes {
+    let (n, m) = sz
+    sm.push((n, m, sampler))
+  }
+  check_law_samples(lname, comb, direct, fact, sm, rng)
+}
+
+///|
+/// 最一般的版本：每個樣本各自帶自己的尺寸**與分布**（N-36）。
+///
+/// 為何要讓分布隨樣本而變，而不是整次搜尋用同一個分布：
+/// 單一分布不論選哪個都會偏。正定分布讓 rank 類錯誤規則無從推翻（N-26）；
+/// 而換成降秩分布之後，det 類規則又會因為兩側同時為 0 而**空洞地**成立
+/// —— 實測這會憑空製造四條新的假陽性（inv/⊗/⊗ₛ、inv/⊕/⊗ₛ、
+/// adj/⊕/⊗ₛ、det/⊕/^）。一條律要判成立，必須在**每一種**分布下都成立。
+pub fn check_law_samples(
+  lname : String,
+  comb : (Mat[Q], Mat[Q]) -> Mat[Q],
+  direct : (Mat[Q], Cost) -> Mat[Q]?,
+  fact : (Mat[Q], Mat[Q], Cost) -> Mat[Q]?,
+  samples : Array[(Int, Int, (Rng, Int) -> Mat[Q])],
+  rng : Rng,
+) -> LawVerdict {
+  let (v, _vac) = check_law_samples_vac(lname, comb, direct, fact, samples, rng)
+  v
+}
+
+///|
+/// 同上，但額外回傳**空洞樣本數**（N-42）。
+///
+/// 空洞樣本 ≔ 兩側都算不出來（皆為 ⊥）的樣本。這種樣本會被判為「相符」，
+/// 於是它對裁決**毫無鑑別力**，卻照樣計入試驗數。原本這件事不可見：
+/// `qadj` 與 `qinv_gauss` 在奇異輸入上回傳 ⊥，而 N-36 刻意加入的降秩樣本
+/// 正是奇異的 —— 換言之，N-36 為了推翻 rank 類假陽性而加的那個樣本，
+/// 對 inv 類與 adj 類的候選完全沒有鑑別力，而舊介面看不出這件事。
+///
+/// 複合會**放大**這個盲區：內層 Φ 一旦在反例上回傳 ⊥，反例就到不了外層。
+pub fn check_law_samples_vac(
+  lname : String,
+  comb : (Mat[Q], Mat[Q]) -> Mat[Q],
+  direct : (Mat[Q], Cost) -> Mat[Q]?,
+  fact : (Mat[Q], Mat[Q], Cost) -> Mat[Q]?,
+  samples : Array[(Int, Int, (Rng, Int) -> Mat[Q])],
+  rng : Rng,
+) -> (LawVerdict, Int) {
+  let mut vac = 0
   let mut holds = true
   let mut tb = 0L
   let mut tf = 0L
   let parts : Array[String] = []
-  for sz in sizes {
-    let (n, m) = sz
-    let a = rand_gram(rng, n)
-    let b = rand_gram(rng, m)
+  for sm0 in samples {
+    let (n, m, sampler) = sm0
+    let a = sampler(rng, n)
+    let b = sampler(rng, m)
     let cd = Cost::new()
     let lhs = direct(comb(a, b), cd)
     let cf = Cost::new()
     let rhs = fact(a, b, cf)
     let same = match (lhs, rhs) {
       (Some(x), Some(y)) => x.equals(y)
-      (None, None) => true
+      (None, None) => {
+        vac = vac + 1
+        true
+      }
       _ => false
     }
     if !same {
@@ -249,14 +440,18 @@ pub fn check_law(
       fmt_d(Cost::ratio(cd, cf), 2),
     )
   }
-  {
-    lname,
-    holds,
-    ltrials: sizes.length(),
-    base_wmul: tb,
-    fast_wmul: tf,
-    ldetail: parts.join("　"),
-  }
+  (
+    {
+      lname,
+      holds,
+      ltrials: samples.length(),
+      base_cost: tb,
+      fast_cost: tf,
+      ldetail: parts.join("　"),
+      ltrack: TQ,
+    },
+    vac,
+  )
 }
 
 ///|
@@ -297,9 +492,11 @@ pub fn law_kron_inv(rng : Rng, sizes : Array[(Int, Int)]) -> LawVerdict {
     "⊗ 求逆律 inv(A⊗B) = inv(A)⊗inv(B)",
     (a, b) => mkron(a, b),
     (g, c) => qinv_gauss(g, c),
-    (a, b, c) => match (qinv_gauss(a, c), qinv_gauss(b, c)) {
-      (Some(x), Some(y)) => Some(qkron_cost(c, x, y))
-      _ => None
+    (a, b, c) => {
+      match (qinv_gauss(a, c), qinv_gauss(b, c)) {
+        (Some(x), Some(y)) => Some(qkron_cost(c, x, y))
+        _ => None
+      }
     },
     sizes,
     rng,
@@ -311,11 +508,9 @@ pub fn law_kron_inv(rng : Rng, sizes : Array[(Int, Int)]) -> LawVerdict {
 pub fn qkron_cost(c : Cost, a : Mat[Q], b : Mat[Q]) -> Mat[Q] {
   let rb = b.mrows
   let cb = b.mcols
-  Mat::build(a.mrows * rb, a.mcols * cb, (i, j) => cq_mul(
-    c,
-    a.at(i / rb, j / cb),
-    b.at(i % rb, j % cb),
-  ))
+  Mat::build(a.mrows * rb, a.mcols * cb, (i, j) => {
+    cq_mul(c, a.at(i / rb, j / cb), b.at(i % rb, j % cb))
+  })
 }
 
 ///|
@@ -394,9 +589,11 @@ pub fn law_sum_inv(rng : Rng, sizes : Array[(Int, Int)]) -> LawVerdict {
     "⊕ 分塊求逆律 inv(A⊕B) = inv(A)⊕inv(B)",
     (a, b) => qblock_diag(a, b),
     (g, c) => qinv_gauss(g, c),
-    (a, b, c) => match (qinv_gauss(a, c), qinv_gauss(b, c)) {
-      (Some(x), Some(y)) => Some(qblock_diag(x, y))
-      _ => None
+    (a, b, c) => {
+      match (qinv_gauss(a, c), qinv_gauss(b, c)) {
+        (Some(x), Some(y)) => Some(qblock_diag(x, y))
+        _ => None
+      }
     },
     sizes,
     rng,
@@ -410,9 +607,9 @@ pub fn law_sum_det(rng : Rng, sizes : Array[(Int, Int)]) -> LawVerdict {
     "⊕ 分塊行列式律 det(A⊕B) = det A·det B",
     (a, b) => qblock_diag(a, b),
     (g, c) => Some(q_scalar_mat(qdet_gauss(g, c))),
-    (a, b, c) => Some(
-      q_scalar_mat(cq_mul(c, qdet_gauss(a, c), qdet_gauss(b, c))),
-    ),
+    (a, b, c) => {
+      Some(q_scalar_mat(cq_mul(c, qdet_gauss(a, c), qdet_gauss(b, c))))
+    },
     sizes,
     rng,
   )
@@ -422,7 +619,9 @@ pub fn law_sum_det(rng : Rng, sizes : Array[(Int, Int)]) -> LawVerdict {
 /// 律表：把一組判決整理成可列印之表（供報告與反律庫使用）
 pub fn law_table(vs : Array[LawVerdict]) -> String {
   let out : Array[String] = []
-  out.push("| 結構律 | 成立 | 試驗 | 直接法字乘 | 分解法字乘 | 總增益 | 逐尺寸 |")
+  out.push(
+    "| 結構律 | 成立 | 試驗 | 直接法字乘 | 分解法字乘 | 總增益 | 逐尺寸 |",
+  )
   out.push("| --- | :-: | --: | --: | --: | --: | --- |")
   for v in vs {
     out.push(
@@ -433,9 +632,9 @@ pub fn law_table(vs : Array[LawVerdict]) -> String {
       " | " +
       v.ltrials.to_string() +
       " | " +
-      v.base_wmul.to_string() +
+      v.base_cost.to_string() +
       " | " +
-      v.fast_wmul.to_string() +
+      v.fast_cost.to_string() +
       " | **×" +
       fmt_d(v.lgain(), 2) +
       "** | " +
@@ -509,9 +708,10 @@ pub fn check_law1(
     lname,
     holds,
     ltrials: sizes.length(),
-    base_wmul: tb,
-    fast_wmul: tf,
+    base_cost: tb,
+    fast_cost: tf,
     ldetail: parts.join("　"),
+    ltrack: TQ,
   }
 }
 
@@ -578,6 +778,16 @@ pub fn SpaceExpr::sgram_cost(self : SpaceExpr, c : Cost) -> Mat[Q] {
         None => Mat::ident(g.mrows)
       }
     }
+    SExt(a, k) => compound(a.sgram_cost(c), k, c)
+    STwist(a, m) => {
+      let g = a.sgram_cost(c)
+      qmul_cost(c, qmul_cost(c, m.transpose(), g), m)
+    }
+    SSub(a, sm) => {
+      let g = a.sgram_cost(c)
+      qmul_cost(c, qmul_cost(c, sm.transpose(), g), sm)
+    }
+    SKSum(a, b) => qkron_sum(a.sgram_cost(c), b.sgram_cost(c))
   }
 }
 
@@ -598,6 +808,9 @@ pub fn synth_inv(e : SpaceExpr, c : Cost) -> Mat[Q]? {
       }
     // 定理 173-2：對偶節點之求逆 = 原 Gram，不需任何消去
     SDual(a) => Some(a.sgram_cost(c))
+    // N-32 新增之構造子在舊合成器上一律攤平 —— 舊合成器之行為維持不變，
+    // 新構造子之律由 N-31 的多態合成器處理。
+    other => qinv_gauss(other.sgram_cost(c), c)
   }
 }
 
@@ -633,6 +846,7 @@ pub fn synth_det(e : SpaceExpr, c : Cost) -> Q? {
         Some(da) => cq_div(c, Q::one(), da)
         None => None
       }
+    other => Some(qdet_gauss(other.sgram_cost(c), c))
   }
 }
 
@@ -707,7 +921,11 @@ pub fn qmul_cost(c : Cost, a : Mat[Q], b : Mat[Q]) -> Mat[Q] {
   Mat::build(a.mrows, b.mcols, (i, j) => {
     let mut s = Q::zero()
     for k in 0..<a.mcols {
-      s = cq_add(c, s, cq_mul(c, a.data[i * a.mcols + k], b.data[k * b.mcols + j]))
+      s = cq_add(
+        c,
+        s,
+        cq_mul(c, a.data[i * a.mcols + k], b.data[k * b.mcols + j]),
+      )
     }
     s
   })
@@ -769,63 +987,144 @@ pub struct LawCand {
 ///|
 /// 候選律之可讀名稱
 pub fn LawCand::cname(self : LawCand) -> String {
-  self.cphi + "(A " + self.ccomb + " B) =? " + self.cphi + "(A) " + self.crule + " " + self.cphi + "(B)"
+  self.cphi +
+  "(A " +
+  self.ccomb +
+  " B) =? " +
+  self.cphi +
+  "(A) " +
+  self.crule +
+  " " +
+  self.cphi +
+  "(B)"
 }
 
 ///|
 /// 【搜尋】枚舉 (Φ, C, ⊙) 三元組，自動產出定律表
 pub fn law_search(rng : Rng, sizes : Array[(Int, Int)]) -> Array[LawCand] {
-  // 矩陣值演算法 Φ
-  let phis_mat : Array[(String, (Mat[Q], Cost) -> Mat[Q]?)] = [
+  law_search_dist(rng, sizes, rand_gram)
+}
+
+///|
+/// 帶取樣分布的定律搜尋（N-36）。
+pub fn law_search_dist(
+  rng : Rng,
+  sizes : Array[(Int, Int)],
+  sampler : (Rng, Int) -> Mat[Q],
+) -> Array[LawCand] {
+  let sm : Array[(Int, Int, (Rng, Int) -> Mat[Q])] = []
+  for sz in sizes {
+    let (n, m) = sz
+    sm.push((n, m, sampler))
+  }
+  law_search_samples(rng, sm)
+}
+
+///|
+/// 以「尺寸 × 分布」樣本清單驅動的定律搜尋（N-36）。
+pub fn phi_mat_registry() -> Array[(String, (Mat[Q], Cost) -> Mat[Q]?)] {
+  [
     ("inv", (a, c) => qinv_gauss(a, c)),
     ("tr̃ans", (a, _c) => Some(a.transpose())),
     ("sq", (a, c) => Some(qmul_cost(c, a, a))),
     ("adj", (a, c) => qadj(c, a)),
     ("cube", (a, c) => Some(qmul_cost(c, a, qmul_cost(c, a, a)))),
   ]
-  // 純量值演算法 Φ（包成 1×1）
-  let phis_sca : Array[(String, (Mat[Q], Cost) -> Mat[Q]?)] = [
+}
+
+///|
+/// 純量值演算法 Φ（包成 1×1 矩陣，與矩陣值 Φ 共用同一檢驗器）
+pub fn phi_sca_registry() -> Array[(String, (Mat[Q], Cost) -> Mat[Q]?)] {
+  [
     ("det", (a, c) => Some(q_scalar_mat(qdet_gauss(a, c)))),
     ("trace", (a, c) => Some(q_scalar_mat(qtrace(c, a)))),
     ("rank", (a, _c) => Some(q_scalar_mat(Q::of_int(mrank(a))))),
   ]
-  // 組合子 C
-  let combs : Array[(String, (Mat[Q], Mat[Q]) -> Mat[Q])] = [
+}
+
+///|
+/// 組合子 C
+pub fn comb_registry() -> Array[(String, (Mat[Q], Mat[Q]) -> Mat[Q])] {
+  [
     ("⊗", (a, b) => mkron(a, b)),
     ("⊕", (a, b) => qblock_diag(a, b)),
     ("⊞", (a, b) => qkron_sum(a, b)),
   ]
-  // 矩陣值合成規則 ⊙（含帶標量修正之 Kronecker）
-  let rules_mat : Array[(String, (Mat[Q], Mat[Q], Mat[Q], Mat[Q], Cost) -> Mat[Q]?)] = [
+}
+
+///|
+/// 矩陣值合成規則 ⊙（含帶標量修正之 Kronecker）
+pub fn rule_mat_registry() -> Array[
+  (String, (Mat[Q], Mat[Q], Mat[Q], Mat[Q], Cost) -> Mat[Q]?),
+] {
+  [
     ("⊗", (x, y, _a, _b, c) => Some(qkron_cost(c, x, y))),
     ("⊕", (x, y, _a, _b, _c) => Some(qblock_diag(x, y))),
     // Sylvester 型：(det A)^{m-1}(det B)^{n-1}·(ΦA ⊗ ΦB)
-    ("⊗ₛ", (x, y, a, b, c) => {
-      let n = a.mrows
-      let m = b.mrows
-      let s = cq_mul(
-        c,
-        qpow_cost(c, qdet_gauss(a, c), m - 1),
-        qpow_cost(c, qdet_gauss(b, c), n - 1),
-      )
-      Some(qsmul_cost(c, s, qkron_cost(c, x, y)))
-    }),
-  ]
-  // 純量值合成規則 ⊙
-  let rules_sca : Array[(String, (Mat[Q], Mat[Q], Mat[Q], Mat[Q], Cost) -> Mat[Q]?)] = [
-    ("·", (x, y, _a, _b, c) => Some(q_scalar_mat(cq_mul(c, x.data[0], y.data[0])))),
-    ("+", (x, y, _a, _b, c) => Some(q_scalar_mat(cq_add(c, x.data[0], y.data[0])))),
-    // det 型：Φ(A)^{dim B} · Φ(B)^{dim A}
-    ("^", (x, y, a, b, c) => Some(
-      q_scalar_mat(
-        cq_mul(
+    (
+      "⊗ₛ",
+      (x, y, a, b, c) => {
+        let n = a.mrows
+        let m = b.mrows
+        let s = cq_mul(
           c,
-          qpow_cost(c, x.data[0], b.mrows),
-          qpow_cost(c, y.data[0], a.mrows),
-        ),
-      ),
-    )),
+          qpow_cost(c, qdet_gauss(a, c), m - 1),
+          qpow_cost(c, qdet_gauss(b, c), n - 1),
+        )
+        Some(qsmul_cost(c, s, qkron_cost(c, x, y)))
+      },
+    ),
   ]
+}
+
+///|
+/// 純量值合成規則 ⊙
+pub fn rule_sca_registry() -> Array[
+  (String, (Mat[Q], Mat[Q], Mat[Q], Mat[Q], Cost) -> Mat[Q]?),
+] {
+  [
+    (
+      "·",
+      (x, y, _a, _b, c) => Some(q_scalar_mat(cq_mul(c, x.data[0], y.data[0]))),
+    ),
+    (
+      "+",
+      (x, y, _a, _b, c) => Some(q_scalar_mat(cq_add(c, x.data[0], y.data[0]))),
+    ),
+    // det 型：Φ(A)^{dim B} · Φ(B)^{dim A}
+    (
+      "^",
+      (x, y, a, b, c) => {
+        Some(
+          q_scalar_mat(
+            cq_mul(
+              c,
+              qpow_cost(c, x.data[0], b.mrows),
+              qpow_cost(c, y.data[0], a.mrows),
+            ),
+          ),
+        )
+      },
+    ),
+  ]
+}
+
+///|
+/// 以「尺寸 × 分布」樣本清單驅動的定律搜尋（N-36）。
+///
+/// 搜尋空間的五張表（Φ 矩陣值／Φ 純量值／C／⊙ 矩陣值／⊙ 純量值）已於 N-42
+/// 提為獨立的註冊表函式。理由不是美觀：複合器（compose.mbt）必須枚舉
+/// **同一組** Φ 與 ⊙；若兩邊各抄一份，遲早分岔，而分岔的那一刻定律表與
+/// 複合表會各說各話且無人察覺。
+pub fn law_search_samples(
+  rng : Rng,
+  samples : Array[(Int, Int, (Rng, Int) -> Mat[Q])],
+) -> Array[LawCand] {
+  let phis_mat = phi_mat_registry()
+  let phis_sca = phi_sca_registry()
+  let combs = comb_registry()
+  let rules_mat = rule_mat_registry()
+  let rules_sca = rule_sca_registry()
   let out : Array[LawCand] = []
   let groups : Array[
     (
@@ -841,15 +1140,17 @@ pub fn law_search(rng : Rng, sizes : Array[(Int, Int)]) -> Array[LawCand] {
         let (cbname, comb) = cb
         for rl in rules {
           let (rname, rule) = rl
-          let v = check_law(
+          let v = check_law_samples(
             pname + " / " + cbname + " / " + rname,
             comb,
             phi,
-            (a, b, c) => match (phi(a, c), phi(b, c)) {
-              (Some(x), Some(y)) => rule(x, y, a, b, c)
-              _ => None
+            (a, b, c) => {
+              match (phi(a, c), phi(b, c)) {
+                (Some(x), Some(y)) => rule(x, y, a, b, c)
+                _ => None
+              }
             },
-            sizes,
+            samples,
             rng,
           )
           out.push({
@@ -867,8 +1168,29 @@ pub fn law_search(rng : Rng, sizes : Array[(Int, Int)]) -> Array[LawCand] {
 }
 
 ///|
+/// 於定律表中查某候選之增益
+pub fn law_find_gain(
+  tbl : Array[LawCand],
+  phi : String,
+  comb : String,
+  rule : String,
+) -> Double? {
+  for t in tbl {
+    if t.cphi == phi && t.ccomb == comb && t.crule == rule {
+      return Some(t.cgain)
+    }
+  }
+  None
+}
+
+///|
 /// 於定律表中查某候選之裁決
-pub fn law_find(tbl : Array[LawCand], phi : String, comb : String, rule : String) -> Bool? {
+pub fn law_find(
+  tbl : Array[LawCand],
+  phi : String,
+  comb : String,
+  rule : String,
+) -> Bool? {
   for t in tbl {
     if t.cphi == phi && t.ccomb == comb && t.crule == rule {
       return Some(t.cholds)
@@ -926,6 +1248,29 @@ pub fn tmat(e : SpaceExpr) -> Int64 {
       let n = a.sdim().to_int64()
       tmat(a) + tkappa() * n * n * n / 100L
     }
+    // N-32 新構造子之物化成本，與 sgram_cost 的實作逐一對應：
+    //   Λᵏ：C(n,k)² 個 k×k 子式行列式
+    SExt(a, k) => {
+      let d = binom(a.sdim(), k).to_int64()
+      let kk = k.to_int64()
+      tmat(a) + d * d * tkappa() * kk * kk * kk / 100L
+    }
+    //   同餘：兩次 n×n 乘法
+    STwist(a, _) => {
+      let n = a.sdim().to_int64()
+      tmat(a) + 2L * n * n * n
+    }
+    //   子空間：Sᵀ(GS)，n²m + nm²
+    SSub(a, sm) => {
+      let n = a.sdim().to_int64()
+      let m = sm.mcols.to_int64()
+      tmat(a) + n * n * m + n * m * m
+    }
+    //   ⊞：兩個 Kronecker 積再相加
+    SKSum(a, b) => {
+      let d = (a.sdim() * b.sdim()).to_int64()
+      tmat(a) + tmat(b) + 2L * d * d
+    }
   }
 }
 
@@ -950,6 +1295,12 @@ pub fn tinv_dec(e : SpaceExpr) -> Int64 {
     }
     SSum(a, b) => tinv_best(a) + tinv_best(b)
     SDual(a) => tmat(a)
+    // N-32 新構造子：符號成本模型尚未納入它們的分解律，
+    // 故一律記為「物化後直接求逆」—— 這是保守估計（不會高估分解法之優勢）。
+    other => {
+      let d = other.sdim().to_int64()
+      tmat(other) + tkappa() * d * d * d / 100L
+    }
   }
 }
 
@@ -1062,6 +1413,37 @@ pub fn tmat2(e : SpaceExpr) -> (Int64, Int64) {
       let w = wwords(n * ba)
       (ca + tkappa() * n * n * n * w * w / 100L, n * ba)
     }
+    SExt(a, k) => {
+      let (ca, ba) = tmat2(a)
+      let d = binom(a.sdim(), k).to_int64()
+      let kk = k.to_int64()
+      let w = wwords(ba)
+      (ca + d * d * tkappa() * kk * kk * kk * w * w / 100L, kk * ba)
+    }
+    STwist(a, m) => {
+      let (ca, ba) = tmat2(a)
+      let n = a.sdim().to_int64()
+      let bm = mat_bits(m)
+      let w = wwords(ba)
+      let wm = wwords(bm)
+      (ca + 2L * n * n * n * w * wm, ba + 2L * bm)
+    }
+    SSub(a, sm) => {
+      let (ca, ba) = tmat2(a)
+      let n = a.sdim().to_int64()
+      let mc = sm.mcols.to_int64()
+      let bm = mat_bits(sm)
+      let w = wwords(ba)
+      let wm = wwords(bm)
+      (ca + (n * n * mc + n * mc * mc) * w * wm, ba + 2L * bm)
+    }
+    SKSum(a, b) => {
+      let (ca, ba) = tmat2(a)
+      let (cb, bb) = tmat2(b)
+      let d = (a.sdim() * b.sdim()).to_int64()
+      let mx = if ba > bb { ba } else { bb }
+      (ca + cb + 2L * d * d * wwords(ba) * wwords(bb), mx + 1L)
+    }
   }
 }
 
@@ -1097,6 +1479,13 @@ pub fn tinv_dec2(e : SpaceExpr) -> (Int64, Int64) {
     }
     // 定理 173-2：對偶節點之求逆 = 物化原 Gram
     SDual(a) => tmat2(a)
+    // N-32 新構造子：同 tinv_dec，記為「物化後直接求逆」
+    other => {
+      let (c0, b0) = tmat2(other)
+      let d = other.sdim().to_int64()
+      let w = wwords(d * b0)
+      (c0 + tkappa() * d * d * d * w * w / 100L, d * b0)
+    }
   }
 }
 
@@ -1281,12 +1670,14 @@ pub fn shom(v : SpaceExpr, w : SpaceExpr) -> SpaceExpr {
 ///|
 /// 隨機非奇異上三角 ℚ 矩陣（det = 對角乘積 ≠ 0）
 pub fn rand_invertible(rng : Rng, n : Int) -> Mat[Q] {
-  Mat::build(n, n, (i, j) => if i > j {
-    Q::zero()
-  } else if i == j {
-    Q::of_int(rng.next_below(3) + 1)
-  } else {
-    Q::frac(rng.next_small(4), rng.next_range(1, 3))
+  Mat::build(n, n, (i, j) => {
+    if i > j {
+      Q::zero()
+    } else if i == j {
+      Q::of_int(rng.next_below(3) + 1)
+    } else {
+      Q::frac(rng.next_small(4), rng.next_range(1, 3))
+    }
   })
 }
 
@@ -1384,7 +1775,9 @@ pub fn negative_registry() -> Array[NegResult] {
     nholds: m2 > m1,
   })
   // 5. 搜尋引擎之推翻數必須多於成立數（N-13）
-  let tbl = law_search(rng, [(2, 2), (2, 3)])
+  // N-35：改用共用快取。此處網格與 law_grid_std() 相同，且本項只用
+  //   「推翻數 > 成立數」這個與種子無關的計數，共用不改變結論。
+  let tbl = law_search_std(rng)
   let mut nh = 0
   let mut nr = 0
   for t in tbl {
@@ -1430,9 +1823,9 @@ pub fn negative_registry() -> Array[NegResult] {
   })
   // 7. Sylvester–Franke 若用線性冪，增益會被右式拖累（N-10）
   let g7 = rand_gram(rng, 6)
-  let c7 = Cost::new()
-  let ck = compound(g7, 3, c7)
-  let _d7 = qdet_gauss(ck, c7)
+  // N-35：原此處另建 C₃(g7)（20×20）並求其行列式，耗 492,444 字乘法，
+  //   但本項之主張只比較 cl.wmul 與 cb.wmul 兩個冪法成本，該複合矩陣
+  //   從未進入任何斷言 —— 純屬死碼，移除不改變本項之任何結論。
   let cl = Cost::new()
   let _r1 = qpow_cost(cl, qdet_gauss(g7, cl), sf_exponent(6, 3))
   let cb = Cost::new()
@@ -1446,4 +1839,62 @@ pub fn negative_registry() -> Array[NegResult] {
     nholds: pow_ratio > 1.0,
   })
   out
+}
+
+// ---------------------------------------------------------------------------
+// N-35：搜尋分層與效能整頓
+// ---------------------------------------------------------------------------
+
+///|
+/// 標準搜尋網格。
+///
+/// 必含非對稱尺寸 (2,3)：命題 175-3 —— 若網格全為方形同尺寸，
+/// `det/⊗/·`（少了指數的錯誤規則）會因 n = m 而僥倖通過。
+pub fn law_grid_std() -> Array[(Int, Int)] {
+  [(2, 2), (2, 3)]
+}
+
+///|
+/// 全量網格，供 `cmd/lawsearch` 之一次性全掃描使用。
+///
+/// N-35 下修的根據：兩個網格對 72 個候選給出**逐條相同的裁決**（相異 0 條），
+/// 此等價性由 `cmd/lawsearch` 每次全掃描時重新驗證。常規義務因此只需小網格。
+pub fn law_grid_full() -> Array[(Int, Int)] {
+  [(2, 2), (2, 3), (3, 3)]
+}
+
+///|
+/// 搜尋結果之快取盒（長度 0 表示未算）。
+///
+/// N-13 與 N-26 原本各自以**完全相同的網格**跑一次完整搜尋（977 + 862 ms），
+/// 第二次純屬重工。`ob_rng()` 為固定種子，兩次結果本就逐位元相同，
+/// 共用不改變任何結論。
+let law_cache : Array[Array[LawCand]] = []
+
+///|
+/// 實際跑過幾次完整搜尋（快取未命中次數）。供 N-35 自證去重確實生效。
+let law_miss : Array[Int] = [0]
+
+///|
+/// 讀取快取未命中次數。
+pub fn law_miss_count() -> Int {
+  law_miss[0]
+}
+
+///|
+/// 帶快取之標準搜尋（N-35）。
+pub fn law_search_std(rng : Rng) -> Array[LawCand] {
+  if law_cache.length() > 0 {
+    return law_cache[0]
+  }
+  law_miss[0] = law_miss[0] + 1
+  let t = law_search(rng, law_grid_std())
+  law_cache.push(t)
+  t
+}
+
+///|
+/// 快取是否已命中過（供 N-35 義務自證「第二次確實沒有重跑」）。
+pub fn law_cache_filled() -> Bool {
+  law_cache.length() > 0
 }

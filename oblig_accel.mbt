@@ -138,7 +138,10 @@ pub fn ob_k02() -> Check {
   // 界不足時「對稱提升」確實會失效（界之必要性之反例）
   let crt2 = Crt::new()
   let big = BigInt::from_int(2000000000)
-  crt2.absorb(normmod((big % BigInt::from_int64(ps[0])).to_int64(), ps[0]), ps[0])
+  crt2.absorb(
+    normmod((big % BigInt::from_int64(ps[0])).to_int64(), ps[0]),
+    ps[0],
+  )
   let underflow_detected = crt2.sym() != big
   mk_check(
     "K-02 中國剩餘定理與對稱提升",
@@ -176,10 +179,7 @@ pub fn ob_k03() -> Check {
     n = n + 1
   }
   mk_check(
-    "K-03 Hadamard 界與素數個數",
-    ok,
-    n,
-    "24 個實例：|det| ≤ ∏列範數；所選素數之積 > 2·界（提升唯一性之前提成立）",
+    "K-03 Hadamard 界與素數個數", ok, n, "24 個實例：|det| ≤ ∏列範數；所選素數之積 > 2·界（提升唯一性之前提成立）",
   )
 }
 
@@ -441,7 +441,6 @@ pub fn ob_k08() -> Check {
     for k in 0..<14 {
       for j in 0..<14 {
         let _ = cz_mul(cfull, a[i][k], b[k][j])
-
       }
     }
   }
@@ -503,7 +502,8 @@ pub fn ob_k09() -> Check {
     "K-09 Gram 行列式之 CRT",
     ok && cf.wmul < cb.wmul,
     n,
-    "8 組 det(AᵀA) ≥ 0 且退化 ⇔ 行相依；10 維 Gram：" + gain_text(cb, cf),
+    "8 組 det(AᵀA) ≥ 0 且退化 ⇔ 行相依；10 維 Gram：" +
+    gain_text(cb, cf),
   )
 }
 
@@ -648,10 +648,9 @@ pub fn ob_l02() -> Check {
   for _t in 0..<12 {
     let ctx1 = FpCtx::make(p)
     let k = 40
-    let v = Array::makei(k, _ => normmod(
-      (rng.next_below(1000000) + 1).to_int64(),
-      p,
-    ))
+    let v = Array::makei(k, _ => {
+      normmod((rng.next_below(1000000) + 1).to_int64(), p)
+    })
     let batch = match fp_batch_inv(v, ctx1) {
       Some(x) => x
       None => {
@@ -683,7 +682,6 @@ pub fn ob_l02() -> Check {
   let _ = fp_batch_inv(v, ctxa)
   for i in 0..<64 {
     let _ = ctxb.inv(v[i])
-
   }
   mk_check(
     "L-02 批次求逆（Montgomery 技巧）",
@@ -853,10 +851,7 @@ pub fn ob_l05() -> Check {
   }
   n = n + 1
   mk_check(
-    "L-05 ℚ RREF 與轉換矩陣之重建",
-    ok,
-    n,
-    "11 組與 mrref 之 R 及秩完全相同；全部通過憑證 T·A = R ∧ det T ≠ 0；含秩虧實例",
+    "L-05 ℚ RREF 與轉換矩陣之重建", ok, n, "11 組與 mrref 之 R 及秩完全相同；全部通過憑證 T·A = R ∧ det T ≠ 0；含秩虧實例",
   )
 }
 
@@ -906,10 +901,7 @@ pub fn ob_l06() -> Check {
     n = n + 1
   }
   mk_check(
-    "L-06 正交投影係數之模重建",
-    ok,
-    n,
-    "8 組 Gram 正規方程以多模重建求解，殘差對每個生成向量之內積精確為 0（最佳逼近定理之見證）",
+    "L-06 正交投影係數之模重建", ok, n, "8 組 Gram 正規方程以多模重建求解，殘差對每個生成向量之內積精確為 0（最佳逼近定理之見證）",
   )
 }
 
@@ -957,7 +949,8 @@ pub fn ob_l07() -> Check {
     "L-07 最小二乘之 𝔽p 組裝與重建",
     ok && lf.certified && cf.wmul < cb.wmul,
     n,
-    "9 組與正規方程之精確解相同且通過憑證；20×10：" + gain_text(cb, cf),
+    "9 組與正規方程之精確解相同且通過憑證；20×10：" +
+    gain_text(cb, cf),
   )
 }
 
@@ -1007,10 +1000,7 @@ pub fn ob_l08() -> Check {
     n = n + 1
   }
   mk_check(
-    "L-08 Gram 之 LDLᵀ 重建（= Gram–Schmidt）",
-    ok,
-    n,
-    "6 組通過憑證 LDLᵀ = G；對角 D 逐項等於 Gram–Schmidt 正交向量之範數平方，且 det G = ∏Dᵢ",
+    "L-08 Gram 之 LDLᵀ 重建（= Gram–Schmidt）", ok, n, "6 組通過憑證 LDLᵀ = G；對角 D 逐項等於 Gram–Schmidt 正交向量之範數平方，且 det G = ∏Dᵢ",
   )
 }
 
@@ -1061,10 +1051,7 @@ pub fn ob_l09() -> Check {
     n = n + 1
   }
   mk_check(
-    "L-09 對偶基底與 Riesz 表示之重建",
-    ok,
-    n,
-    "6 組以 G⁻¹ 之多模重建造出對偶基底，⟨wⁱ, wⱼ⟩ = δᵢⱼ 精確成立",
+    "L-09 對偶基底與 Riesz 表示之重建", ok, n, "6 組以 G⁻¹ 之多模重建造出對偶基底，⟨wⁱ, wⱼ⟩ = δᵢⱼ 精確成立",
   )
 }
 
@@ -1228,7 +1215,7 @@ pub fn ob_m02() -> Check {
     let r1 = fpp_mul(f, h, ctx)
     match fpp_mul_ntt(f, h, g, ctx) {
       None => conv_ok = false
-      Some(r2) => {
+      Some(r2) =>
         if r1.length() != r2.length() {
           conv_ok = false
         } else {
@@ -1238,7 +1225,6 @@ pub fn ob_m02() -> Check {
             }
           }
         }
-      }
     }
     n = n + 1
   }
@@ -1354,8 +1340,12 @@ pub fn ob_m04() -> Check {
     n = n + 1
   }
   let d = 64
-  let f = Array::makei(d, _ => Q::frac(rng.next_small(99), rng.next_range(1, 40)))
-  let g = Array::makei(d, _ => Q::frac(rng.next_small(99), rng.next_range(1, 40)))
+  let f = Array::makei(d, _ => {
+    Q::frac(rng.next_small(99), rng.next_range(1, 40))
+  })
+  let g = Array::makei(d, _ => {
+    Q::frac(rng.next_small(99), rng.next_range(1, 40))
+  })
   let cb = Cost::new()
   let rb = qpoly_mul(f, g, cb)
   let cf = Cost::new()
@@ -1430,17 +1420,17 @@ pub fn ob_m06() -> Check {
   for t in 0..<8 {
     let dg = 2 + t % 3
     let du = 3 + t % 4
-    let d : Array[BigInt] = Array::makei(dg + 1, _ => BigInt::from_int(
-      rng.next_range(-20, 20),
-    ))
+    let d : Array[BigInt] = Array::makei(dg + 1, _ => {
+      BigInt::from_int(rng.next_range(-20, 20))
+    })
     d[dg] = 1N
-    let u1 : Array[BigInt] = Array::makei(du + 1, _ => BigInt::from_int(
-      rng.next_range(-20, 20),
-    ))
+    let u1 : Array[BigInt] = Array::makei(du + 1, _ => {
+      BigInt::from_int(rng.next_range(-20, 20))
+    })
     u1[du] = 1N
-    let u2 : Array[BigInt] = Array::makei(du + 1, _ => BigInt::from_int(
-      rng.next_range(-20, 20),
-    ))
+    let u2 : Array[BigInt] = Array::makei(du + 1, _ => {
+      BigInt::from_int(rng.next_range(-20, 20))
+    })
     u2[du] = 1N
     let cc = Cost::new()
     let f = zpoly_mul_school(d, u1, cc)
@@ -1475,13 +1465,13 @@ pub fn ob_m06() -> Check {
   }
   // 係數膨脹之對照（互質輸入 ⇒ 歐幾里得之最壞情形）
   let du = 16
-  let f : Array[BigInt] = Array::makei(du + 1, _ => BigInt::from_int(
-    rng.next_range(-30, 30),
-  ))
+  let f : Array[BigInt] = Array::makei(du + 1, _ => {
+    BigInt::from_int(rng.next_range(-30, 30))
+  })
   f[du] = 1N
-  let g : Array[BigInt] = Array::makei(du, _ => BigInt::from_int(
-    rng.next_range(-30, 30),
-  ))
+  let g : Array[BigInt] = Array::makei(du, _ => {
+    BigInt::from_int(rng.next_range(-30, 30))
+  })
   g[du - 1] = 1N
   let fq = Array::makei(f.length(), i => Q::make(f[i], 1N))
   let gq = Array::makei(g.length(), i => Q::make(g[i], 1N))
@@ -1552,7 +1542,9 @@ pub fn ob_m07() -> Check {
   }
   let k = 20
   let xs = Array::makei(k, i => Q::of_int(i + 1))
-  let ys = Array::makei(k, _ => Q::frac(rng.next_small(80), rng.next_range(1, 9)))
+  let ys = Array::makei(k, _ => {
+    Q::frac(rng.next_small(80), rng.next_range(1, 9))
+  })
   let cb = Cost::new()
   let _ = qinterp_lagrange(xs, ys, cb)
   let cf = Cost::new()

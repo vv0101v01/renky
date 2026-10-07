@@ -91,9 +91,11 @@ pub fn ob_n02() -> Check {
     "偽律 inv(A⊗B) =? inv(A)⊗B",
     (a, b) => mkron(a, b),
     (g, c) => qinv_gauss(g, c),
-    (a, b, c) => match qinv_gauss(a, c) {
-      Some(x) => Some(qkron_cost(c, x, b))
-      None => None
+    (a, b, c) => {
+      match qinv_gauss(a, c) {
+        Some(x) => Some(qkron_cost(c, x, b))
+        None => None
+      }
     },
     sizes,
     rng,
@@ -107,9 +109,9 @@ pub fn ob_n02() -> Check {
     "偽律 det(A⊗B) =? det A·det B",
     (a, b) => mkron(a, b),
     (g, c) => Some(q_scalar_mat(qdet_gauss(g, c))),
-    (a, b, c) => Some(
-      q_scalar_mat(cq_mul(c, qdet_gauss(a, c), qdet_gauss(b, c))),
-    ),
+    (a, b, c) => {
+      Some(q_scalar_mat(cq_mul(c, qdet_gauss(a, c), qdet_gauss(b, c))))
+    },
     sizes,
     rng,
   )
@@ -122,9 +124,11 @@ pub fn ob_n02() -> Check {
     "偽律 inv(A⊕B) =? inv(A)⊗inv(B)",
     (a, b) => qblock_diag(a, b),
     (g, c) => qinv_gauss(g, c),
-    (a, b, c) => match (qinv_gauss(a, c), qinv_gauss(b, c)) {
-      (Some(x), Some(y)) => Some(qkron_cost(c, x, y))
-      _ => None
+    (a, b, c) => {
+      match (qinv_gauss(a, c), qinv_gauss(b, c)) {
+        (Some(x), Some(y)) => Some(qkron_cost(c, x, y))
+        _ => None
+      }
     },
     sizes,
     rng,
@@ -134,9 +138,7 @@ pub fn ob_n02() -> Check {
   }
   n = n + f3.ltrials
   mk_check(
-    "N-02 結構律檢驗器之可靠性（真律判真、偽律判偽）",
-    ok,
-    n,
+    "N-02 結構律檢驗器之可靠性（真律判真、偽律判偽）", ok, n,
     "1 條真律全數判真；3 條刻意偽律（錯誤合成子、錯誤指數、組合子張冠李戴）全數判偽。定理 170：holds = false 為確定性結論（有具體反例），holds = true 為機率性證據",
   )
 }
@@ -244,10 +246,10 @@ pub fn ob_n05() -> Check {
     ok = false
   }
   // 定理 173-2 之成本面主張：分解法必須真的是零次乘法
-  if v.fast_wmul != 0L {
+  if v.fast_cost != 0L {
     ok = false
   }
-  if v.base_wmul <= 0L {
+  if v.base_cost <= 0L {
     ok = false
   }
   n = n + v.ltrials
@@ -279,7 +281,7 @@ pub fn ob_n05() -> Check {
     ok,
     n,
     "6 個維度：直接法共 " +
-    v.base_wmul.to_string() +
+    v.base_cost.to_string() +
     " 次字乘，分解法 0 次（增益無上界）—— 對偶節點之「求逆」不需任何消去；" +
     v.ldetail +
     "。另 4 組驗證 G(A*) = (G⁻¹)ᵀ、對合 G(A**) = G、det G(A*) = 1/det G",
@@ -381,7 +383,7 @@ pub fn ob_n13() -> Check {
   let rng = ob_rng()
   let mut ok = true
   // 網格必含非對稱尺寸（命題 175-3）
-  let tbl = law_search(rng, [(2, 2), (2, 3), (3, 3)])
+  let tbl = law_search_std(rng)
   let mut nh = 0
   let mut nr = 0
   for t in tbl {
@@ -400,12 +402,17 @@ pub fn ob_n13() -> Check {
   }
   // 已知為真之候選必須被尋獲
   let must_hold : Array[(String, String, String)] = [
-    ("inv", "⊗", "⊗"), ("inv", "⊕", "⊕"),
-    ("det", "⊗", "^"), ("det", "⊕", "·"),
-    ("sq", "⊗", "⊗"), ("sq", "⊕", "⊕"),
+    ("inv", "⊗", "⊗"),
+    ("inv", "⊕", "⊕"),
+    ("det", "⊗", "^"),
+    ("det", "⊕", "·"),
+    ("sq", "⊗", "⊗"),
+    ("sq", "⊕", "⊕"),
     ("adj", "⊗", "⊗ₛ"),
-    ("trace", "⊗", "·"), ("trace", "⊕", "+"),
-    ("rank", "⊗", "·"), ("rank", "⊕", "+"),
+    ("trace", "⊗", "·"),
+    ("trace", "⊕", "+"),
+    ("rank", "⊗", "·"),
+    ("rank", "⊕", "+"),
   ]
   for m in must_hold {
     let (p, c, r) = m
@@ -415,12 +422,18 @@ pub fn ob_n13() -> Check {
   }
   // 已知為偽之候選必須被推翻（含張冠李戴與少了指數者）
   let must_fail : Array[(String, String, String)] = [
-    ("inv", "⊗", "⊕"), ("inv", "⊕", "⊗"),
-    ("det", "⊗", "·"), ("det", "⊕", "^"),
-    ("adj", "⊗", "⊗"), ("adj", "⊕", "⊕"),
-    ("trace", "⊗", "+"), ("trace", "⊕", "·"),
-    ("rank", "⊗", "+"), ("rank", "⊕", "·"),
-    ("sq", "⊗", "⊕"), ("sq", "⊗", "⊗ₛ"),
+    ("inv", "⊗", "⊕"),
+    ("inv", "⊕", "⊗"),
+    ("det", "⊗", "·"),
+    ("det", "⊕", "^"),
+    ("adj", "⊗", "⊗"),
+    ("adj", "⊕", "⊕"),
+    ("trace", "⊗", "+"),
+    ("trace", "⊕", "·"),
+    ("rank", "⊗", "+"),
+    ("rank", "⊕", "·"),
+    ("sq", "⊗", "⊕"),
+    ("sq", "⊗", "⊗ₛ"),
   ]
   for m in must_fail {
     let (p, c, r) = m
@@ -429,10 +442,12 @@ pub fn ob_n13() -> Check {
     }
   }
   // 命題 175-3：退化網格會放行偽律 —— 以 rank(A⊗B) =? rank A + rank B 示範
-  let rk_direct = (g : Mat[Q], _c : Cost) => Some(q_scalar_mat(Q::of_int(mrank(g))))
-  let rk_sum = (x : Mat[Q], y : Mat[Q], c : Cost) => Some(
-    q_scalar_mat(cq_add(c, Q::of_int(mrank(x)), Q::of_int(mrank(y)))),
-  )
+  let rk_direct = (g : Mat[Q], _c : Cost) => {
+    Some(q_scalar_mat(Q::of_int(mrank(g))))
+  }
+  let rk_sum = (x : Mat[Q], y : Mat[Q], c : Cost) => {
+    Some(q_scalar_mat(cq_add(c, Q::of_int(mrank(x)), Q::of_int(mrank(y)))))
+  }
   let deg = check_law(
     "rank/⊗/+ @ 退化網格",
     (x, y) => mkron(x, y),
@@ -456,8 +471,17 @@ pub fn ob_n13() -> Check {
   // 列出機器尋獲且成本可量測之加速律
   let wins : Array[String] = []
   for t in tbl {
-    if t.cholds && (t.cphi == "inv" || t.cphi == "det" || t.cphi == "sq" || t.cphi == "adj" || t.cphi == "trace") {
-      wins.push(t.cphi + "/" + t.ccomb + "/" + t.crule + " ×" + fmt_d(t.cgain, 2))
+    if t.cholds &&
+      (
+        t.cphi == "inv" ||
+        t.cphi == "det" ||
+        t.cphi == "sq" ||
+        t.cphi == "adj" ||
+        t.cphi == "trace"
+      ) {
+      wins.push(
+        t.cphi + "/" + t.ccomb + "/" + t.crule + " ×" + fmt_d(t.cgain, 2),
+      )
     }
   }
   mk_check(
@@ -488,9 +512,11 @@ pub fn ob_n12() -> Check {
   let mut worst3 = 0.0
   let mut all_dec = true
   let mut min_meas = 1.0e18
+  // N-35：維數上限由 32 下修至 22。成本模型之誤差比較（m₃ < m₁ < m₂）
+  //   與分派器之保守性皆為序關係，不依賴絕對維數；下修後序關係不變。
   for depth in [1, 2, 3] {
     for _t in 0..<6 {
-      let e = rand_expr(rng, depth, 32)
+      let e = rand_expr(rng, depth, 22)
       let (same, wb, wf, _lbl, _dim) = synth_compare(e)
       if !same {
         ok = false
@@ -565,13 +591,20 @@ pub fn ob_n10() -> Check {
   let rows : Array[String] = []
   // 增益隨 n 單調上升之主張**只在固定 k 下成立** —— 跨 k 比較時指數
   // C(n−1,k−1) 一併改變，兩個自變數同時動，序關係不保證。
-  // 故分 k 追蹤：k=2 之鏈 (4,2)→(5,2)→(6,2)、k=3 之鏈 (5,3)→(6,3)。
+  // 故分 k 追蹤：k=2 之鏈 (4,2)→(5,2)→(6,2)、k=3 之鏈 (4,3)→(5,3)。
+  // N-35 網格下修：原 k=3 鏈為 (5,3)→(6,3)，其中 (6,3) 之複合矩陣為 20×20，
+  //   直接法需 492,444 字乘法，佔本條原成本之 71%。改以 (4,3)→(5,3) 維持
+  //   同樣的二點單調鏈而成本僅 1/10；(6,3) 之大尺寸實測移入 cmd/lawsearch。
   let mut prev2 = 0.0
   let mut prev3 = 0.0
   let mut mono = true
   let mut ratio_small = 0.0
   let mut ratio_large = 0.0
-  for nk in [(4, 2), (5, 2), (6, 2), (5, 3), (6, 3)] {
+  // N-35：原以 (n,k) 硬編碼挑取兩端（nn==4 與 nn==6&&kk==3），網格一動就失效。
+  //   改為依**指數大小**動態挑取兩端，網格再變也不必改這段。
+  let mut e_small = 0
+  let mut e_large = 0
+  for nk in [(4, 2), (5, 2), (6, 2), (4, 3), (5, 3)] {
     let (nn, kk) = nk
     let a = rand_gram(rng, nn)
     let cd = Cost::new()
@@ -606,17 +639,27 @@ pub fn ob_n10() -> Check {
     }
     // 線性冪 ÷ 二進位冪 之成本比：應隨指數增大而拉開
     let rr = c1.wmul.to_double() / c2.wmul.to_double()
-    if nn == 4 {
+    let ee = sf_exponent(nn, kk)
+    if e_small == 0 || ee < e_small {
+      e_small = ee
       ratio_small = rr
     }
-    if nn == 6 && kk == 3 {
+    if ee > e_large {
+      e_large = ee
       ratio_large = rr
     }
     tb = tb + cd.wmul
     tf = tf + c2.wmul
     rows.push(
-      "C(" + nn.to_string() + "," + kk.to_string() + ")=" +
-      ck.mrows.to_string() + " e=" + sf_exponent(nn, kk).to_string() + " ×" +
+      "C(" +
+      nn.to_string() +
+      "," +
+      kk.to_string() +
+      ")=" +
+      ck.mrows.to_string() +
+      " e=" +
+      sf_exponent(nn, kk).to_string() +
+      " ×" +
       fmt_d(g, 1),
     )
     n = n + 3
@@ -639,9 +682,13 @@ pub fn ob_n10() -> Check {
     fmt_d(tb.to_double() / tf.to_double(), 1) +
     "。增益之單調性**只在固定 k 下成立**（k=2 鏈與 k=3 鏈各自上升）—— 跨 k 比較時 C(n,k) 與指數 C(n−1,k−1) 同時改變，序關係不保證；此限制由義務以分鏈斷言明文固定。右式冪法之抉擇是本條關鍵：線性冪／二進位冪之成本比由 ×" +
     fmt_d(ratio_small, 2) +
-    "（e=3）拉開到 ×" +
+    "（e=" +
+    e_small.to_string() +
+    "）拉開到 ×" +
     fmt_d(ratio_large, 2) +
-    "（e=10）—— 指數 C(n−1,k−1) 隨 n 組合爆炸，若右式用線性冪，整條律之增益會在 (7,3) 之後**開始下降**。一次性實測（因基準法過貴未納入常規義務）：線性冪 (7,3) ×99.4 → (8,4) ×85.1 → (9,4) ×75.3 逐步惡化；二進位冪 ×232.3 → ×395.5 → ×814.4 持續上升",
+    "（e=" +
+    e_large.to_string() +
+    "）—— 指數 C(n−1,k−1) 隨 n 組合爆炸，若右式用線性冪，整條律之增益會在 (7,3) 之後**開始下降**。一次性實測（因基準法過貴未納入常規義務）：線性冪 (7,3) ×99.4 → (8,4) ×85.1 → (9,4) ×75.3 逐步惡化；二進位冪 ×232.3 → ×395.5 → ×814.4 持續上升",
   )
 }
 
@@ -656,7 +703,10 @@ pub fn ob_n06() -> Check {
   let rows : Array[String] = []
   let mut hom_gain = 0.0
   let mut ten_gain = 0.0
-  for pq in [(2, 3), (3, 3), (3, 4), (4, 4), (4, 5)] {
+  // N-35 網格下修：原含 (4,5)，其 Hom 空間為 20×20，直接法需 457,887 字乘法，
+  //   佔本條原成本之 64%，(4,4) 之 dim 16 另佔 28%。下修至 (3,4)（dim 12），
+  //   仍保有 dim 6 → 9 → 12 之三點遞增鏈；dim 16／20 之實測移入 cmd/lawsearch。
+  for pq in [(2, 3), (3, 3), (3, 4)] {
     let (p, q) = pq
     let v = SLeaf("V", rand_gram(rng, p))
     let w = SLeaf("W", rand_gram(rng, q))
@@ -673,10 +723,7 @@ pub fn ob_n06() -> Check {
     let c0 = Cost::new()
     match qinv_gauss(v.sgram(), c0) {
       None => ok = false
-      Some(iv) =>
-        if !gh.equals(mkron(w.sgram(), iv.transpose())) {
-          ok = false
-        }
+      Some(iv) => if !gh.equals(mkron(w.sgram(), iv.transpose())) { ok = false }
     }
     // 定理 182：catamorphism 直接適用，且結果正確
     let (same, wb, wf, _l, _d) = synth_compare(h)
@@ -685,7 +732,12 @@ pub fn ob_n06() -> Check {
     }
     tb = tb + wb
     tf = tf + wf
-    rows.push("dim" + (p * q).to_string() + " ×" + fmt_d(wb.to_double() / wf.to_double(), 1))
+    rows.push(
+      "dim" +
+      (p * q).to_string() +
+      " ×" +
+      fmt_d(wb.to_double() / wf.to_double(), 1),
+    )
     n = n + 3
   }
   // 推論 182-1：同維之下 Hom 之增益高於純 ⊗（前者只需一次求逆）
@@ -766,19 +818,24 @@ pub fn ob_n08() -> Check {
   let mut inv_ok = 0
   for sz in [3, 4, 5, 6] {
     // 造一個不定號對稱矩陣（含正負特徵值）
-    let s0 : RMat = Mat::build(sz, sz, (i, j) => if i == j {
-      (if i % 2 == 0 { 1.0 } else { -1.0 }) * (1.0 + i.to_double())
-    } else {
-      0.3 * ((i + j) % 3).to_double()
+    let s0 : RMat = Mat::build(sz, sz, (i, j) => {
+      if i == j {
+        (if i % 2 == 0 { 1.0 } else { -1.0 }) * (1.0 + i.to_double())
+      } else {
+        0.3 * ((i + j) % 3).to_double()
+      }
     })
-    let sym : RMat = Mat::build(sz, sz, (i, j) => 0.5 *
-      (s0.at(i, j) + s0.at(j, i)))
-    let a : RMat = Mat::build(sz, sz, (i, j) => if i > j {
-      0.0
-    } else if i == j {
-      1.0 + (i % 2).to_double()
-    } else {
-      0.25 * ((i * 3 + j) % 4).to_double()
+    let sym : RMat = Mat::build(sz, sz, (i, j) => {
+      0.5 * (s0.at(i, j) + s0.at(j, i))
+    })
+    let a : RMat = Mat::build(sz, sz, (i, j) => {
+      if i > j {
+        0.0
+      } else if i == j {
+        1.0 + (i % 2).to_double()
+      } else {
+        0.25 * ((i * 3 + j) % 4).to_double()
+      }
     })
     let cong = a.transpose().times(sym.times(a))
     let (l1, q1, _r1) = cjacobi_eigen(sym, 1.0e-12, 2000, Cost::new())
@@ -819,12 +876,14 @@ pub fn ob_n09() -> Check {
   let mut neg = 0
   for dim in [3, 4, 5] {
     let g = rand_gram(rng, dim)
-    for k in 1..=dim {
+    for k in 1..<=dim {
       // (a) S 單射（取前 k 個標準基向量）⇒ G_U 應正定
-      let s : Mat[Q] = Mat::build(dim, k, (i, j) => if i == j {
-        Q::one()
-      } else {
-        Q::zero()
+      let s : Mat[Q] = Mat::build(dim, k, (i, j) => {
+        if i == j {
+          Q::one()
+        } else {
+          Q::zero()
+        }
       })
       let c = Cost::new()
       let gu = qmul_cost(c, s.transpose(), qmul_cost(c, g, s))
@@ -848,16 +907,18 @@ pub fn ob_n09() -> Check {
     }
     // (b) S 不單射（最後一行重複）⇒ G_U 必不正定，且秩降
     if dim >= 2 {
-      let s2 : Mat[Q] = Mat::build(dim, dim, (i, j) => if j == dim - 1 {
-        if i == 0 {
+      let s2 : Mat[Q] = Mat::build(dim, dim, (i, j) => {
+        if j == dim - 1 {
+          if i == 0 {
+            Q::one()
+          } else {
+            Q::zero()
+          }
+        } else if i == j {
           Q::one()
         } else {
           Q::zero()
         }
-      } else if i == j {
-        Q::one()
-      } else {
-        Q::zero()
       })
       let c2 = Cost::new()
       let gu2 = qmul_cost(c2, s2.transpose(), qmul_cost(c2, g, s2))
@@ -896,7 +957,9 @@ pub fn ob_n14() -> Check {
       ok = false
       nfail = nfail + 1
     }
-    parts.push(r.nsrc + " " + r.nclaim + "（實測 " + fmt_d(r.nmeasured, 2) + "）")
+    parts.push(
+      r.nsrc + " " + r.nclaim + "（實測 " + fmt_d(r.nmeasured, 2) + "）",
+    )
   }
   // 登錄表不得為空，且必須涵蓋至少 4 個不同來源條目
   if reg.length() < 7 {
@@ -938,7 +1001,7 @@ pub fn ob_n14() -> Check {
 pub fn ob_n26() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  let tbl = law_search(rng, [(2, 2), (2, 3), (3, 3)])
+  let tbl = law_search_std(rng)
   let mut nh = 0
   let mut nr = 0
   let mut ks_hold = 0
@@ -989,12 +1052,14 @@ pub fn ob_n26() -> Check {
   }
   // 明確反例：A = diag(1,−1)、B = [1] ⇒ A⊞B = diag(2,0)
   //   rank(A⊞B) = 1，而 rank A · rank B = 2·1 = 2。
-  let ca : Mat[Q] = Mat::build(2, 2, (i, j) => if i != j {
-    Q::zero()
-  } else if i == 0 {
-    Q::one()
-  } else {
-    Q::of_int(-1)
+  let ca : Mat[Q] = Mat::build(2, 2, (i, j) => {
+    if i != j {
+      Q::zero()
+    } else if i == 0 {
+      Q::one()
+    } else {
+      Q::of_int(-1)
+    }
   })
   let cb : Mat[Q] = Mat::build(1, 1, (_i, _j) => Q::one())
   let ks = qkron_sum(ca, cb)

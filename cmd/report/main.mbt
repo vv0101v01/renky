@@ -303,7 +303,11 @@ fn main {
     let mut row = "| n = " + n.to_string() + " |"
     for b in [8, 32, 128, 512, 2048] {
       row = row +
-        (if @hilbert.plan_zdet(n, b).use_fast { " **加速** |" } else { " · |" })
+        (if @hilbert.plan_zdet(n, b).use_fast {
+          " **加速** |"
+        } else {
+          " · |"
+        })
     }
     println(row)
   }

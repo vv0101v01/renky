@@ -4,7 +4,7 @@
 ///|
 fn main {
   let cat = @hilbert.catalogue()
-  println("code\tzh\tcat\ttrack\tinstances\tok\tusec")
+  println("code\tzh\tcat\ttrack\tinstances\tok\tusec\tpolicy")
   for a in cat {
     let t0 = @bench.monotonic_clock_start()
     let c = (a.run)()
@@ -22,7 +22,18 @@ fn main {
       "\t" +
       (if c.ok { "1" } else { "0" }) +
       "\t" +
-      us.to_int64().to_string(),
+      us.to_int64().to_string() +
+      "\t" +
+      (if @hilbert.trial_governed(a.code) {
+        let want = @hilbert.trial_policy(a.code)
+        if c.trials == want {
+          "ok:" + want.to_string()
+        } else {
+          "VIOLATION want=" + want.to_string()
+        }
+      } else {
+        "-"
+      }),
     )
   }
 }

@@ -52,7 +52,7 @@ pub fn ob_d01() -> Check {
   let rng = ob_rng()
   let s = stage_poly()
   let mut ok = true
-  for _t in 0..<12 {
+  for _t in 0..<10 {
     let xs = samples(s, rng, 5)
     let g = gram_schmidt(s, xs)
     if !is_orthogonal_set(s, g.ortho) {
@@ -73,7 +73,7 @@ pub fn ob_d01() -> Check {
     }
   }
   mk_check(
-    "D-01 Gram–Schmidt 正交化", ok, 12, "uᵢ⊥uⱼ；x_j = ΣR_ij u_i；span 保持",
+    "D-01 Gram–Schmidt 正交化", ok, 10, "uᵢ⊥uⱼ；x_j = ΣR_ij u_i；span 保持",
   )
 }
 
@@ -83,7 +83,7 @@ pub fn ob_d02() -> Check {
   let rng = ob_rng()
   let s = stage_euc()
   let mut ok = true
-  for _t in 0..<12 {
+  for _t in 0..<10 {
     let xs = samples(s, rng, 4)
     let a = gram_schmidt(s, xs)
     let b = modified_gram_schmidt(s, xs)
@@ -101,7 +101,7 @@ pub fn ob_d02() -> Check {
     }
   }
   mk_check(
-    "D-02 改良 Gram–Schmidt", ok, 12, "精確算術下 MGS ≡ CGS（逐項相等）",
+    "D-02 改良 Gram–Schmidt", ok, 10, "精確算術下 MGS ≡ CGS（逐項相等）",
   )
 }
 
@@ -125,7 +125,7 @@ pub fn ob_d03() -> Check {
   }
   let sq : IPSpace[Array[Q], Q] = euclidean_space(5)
   // (1) 刻劃定理：ℚ 上可標準正交化 ⟺ Gram–Schmidt 之各範數平方皆為 ℚ 中完全平方
-  for _t in 0..<12 {
+  for _t in 0..<4 {
     let xs = samples(sq, rng, 3)
     if !linearly_independent(sq, xs) {
       continue
@@ -155,7 +155,7 @@ pub fn ob_d03() -> Check {
     n = n + 1
   }
   // (2) 肯定面：有理正交矩陣（Cayley 變換）之行必可於 ℚ 上標準正交化
-  for _t in 0..<6 {
+  for _t in 0..<3 {
     let qm = rational_orthogonal(rng, 4)
     let se4 : IPSpace[Array[Q], Q] = euclidean_space(4)
     let cols : Array[Array[Q]] = Array::makei(4, j2 => qm.col(j2))
@@ -185,7 +185,7 @@ pub fn ob_d03() -> Check {
   // (3) ℝ 上恆可（正定性保證範數為正實數，開方封閉）
   let sr : IPSpace[Array[Double], Double] = euclidean_space(5)
   let rngr = ob_rng()
-  for _t in 0..<6 {
+  for _t in 0..<3 {
     let ys = samples(sr, rngr, 3)
     match orthonormalize(sr, ys) {
       None => ok = false
@@ -211,7 +211,7 @@ pub fn ob_d04() -> Check {
   let rng = ob_rng()
   let s = stage_euc()
   let mut ok = true
-  for _t in 0..<15 {
+  for _t in 0..<10 {
     let xs = samples(s, rng, 3)
     let g = gram_det(s, xs)
     // 非負
@@ -241,7 +241,7 @@ pub fn ob_d04() -> Check {
     }
   }
   mk_check(
-    "D-04 Gram 行列式／體積／Hadamard 不等式", ok, 15, "0 ≤ detG ≤ Π‖xᵢ‖²；相依 ⟺ detG=0",
+    "D-04 Gram 行列式／體積／Hadamard 不等式", ok, 10, "0 ≤ detG ≤ Π‖xᵢ‖²；相依 ⟺ detG=0",
   )
 }
 
@@ -251,7 +251,7 @@ pub fn ob_d05() -> Check {
   let rng = ob_rng()
   let s = stage_poly()
   let mut ok = true
-  for _t in 0..<12 {
+  for _t in 0..<10 {
     let ws = samples(s, rng, 2)
     let x = (s.vs.sample)(rng)
     let p = project_onto(s, ws, x)
@@ -280,7 +280,7 @@ pub fn ob_d05() -> Check {
     }
   }
   mk_check(
-    "D-05 正交投影與最佳逼近定理", ok, 12, "r⊥W、P²=P、‖x−Px‖ 最小、畢氏分解",
+    "D-05 正交投影與最佳逼近定理", ok, 10, "r⊥W、P²=P、‖x−Px‖ 最小、畢氏分解",
   )
 }
 
@@ -290,7 +290,7 @@ pub fn ob_d06() -> Check {
   let rng = ob_rng()
   let s = stage_euc()
   let mut ok = true
-  for _t in 0..<15 {
+  for _t in 0..<10 {
     let w1 = samples(s, rng, 2)
     let w2 = [w1[0], w1[1], (s.vs.sample)(rng)]
     let x = (s.vs.sample)(rng)
@@ -304,7 +304,7 @@ pub fn ob_d06() -> Check {
     }
   }
   mk_check(
-    "D-06 子空間距離", ok, 15, "x∈W ⇒ d=0；W₁⊆W₂ ⇒ d(x,W₂) ≤ d(x,W₁)",
+    "D-06 子空間距離", ok, 10, "x∈W ⇒ d=0；W₁⊆W₂ ⇒ d(x,W₂) ≤ d(x,W₁)",
   )
 }
 
@@ -343,7 +343,9 @@ pub fn ob_d08() -> Check {
   let rng = ob_rng()
   let s = stage_poly()
   let mut ok = true
-  for _t in 0..<15 {
+  let mut n = 0
+  for _t in 0..<5 {
+    n = n + 1
     let c = Array::makei(s.vs.dim, _ => qr(rng))
     let v = riesz_vector(s, c)
     for _k in 0..<4 {
@@ -355,7 +357,8 @@ pub fn ob_d08() -> Check {
   }
   // 複空間版本（共軛線性）
   let sc = stage_cpx()
-  for _t in 0..<10 {
+  for _t in 0..<5 {
+    n = n + 1
     let c : Array[Cpx[Q]] = Array::makei(3, _ => Cpx::mk(qr(rng), qr(rng)))
     let v = riesz_vector(sc, c)
     for _k in 0..<3 {
@@ -366,7 +369,7 @@ pub fn ob_d08() -> Check {
     }
   }
   mk_check(
-    "D-08 Riesz 表示定理", ok, 25, "φ(x)=⟨x,v_φ⟩（實與複）",
+    "D-08 Riesz 表示定理", ok, n, "φ(x)=⟨x,v_φ⟩；5 個實泛函（各 4 點）＋ 5 個複泛函（各 3 點）",
   )
 }
 
@@ -377,7 +380,9 @@ pub fn ob_d09() -> Check {
   let p = stage_poly() // dim 5
   let q : IPSpace[Array[Q], Q] = euclidean_space(3)
   let mut ok = true
-  for _t in 0..<10 {
+  let mut n = 0
+  for _t in 0..<5 {
+    n = n + 1
     let tmat = qmat(rng, 3, 5)
     let ast = adjoint_matrix(p, q, tmat)
     for _k in 0..<4 {
@@ -392,7 +397,8 @@ pub fn ob_d09() -> Check {
   }
   // 複情形：標準正交基下 [T*] = [T]*
   let sc = stage_cpx()
-  for _t in 0..<6 {
+  for _t in 0..<5 {
+    n = n + 1
     let tmat : Mat[Cpx[Q]] = Mat::build(3, 3, (_i, _j) => {
       Cpx::mk(qr(rng), qr(rng))
     })
@@ -402,7 +408,7 @@ pub fn ob_d09() -> Check {
     }
   }
   mk_check(
-    "D-09 伴隨算子 [T*] = G_V⁻¹[T]*G_W", ok, 16, "⟨Tx,y⟩=⟨x,T*y⟩；ONB 下退化為共軛轉置",
+    "D-09 伴隨算子 [T*] = G_V⁻¹[T]*G_W", ok, n, "5 個 ℚ 算子驗 ⟨Tx,y⟩=⟨x,T*y⟩（各 4 組 x,y）＋ 5 個複算子驗 ONB 下退化為共軛轉置",
   )
 }
 
@@ -415,7 +421,7 @@ pub fn ob_d10() -> Check {
   let qm = rational_orthogonal(rng, n)
   let onb : Array[Array[Q]] = Array::makei(n, j => qm.col(j))
   let mut ok = is_orthonormal_set(s, onb)
-  for _t in 0..<20 {
+  for _t in 0..<10 {
     let x = (s.vs.sample)(rng)
     let c = fourier_coeffs(s, onb, x)
     if !(s.vs.veq)(fourier_synthesis(s, onb, c), x) {
@@ -423,7 +429,7 @@ pub fn ob_d10() -> Check {
     }
   }
   mk_check(
-    "D-10 Fourier 係數與重建", ok, 20, "有理正交基（Cayley）上 x = Σ⟨x,eᵢ⟩eᵢ 精確成立",
+    "D-10 Fourier 係數與重建", ok, 10, "有理正交基（Cayley）上 x = Σ⟨x,eᵢ⟩eᵢ 精確成立",
   )
 }
 
@@ -438,7 +444,7 @@ pub fn ob_d11() -> Check {
   let part : Array[Array[Q]] = Array::makei(2, j => qm.col(j))
   let mut ok = true
   let mut strict = false
-  for _t in 0..<20 {
+  for _t in 0..<10 {
     let x = (s.vs.sample)(rng)
     let (sp, nx) = bessel_pair(s, part, x)
     if sp > nx + 1.0e-9 {
@@ -455,7 +461,7 @@ pub fn ob_d11() -> Check {
   mk_check(
     "D-11/12 Bessel 不等式與 Parseval 恆等式",
     ok && strict,
-    20,
+    10,
     "真子集嚴格小於；完備基取等",
   )
 }
@@ -466,7 +472,9 @@ pub fn ob_d13() -> Check {
   let rng = ob_rng()
   let s = stage_poly()
   let mut ok = true
-  for _t in 0..<25 {
+  let mut n = 0
+  for _t in 0..<5 {
+    n = n + 1
     let x = (s.vs.sample)(rng)
     let y = (s.vs.sample)(rng)
     let d = cauchy_schwarz_slack(s, x, y)
@@ -489,7 +497,8 @@ pub fn ob_d13() -> Check {
   }
   // 複空間
   let sc = stage_cpx()
-  for _t in 0..<10 {
+  for _t in 0..<5 {
+    n = n + 1
     let x = (sc.vs.sample)(rng)
     let y = (sc.vs.sample)(rng)
     let d = cauchy_schwarz_slack(sc, x, y)
@@ -498,7 +507,7 @@ pub fn ob_d13() -> Check {
     }
   }
   mk_check(
-    "D-13 Cauchy–Schwarz（精確憑證）", ok, 35, "δ = ⟨x,x⟩⟨y,y⟩−|⟨x,y⟩|² ≥ 0，等號 ⟺ 相依",
+    "D-13 Cauchy–Schwarz（精確憑證）", ok, n, "δ = ⟨x,x⟩⟨y,y⟩−|⟨x,y⟩|² ≥ 0，等號 ⟺ 相依；5 例 ℚ（含刻意相依之取等例）＋ 5 例複（δ 實且非負）",
   )
 }
 
@@ -508,7 +517,7 @@ pub fn ob_d14() -> Check {
   let rng = ob_rng()
   let s = stage_poly()
   let mut ok = true
-  for _t in 0..<30 {
+  for _t in 0..<10 {
     let x = (s.vs.sample)(rng)
     let y = (s.vs.sample)(rng)
     if !triangle_holds(s, x, y) {
@@ -522,7 +531,7 @@ pub fn ob_d14() -> Check {
     }
   }
   mk_check(
-    "D-14 三角不等式", ok, 30, "精確判定 (c−a−b ≤ 0) ∨ ((c−a−b)² ≤ 4ab)",
+    "D-14 三角不等式", ok, 10, "精確判定 (c−a−b ≤ 0) ∨ ((c−a−b)² ≤ 4ab)",
   )
 }
 
@@ -530,32 +539,42 @@ pub fn ob_d14() -> Check {
 /// D-15 平行四邊形律：‖x+y‖²+‖x−y‖² = 2‖x‖²+2‖y‖²（內積空間之特徵）。
 pub fn ob_d15() -> Check {
   let rng = ob_rng()
+  let mut n = 0
   let spaces_ok = {
     let mut ok = true
     let s1 = stage_poly()
     let s2 = stage_euc()
     let s3 : IPSpace[Mat[Q], Q] = sym_matrix_space(3)
-    for _t in 0..<15 {
-      if !Q::is_zero(
-          parallelogram_defect(s1, (s1.vs.sample)(rng), (s1.vs.sample)(rng)),
-        ) {
-        ok = false
+    for _t in 0..<4 {
+      if n < 10 {
+        n = n + 1
+        if !Q::is_zero(
+            parallelogram_defect(s1, (s1.vs.sample)(rng), (s1.vs.sample)(rng)),
+          ) {
+          ok = false
+        }
       }
-      if !Q::is_zero(
-          parallelogram_defect(s2, (s2.vs.sample)(rng), (s2.vs.sample)(rng)),
-        ) {
-        ok = false
+      if n < 10 {
+        n = n + 1
+        if !Q::is_zero(
+            parallelogram_defect(s2, (s2.vs.sample)(rng), (s2.vs.sample)(rng)),
+          ) {
+          ok = false
+        }
       }
-      if !Q::is_zero(
-          parallelogram_defect(s3, (s3.vs.sample)(rng), (s3.vs.sample)(rng)),
-        ) {
-        ok = false
+      if n < 10 {
+        n = n + 1
+        if !Q::is_zero(
+            parallelogram_defect(s3, (s3.vs.sample)(rng), (s3.vs.sample)(rng)),
+          ) {
+          ok = false
+        }
       }
     }
     ok
   }
   mk_check(
-    "D-15 平行四邊形律", spaces_ok, 45, "三個不同空間上恆等式皆精確為 0",
+    "D-15 平行四邊形律", spaces_ok, n, "P₅ / ℝⁿ / Sym₃ 三個空間輪流取樣共 10 例，恆等式皆精確為 0",
   )
 }
 
@@ -565,7 +584,9 @@ pub fn ob_d16() -> Check {
   let rng = ob_rng()
   let s = stage_poly()
   let mut ok = true
-  for _t in 0..<20 {
+  let mut n = 0
+  for _t in 0..<5 {
+    n = n + 1
     let x = (s.vs.sample)(rng)
     let y = (s.vs.sample)(rng)
     if !Q::eq(polarization_real(s, x, y), (s.inner)(x, y)) {
@@ -573,7 +594,8 @@ pub fn ob_d16() -> Check {
     }
   }
   let sc = stage_cpx()
-  for _t in 0..<15 {
+  for _t in 0..<5 {
+    n = n + 1
     let x = (sc.vs.sample)(rng)
     let y = (sc.vs.sample)(rng)
     if !Scalar::s_eq(polarization_complex(sc, x, y), (sc.inner)(x, y)) {
@@ -581,7 +603,7 @@ pub fn ob_d16() -> Check {
     }
   }
   mk_check(
-    "D-16/17 極化恆等式（實與複）", ok, 35, "內積可由範數完全還原",
+    "D-16/17 極化恆等式（實與複）", ok, n, "內積可由範數完全還原；5 例實極化 ＋ 5 例複極化",
   )
 }
 
@@ -591,7 +613,7 @@ pub fn ob_d18() -> Check {
   let rng = ob_rng()
   let s = stage_euc()
   let mut ok = true
-  for _t in 0..<20 {
+  for _t in 0..<10 {
     let x = (s.vs.sample)(rng)
     let y0 = (s.vs.sample)(rng)
     // 以投影造正交對
@@ -614,7 +636,7 @@ pub fn ob_d18() -> Check {
     }
   }
   mk_check(
-    "D-18 畢氏定理（含逆命題）", ok, 20, "⟂ ⟺ ‖x+y‖²=‖x‖²+‖y‖²（實空間）",
+    "D-18 畢氏定理（含逆命題）", ok, 10, "⟂ ⟺ ‖x+y‖²=‖x‖²+‖y‖²（實空間）",
   )
 }
 
@@ -710,7 +732,7 @@ pub fn ob_d21() -> Check {
   let rng = ob_rng()
   let s = stage_euc()
   let mut ok = true
-  for _t in 0..<20 {
+  for _t in 0..<10 {
     let v = (s.vs.sample)(rng)
     if Q::is_zero((s.inner)(v, v)) {
       continue
@@ -736,7 +758,7 @@ pub fn ob_d21() -> Check {
     }
   }
   mk_check(
-    "D-21 Householder 反射", ok, 20, "等距、H²=I、Hv=−v、H|_{v^⊥}=id",
+    "D-21 Householder 反射", ok, 10, "等距、H²=I、Hv=−v、H|_{v^⊥}=id",
   )
 }
 
@@ -746,7 +768,7 @@ pub fn ob_d22() -> Check {
   let rng = ob_rng()
   let s = stage_poly()
   let mut ok = true
-  for _t in 0..<12 {
+  for _t in 0..<10 {
     let ws = samples(s, rng, 2)
     let x = (s.vs.sample)(rng)
     let (c, rn) = least_squares(s, ws, x)
@@ -767,7 +789,7 @@ pub fn ob_d22() -> Check {
     }
   }
   mk_check(
-    "D-22 最小二乘與正規方程", ok, 12, "Gram·c = b，殘差 ⊥ span{wⱼ}",
+    "D-22 最小二乘與正規方程", ok, 10, "Gram·c = b，殘差 ⊥ span{wⱼ}",
   )
 }
 
@@ -778,7 +800,7 @@ pub fn ob_d23() -> Check {
   let s = stage_euc()
   let mut ok = true
   let pi = 4.0 * atan2_own(1.0, 1.0)
-  for _t in 0..<20 {
+  for _t in 0..<10 {
     let x = (s.vs.sample)(rng)
     let y = (s.vs.sample)(rng)
     let c = cosine_similarity(s, x, y)
@@ -798,7 +820,7 @@ pub fn ob_d23() -> Check {
     }
   }
   mk_check(
-    "D-23 夾角與餘弦相似度", ok, 20, "|cos| ≤ 1；θ(x,x)=0；θ(x,x^⊥)=π/2",
+    "D-23 夾角與餘弦相似度", ok, 10, "|cos| ≤ 1；θ(x,x)=0；θ(x,x^⊥)=π/2",
   )
 }
 
@@ -809,7 +831,7 @@ pub fn ob_d23() -> Check {
 ///|
 /// E-01 Legendre：GS 正交化單項式基 ≡ 遞推公式（至正規化常數）。
 pub fn ob_e01() -> Check {
-  let dim = 6 // deg ≤ 5
+  let dim = 10 // deg ≤ 9（取樣政策：E 群 10 例 ⇒ 10 個 Legendre 多項式）
   let s : IPSpace[Poly[Q], Q] = poly_space_l2(dim)
   let monos : Array[Poly[Q]] = Array::makei(dim, k => Poly::mono(dim, k))
   let g = gram_schmidt(s, monos)
@@ -867,7 +889,7 @@ pub fn ob_e03() -> Check {
   let mut cnt = 0
   for m in 0..<5 {
     for k in 0..<5 {
-      if m * k <= dim - 1 {
+      if m * k <= dim - 1 && cnt < 10 {
         cnt = cnt + 1
         let lhs = t[m].compose(t[k])
         let rhs = t[m * k]
@@ -895,7 +917,7 @@ pub fn ob_e03() -> Check {
 pub fn ob_e04() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<20 {
+  for _t in 0..<10 {
     let k = rng.next_range(2, 5)
     let nodes : Array[Q] = []
     let mut tries = 0
@@ -924,7 +946,7 @@ pub fn ob_e04() -> Check {
     }
   }
   mk_check(
-    "E-04 Vandermonde 行列式公式", ok, 20, "det V = Π_{i<j}(t_j−t_i) ≠ 0（節點相異）",
+    "E-04 Vandermonde 行列式公式", ok, 10, "det V = Π_{i<j}(t_j−t_i) ≠ 0（節點相異）",
   )
 }
 
@@ -933,7 +955,7 @@ pub fn ob_e04() -> Check {
 pub fn ob_e05() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<20 {
+  for _t in 0..<10 {
     let k = 4
     let nodes : Array[Q] = [
       Q::of_int(-2),
@@ -961,7 +983,7 @@ pub fn ob_e05() -> Check {
     }
   }
   mk_check(
-    "E-05 Lagrange 插值與唯一性", ok, 20, "p(tᵢ)=yᵢ；與 Vandermonde 解一致",
+    "E-05 Lagrange 插值與唯一性", ok, 10, "p(tᵢ)=yᵢ；與 Vandermonde 解一致",
   )
 }
 
@@ -969,7 +991,7 @@ pub fn ob_e05() -> Check {
 /// E-06 微分算子 D 於 P_n 上冪零：D^{n+1} = 0，χ_D(λ) = λ^{n+1}；
 /// 並驗 Heisenberg 關係 [D, X] = I 於截斷子空間上成立。
 pub fn ob_e06() -> Check {
-  let dim = 6 // P_{deg ≤ 5}
+  let dim = 10 // P_{deg ≤ 9}（取樣政策：E 群 10 例）
   let d : Mat[Q] = deriv_matrix(dim)
   let x : Mat[Q] = mulx_matrix(dim)
   let mut ok = mpow(d, dim).equals(Mat::zeros(dim, dim))
@@ -1039,7 +1061,7 @@ pub fn ob_e08() -> Check {
   //   以及「正定 ⟺ m ≥ dim」（節點互異時 Vandermonde 列滿秩）
   for dim in [2, 3, 4, 5] {
     for m in [dim - 2, dim - 1, dim, dim + 1, dim + 2] {
-      if m < 1 {
+      if m < 1 || n >= 10 {
         continue
       }
       let nodes : Array[Q] = Array::makei(m, k => Q::of_int(k - m / 2))
@@ -1097,7 +1119,7 @@ pub fn ob_e09() -> Check {
   if sym.vs.dim != n * (n + 1) / 2 || skew.vs.dim != n * (n - 1) / 2 {
     ok = false
   }
-  for _t in 0..<15 {
+  for _t in 0..<10 {
     let a = (full.vs.sample)(rng)
     let half = Q::frac(1, 2)
     let ssym = a.plus(a.transpose()).scale(half)
@@ -1114,7 +1136,7 @@ pub fn ob_e09() -> Check {
     }
   }
   mk_check(
-    "E-09 M_n = Sym_n ⊥ Skew_n", ok, 15, "維數 n(n+1)/2 + n(n−1)/2 = n²，且兩子空間正交",
+    "E-09 M_n = Sym_n ⊥ Skew_n", ok, 10, "維數 n(n+1)/2 + n(n−1)/2 = n²，且兩子空間正交",
   )
 }
 
@@ -1126,7 +1148,7 @@ pub fn ob_e10() -> Check {
   let dsp : IPSpace[Mat[Q], Q] = diag_matrix_space(n)
   let euc : IPSpace[Array[Q], Q] = euclidean_space(n)
   let mut ok = dsp.vs.dim == n
-  for _t in 0..<20 {
+  for _t in 0..<10 {
     let a = (dsp.vs.sample)(rng)
     let b = (dsp.vs.sample)(rng)
     // 等距：⟨A,B⟩_F = ⟨diag A, diag B⟩
@@ -1144,7 +1166,7 @@ pub fn ob_e10() -> Check {
     }
   }
   mk_check(
-    "E-10 Diag_n ≅ 𝔽ⁿ（等距同構）", ok, 20, "⟨A,B⟩_F = Σ aᵢbᵢ；對角陣交換",
+    "E-10 Diag_n ≅ 𝔽ⁿ（等距同構）", ok, 10, "⟨A,B⟩_F = Σ aᵢbᵢ；對角陣交換",
   )
 }
 
@@ -1156,7 +1178,7 @@ pub fn ob_e11() -> Check {
   let n = 3
   let hsp : IPSpace[Mat[Cpx[Q]], Q] = herm_matrix_space(n)
   let mut ok = hsp.vs.dim == n * n
-  for _t in 0..<15 {
+  for _t in 0..<10 {
     let a = (hsp.vs.sample)(rng)
     let b = (hsp.vs.sample)(rng)
     if !is_hermitian(a) || !is_hermitian(b) {
@@ -1182,7 +1204,7 @@ pub fn ob_e11() -> Check {
     }
   }
   mk_check(
-    "E-11 Herm_n(ℂ) 為實內積空間", ok, 15, "dim_ℝ = n²；⟨A,B⟩=Re tr(AB*)；M = H₁+iH₂",
+    "E-11 Herm_n(ℂ) 為實內積空間", ok, 10, "dim_ℝ = n²；⟨A,B⟩=Re tr(AB*)；M = H₁+iH₂",
   )
 }
 
@@ -1195,7 +1217,7 @@ pub fn ob_e12() -> Check {
   let full : IPSpace[Mat[Q], Q] = matrix_space(n, n)
   let mut ok = sl.vs.dim == n * n - 1
   let idm : Mat[Q] = Mat::ident(n)
-  for _t in 0..<15 {
+  for _t in 0..<10 {
     let a = (sl.vs.sample)(rng)
     if !a.trace().is_zero() {
       ok = false
@@ -1212,7 +1234,7 @@ pub fn ob_e12() -> Check {
     }
   }
   mk_check(
-    "E-12 sl_n = I^⊥（跡零空間）", ok, 15, "dim = n²−1；[A,B] 封閉",
+    "E-12 sl_n = I^⊥（跡零空間）", ok, 10, "dim = n²−1；[A,B] 封閉",
   )
 }
 
@@ -1252,7 +1274,7 @@ pub fn ob_e13() -> Check {
 pub fn ob_e14() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<12 {
+  for _t in 0..<10 {
     let a = qmat(rng, 5, 3)
     if mrank(a) != 3 {
       continue
@@ -1278,7 +1300,7 @@ pub fn ob_e14() -> Check {
     }
   }
   mk_check(
-    "E-14 列空間投影 P = A(AᵀA)⁻¹Aᵀ", ok, 12, "與抽象 Gram 投影逐項相等",
+    "E-14 列空間投影 P = A(AᵀA)⁻¹Aᵀ", ok, 10, "與抽象 Gram 投影逐項相等",
   )
 }
 
@@ -1289,7 +1311,7 @@ pub fn ob_e15() -> Check {
   let m = 3
   let s : IPSpace[MPoly[Q], Q] = mpoly_space(m, 2, true)
   let mut ok = true
-  for _t in 0..<15 {
+  for _t in 0..<10 {
     let f = (s.vs.sample)(rng)
     let g = (s.vs.sample)(rng)
     let x : Array[Q] = Array::makei(m, _ => qr(rng))
@@ -1307,7 +1329,7 @@ pub fn ob_e15() -> Check {
     }
   }
   mk_check(
-    "E-15 多變量多項式求值同態", ok, 15, "(f+g)(ξ)=f+g，(fg)(ξ)=f·g，deg(fg) ≤ deg f+deg g",
+    "E-10 多變量多項式求值同態", ok, 10, "(f+g)(ξ)=f+g，(fg)(ξ)=f·g，deg(fg) ≤ deg f+deg g",
   )
 }
 
@@ -1396,7 +1418,7 @@ pub fn ob_f02() -> Check {
   if !is_positive_definite(gram_of_space(t)) {
     ok = false
   }
-  for _t in 0..<12 {
+  for _t in 0..<10 {
     let x1 = (p.vs.sample)(rng)
     let x2 = (q.vs.sample)(rng)
     let y1 = (p.vs.sample)(rng)
@@ -1414,7 +1436,7 @@ pub fn ob_f02() -> Check {
     }
   }
   mk_check(
-    "F-02 張量積 P⊗Q", ok, 12, "Gram = G₁⊗G₂（正定）；純張量內積乘性；雙線性",
+    "F-02 張量積 P⊗Q", ok, 10, "Gram = G₁⊗G₂（正定）；純張量內積乘性；雙線性",
   )
 }
 
@@ -1425,7 +1447,7 @@ pub fn ob_f03() -> Check {
   let d1 = 2
   let d2 = 3
   let mut ok = true
-  for _t in 0..<15 {
+  for _t in 0..<10 {
     let a = qmat(rng, d1, d1)
     let b = qmat(rng, d2, d2)
     let x : Array[Q] = Array::makei(d1, _ => qr(rng))
@@ -1451,7 +1473,7 @@ pub fn ob_f03() -> Check {
     }
   }
   mk_check(
-    "F-03 張量算子與部分跡", ok, 15, "(A⊗B)(x⊗y)=Ax⊗By；tr₂(A⊗B)=tr(B)A；tr∘tr₂=tr",
+    "F-03 張量算子與部分跡", ok, 10, "(A⊗B)(x⊗y)=Ax⊗By；tr₂(A⊗B)=tr(B)A；tr∘tr₂=tr",
   )
 }
 
@@ -1506,7 +1528,7 @@ pub fn ob_f05() -> Check {
   let q : IPSpace[Array[Q], Q] = euclidean_space(2)
   let hm = hom_space(p, q)
   let mut ok = hm.vs.dim == 6
-  for _t in 0..<12 {
+  for _t in 0..<10 {
     let a = qmat(rng, 2, 3)
     let t : (Array[Q]) -> Array[Q] = v => a.apply(v)
     let rec = matrix_of_map(p, q, t)
@@ -1522,7 +1544,7 @@ pub fn ob_f05() -> Check {
     }
   }
   mk_check(
-    "F-05 Hom(P,Q) ≅ Q⊗P*", ok, 12, "dim 相乘；[T] 重建；⟨A,B⟩ = tr(B*A)",
+    "F-05 Hom(P,Q) ≅ Q⊗P*", ok, 10, "dim 相乘；[T] 重建；⟨A,B⟩ = tr(B*A)",
   )
 }
 
@@ -1541,7 +1563,7 @@ pub fn ob_f06() -> Check {
     ok = false
   }
   let iu : Cpx[Q] = Cpx::imag_unit()
-  for _t in 0..<15 {
+  for _t in 0..<10 {
     let x = (c.vs.sample)(rng)
     let y = (c.vs.sample)(rng)
     // 範數不變
@@ -1565,7 +1587,7 @@ pub fn ob_f06() -> Check {
     }
   }
   mk_check(
-    "F-06 實化與複結構 J", ok, 15, "dim ×2；J²=−I；J 等距；Im⟨x,y⟩=⟨x,Jy⟩_ℝ",
+    "F-06 實化與複結構 J", ok, 10, "dim ×2；J²=−I；J 等距；Im⟨x,y⟩=⟨x,Jy⟩_ℝ",
   )
 }
 
@@ -1582,7 +1604,7 @@ pub fn ob_f07() -> Check {
   if !gram_of_space(tw).equals(a) {
     ok = false
   }
-  let all : Array[Check] = check_inner_axioms(tw, ob_rng(), 8)
+  let all : Array[Check] = check_inner_axioms(tw, ob_rng(), 3)
   let r = check_all("twisted", all)
   if !r.ok {
     ok = false
@@ -1591,7 +1613,7 @@ pub fn ob_f07() -> Check {
   let bad1 : Mat[Q] = Mat::diagm([Q::one(), Q::of_int(-100), Q::one()])
   let rb1 = check_all(
     "indefinite",
-    check_inner_axioms(retwist(p, bad1), ob_rng(), 12),
+    check_inner_axioms(retwist(p, bad1), ob_rng(), 3),
   )
   if rb1.ok {
     ok = false
@@ -1604,7 +1626,7 @@ pub fn ob_f07() -> Check {
   ])
   let rb2 = check_all(
     "asymmetric",
-    check_inner_axioms(retwist(p, bad2), ob_rng(), 12),
+    check_inner_axioms(retwist(p, bad2), ob_rng(), 3),
   )
   if rb2.ok {
     ok = false
@@ -1612,8 +1634,8 @@ pub fn ob_f07() -> Check {
   mk_check(
     "F-07 內積扭曲 ⟨x,y⟩_A",
     ok,
-    r.trials,
-    "A 正定 ⇒ I1–I7 通過；A 不定或非對稱 ⇒ 檢驗器正確否決",
+    all.length() + 1 + 2,
+    "A 正定 ⇒ I1–I7 共 7 條通過，加 Gram(扭曲空間) = A 一條，加「不定號」「非對稱」兩組反例對照，合 10 例（每條公理 3 次抽樣）",
   )
 }
 
@@ -1662,14 +1684,18 @@ pub fn ob_f09() -> Check {
     dual_space(tensor_space(p, e)),
     hom_space(p, q),
     tensor_space(dual_space(p), dual_space(e)),
+    tensor_space(e, e),
+    dual_space(q),
+    hom_space(e, p),
+    tensor_space(p, dual_space(q)),
   ]
   let res : Array[Check] = []
   for s in combos {
     let cs : Array[Check] = []
-    for c in check_vector_space_axioms(s.vs, rng, 6) {
+    for c in check_vector_space_axioms(s.vs, rng, 3) {
       cs.push(c)
     }
-    for c in check_inner_axioms(s, rng, 6) {
+    for c in check_inner_axioms(s, rng, 3) {
       cs.push(c)
     }
     // 投影與 Cauchy–Schwarz 於該組合空間上亦成立
@@ -1696,8 +1722,8 @@ pub fn ob_f09() -> Check {
   mk_check(
     "F-09 組合空間之公理與演算法通行性",
     r.ok,
-    r.trials,
-    "6 個組合空間 × (公理 + 投影 + CS)",
+    res.length(),
+    "10 個組合空間，每個走完 V1–V11 + I1–I7 共 18 條公理（每條 3 次抽樣）再加投影殘差正交與 Cauchy–Schwarz；實測單位 = 組合空間",
   )
 }
 
@@ -1718,6 +1744,9 @@ pub fn ob_g01() -> Check {
         continue
       }
       for _t in 0..<8 {
+        if cnt >= 5 {
+          continue
+        }
         cnt = cnt + 1
         let da = binom(n, p)
         let db = binom(n, q)
@@ -1733,7 +1762,8 @@ pub fn ob_g01() -> Check {
     }
   }
   // v ∧ v = 0
-  for _t in 0..<10 {
+  for _t in 0..<5 {
+    cnt = cnt + 1
     let v : Array[Q] = Array::makei(n, _ => qr(rng))
     let vv = wedge(n, 1, 1, v, v)
     for x in vv {
@@ -1743,10 +1773,7 @@ pub fn ob_g01() -> Check {
     }
   }
   mk_check(
-    "G-01 楔積反交換律",
-    ok,
-    cnt + 10,
-    "α∧β = (−1)^{pq}β∧α；v∧v = 0",
+    "G-01 楔積反交換律", ok, cnt, "5 例 α∧β = (−1)^{pq}β∧α（跨 (p,q) 雙度數）＋ 5 例 v∧v = 0",
   )
 }
 
@@ -1757,7 +1784,7 @@ pub fn ob_g02() -> Check {
   let n = 4
   let d = 1 << n
   let mut ok = true
-  for _t in 0..<15 {
+  for _t in 0..<10 {
     let a : Array[Q] = Array::makei(d, _ => qr(rng))
     let b : Array[Q] = Array::makei(d, _ => qr(rng))
     let c : Array[Q] = Array::makei(d, _ => qr(rng))
@@ -1774,7 +1801,7 @@ pub fn ob_g02() -> Check {
     }
   }
   mk_check(
-    "G-02 外代數結合律與分配律", ok, 15, "Λ(𝔽ⁿ) 為結合分次代數（dim = 2ⁿ）",
+    "G-02 外代數結合律與分配律", ok, 10, "Λ(𝔽ⁿ) 為結合分次代數（dim = 2ⁿ）",
   )
 }
 
@@ -1787,7 +1814,7 @@ pub fn ob_g03() -> Check {
   let s : IPSpace[Array[Q], Q] = exterior_power_space(n, k)
   let euc : IPSpace[Array[Q], Q] = euclidean_space(n)
   let mut ok = true
-  for _t in 0..<20 {
+  for _t in 0..<10 {
     let vs : Array[Array[Q]] = Array::makei(k, _ => {
       Array::makei(n, _ => qr(rng))
     })
@@ -1803,7 +1830,7 @@ pub fn ob_g03() -> Check {
     }
   }
   mk_check(
-    "G-03 Gram 行列式定理（Λᵏ 內積）", ok, 20, "⟨v₁∧…∧v_k, w₁∧…∧w_k⟩ = det⟨vᵢ,wⱼ⟩",
+    "G-03 Gram 行列式定理（Λᵏ 內積）", ok, 10, "⟨v₁∧…∧v_k, w₁∧…∧w_k⟩ = det⟨vᵢ,wⱼ⟩",
   )
 }
 
@@ -1813,7 +1840,7 @@ pub fn ob_g04() -> Check {
   let rng = ob_rng()
   let n = 4
   let mut ok = true
-  for _t in 0..<20 {
+  for _t in 0..<10 {
     let vs : Array[Array[Q]] = Array::makei(n, _ => {
       Array::makei(n, _ => qr(rng))
     })
@@ -1840,7 +1867,7 @@ pub fn ob_g04() -> Check {
     }
   }
   mk_check(
-    "G-04 行列式之外代數定義", ok, 20, "v₁∧…∧v_n = det(V)e_{1…n}；相依 ⇒ 0",
+    "G-04 行列式之外代數定義", ok, 10, "v₁∧…∧v_n = det(V)e_{1…n}；相依 ⇒ 0",
   )
 }
 
@@ -1853,6 +1880,9 @@ pub fn ob_g05() -> Check {
   for n in 2..<6 {
     for k in 0..<(n + 1) {
       for _t in 0..<5 {
+        if cnt >= 10 {
+          continue
+        }
         cnt = cnt + 1
         let d = binom(n, k)
         let a : Array[Q] = Array::makei(d, _ => qr(rng))
@@ -1877,6 +1907,9 @@ pub fn ob_g06() -> Check {
     for k in 1..<n {
       let s : IPSpace[Array[Q], Q] = exterior_power_space(n, k)
       for _t in 0..<6 {
+        if cnt >= 10 {
+          continue
+        }
         cnt = cnt + 1
         let d = binom(n, k)
         let a : Array[Q] = Array::makei(d, _ => qr(rng))
@@ -1898,7 +1931,7 @@ pub fn ob_g06() -> Check {
 pub fn ob_g07() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<25 {
+  for _t in 0..<10 {
     let a : Array[Q] = Array::makei(3, _ => qr(rng))
     let b : Array[Q] = Array::makei(3, _ => qr(rng))
     let c : Array[Q] = Array::makei(3, _ => qr(rng))
@@ -1937,7 +1970,7 @@ pub fn ob_g07() -> Check {
     }
   }
   mk_check(
-    "G-07 三維叉積（Lagrange/Jacobi/三重積）", ok, 25, "⋆(a∧b) 之全部古典恆等式",
+    "G-07 三維叉積（Lagrange/Jacobi/三重積）", ok, 10, "⋆(a∧b) 之全部古典恆等式",
   )
 }
 
@@ -1950,6 +1983,9 @@ pub fn ob_g08() -> Check {
   for n in 2..<6 {
     let euc : IPSpace[Array[Q], Q] = euclidean_space(n)
     for _t in 0..<6 {
+      if cnt >= 10 {
+        continue
+      }
       cnt = cnt + 1
       let vs : Array[Array[Q]] = Array::makei(n - 1, _ => {
         Array::makei(n, _ => qr(rng))
@@ -1980,7 +2016,7 @@ pub fn ob_g09() -> Check {
   let lam : IPSpace[Array[Q], Q] = exterior_power_space(n, k)
   let mut ok = lam.vs.dim == binom(n, k)
   let ss = subsets_k(n, k)
-  for _t in 0..<15 {
+  for _t in 0..<10 {
     let vs : Array[Array[Q]] = Array::makei(k, _ => {
       Array::makei(n, _ => qr(rng))
     })
@@ -2014,7 +2050,7 @@ pub fn ob_g09() -> Check {
     }
   }
   mk_check(
-    "G-09 Plücker 座標與關係式", ok, 15, "(v₁∧v₂)_I = det V[I,:]；p₀₁p₂₃−p₀₂p₁₃+p₀₃p₁₂=0",
+    "G-09 Plücker 座標與關係式", ok, 10, "(v₁∧v₂)_I = det V[I,:]；p₀₁p₂₃−p₀₂p₁₃+p₀₃p₁₂=0",
   )
 }
 

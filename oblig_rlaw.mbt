@@ -44,7 +44,15 @@ pub fn ob_n20() -> Check {
     if sz == 8 {
       f8 = c.flops
     }
-    rows.push("n" + sz.to_string() + " " + c.flops.to_string() + "f/" + rt.to_string() + "轉")
+    rows.push(
+      "n" +
+      sz.to_string() +
+      " " +
+      c.flops.to_string() +
+      "f/" +
+      rt.to_string() +
+      "轉",
+    )
     n = n + 1
   }
   // n: 4 → 8 之成本成長須超過 ×4（古典 Jacobi 為 Θ(n⁴)：旋轉數 Θ(n²) × 每轉 Θ(n²)）
@@ -113,7 +121,9 @@ pub fn ob_n21() -> Check {
     }
     tb = tb + cd.flops
     tf = tf + cf.flops
-    rows.push("dim" + (p * q).to_string() + " ×" + fmt_d(flop_ratio(cd, cf), 1))
+    rows.push(
+      "dim" + (p * q).to_string() + " ×" + fmt_d(flop_ratio(cd, cf), 1),
+    )
     n = n + 2
   }
   // ---- ⊕ 譜律（定理 178-3）：spec(A⊕B) = spec A ⊎ spec B ----
@@ -252,7 +262,9 @@ pub fn ob_n22() -> Check {
     let (u2, s2, v2) = svd_jacobi(a, 40)
     // 不可只比對譜（spec_dev 會排序，看不出行序差異）——
     // U、V 亦須逐元素相同，否則孿生體對下游（如 pinv）並不忠實。
-    if spec_dev(s1, s2) != 0.0 || mat_dev(u1, u2) != 0.0 || mat_dev(v1, v2) != 0.0 {
+    if spec_dev(s1, s2) != 0.0 ||
+      mat_dev(u1, u2) != 0.0 ||
+      mat_dev(v1, v2) != 0.0 {
       ok = false
     }
     n = n + 2
@@ -287,7 +299,9 @@ pub fn ob_n22() -> Check {
     }
     tbc = tbc + cd.flops
     tfc = tfc + cf.flops
-    rowc.push("dim" + (p * q).to_string() + " ×" + fmt_d(flop_ratio(cd, cf), 1))
+    rowc.push(
+      "dim" + (p * q).to_string() + " ×" + fmt_d(flop_ratio(cd, cf), 1),
+    )
     n = n + 1
   }
   if devc > 1.0e-10 {
@@ -315,7 +329,9 @@ pub fn ob_n22() -> Check {
     }
     tbs = tbs + cd.flops
     tfs = tfs + cf.flops
-    rows.push("dim" + (p * q).to_string() + " ×" + fmt_d(flop_ratio(cd, cf), 1))
+    rows.push(
+      "dim" + (p * q).to_string() + " ×" + fmt_d(flop_ratio(cd, cf), 1),
+    )
     n = n + 1
   }
   if devs > 1.0e-8 {
@@ -400,12 +416,15 @@ pub fn ob_n25() -> Check {
     ok = false
   }
   // 非同構因子之一般情形：A(2)⊗B(3)⊗C(2)
-  let a = Mat::build(2, 2, (i, j) => (rng.next_below(7) - 3).to_double() +
-    (if i == j { 4.0 } else { 0.0 }))
-  let b = Mat::build(3, 3, (i, j) => (rng.next_below(7) - 3).to_double() +
-    (if i == j { 4.0 } else { 0.0 }))
-  let c3 = Mat::build(2, 2, (i, j) => (rng.next_below(7) - 3).to_double() +
-    (if i == j { 4.0 } else { 0.0 }))
+  let a = Mat::build(2, 2, (i, j) => {
+    (rng.next_below(7) - 3).to_double() + (if i == j { 4.0 } else { 0.0 })
+  })
+  let b = Mat::build(3, 3, (i, j) => {
+    (rng.next_below(7) - 3).to_double() + (if i == j { 4.0 } else { 0.0 })
+  })
+  let c3 = Mat::build(2, 2, (i, j) => {
+    (rng.next_below(7) - 3).to_double() + (if i == j { 4.0 } else { 0.0 })
+  })
   let big = mkron(mkron(a, b), c3)
   let x12 = Array::makei(12, _i => (rng.next_below(9) - 4).to_double())
   let cdd = Cost::new()
@@ -489,7 +508,9 @@ pub fn ob_n23() -> Check {
     tb = tb + cd.flops
     tf = tf + cf.flops
     gains.push(flop_ratio(cd, cf))
-    rows.push("dim" + (p * q).to_string() + " ×" + fmt_d(flop_ratio(cd, cf), 1))
+    rows.push(
+      "dim" + (p * q).to_string() + " ×" + fmt_d(flop_ratio(cd, cf), 1),
+    )
     n = n + 2
   }
   let g = tb.to_double() / tf.to_double()
@@ -520,7 +541,11 @@ pub fn ob_n23() -> Check {
     "，總增益 ×" +
     fmt_d(g, 1) +
     "。命題 183-3：本條**不作單調性斷言**（本次執行之增益序列" +
-    (if mono { "恰為遞增，但這是巧合而非保證" } else { "即非單調" }) +
+    (if mono {
+      "恰為遞增，但這是巧合而非保證"
+    } else {
+      "即非單調"
+    }) +
     "）—— 單邊 Jacobi SVD 之收斂掃描數依輸入而異，非尺寸之單調函數。此為迭代演算法套結構律時之固有現象，與 N-03、N-10 等掃描數固定之直接法不同。把迭代法的增益波動誤報為單調上升，是結構律量測中最易犯的錯，此處明文排除",
   )
 }
@@ -556,10 +581,12 @@ pub fn ob_n24() -> Check {
   }
   for sz in [(2, 2), (3, 3), (4, 4), (5, 5)] {
     let (p, q) = sz
-    let a : RMat = Mat::build(p, p, (_i, _j) => (rng.next_below(5) - 2).to_double() *
-      0.1)
-    let b : RMat = Mat::build(q, q, (_i, _j) => (rng.next_below(5) - 2).to_double() *
-      0.1)
+    let a : RMat = Mat::build(p, p, (_i, _j) => {
+      (rng.next_below(5) - 2).to_double() * 0.1
+    })
+    let b : RMat = Mat::build(q, q, (_i, _j) => {
+      (rng.next_below(5) - 2).to_double() * 0.1
+    })
     // 定理 184-1：expm(A⊕B) = expm(A) ⊕ expm(B)
     let cd = Cost::new()
     let ed = cexpm(rblock_diag(a, b), cd)
@@ -589,7 +616,9 @@ pub fn ob_n24() -> Check {
     }
     tb_ks = tb_ks + cd2.flops
     tf_ks = tf_ks + cf2.flops
-    rks.push("dim" + (p * q).to_string() + " ×" + fmt_d(flop_ratio(cd2, cf2), 1))
+    rks.push(
+      "dim" + (p * q).to_string() + " ×" + fmt_d(flop_ratio(cd2, cf2), 1),
+    )
     // 定理 184-3：sqrtm(A⊗B) = sqrtm(A) ⊗ sqrtm(B)
     let sa0 = rand_spd(rng, p)
     let sb0 = rand_spd(rng, q)
@@ -607,7 +636,9 @@ pub fn ob_n24() -> Check {
     }
     tb_sq = tb_sq + cd3.flops
     tf_sq = tf_sq + cf3.flops
-    rsq.push("dim" + (p * q).to_string() + " ×" + fmt_d(flop_ratio(cd3, cf3), 1))
+    rsq.push(
+      "dim" + (p * q).to_string() + " ×" + fmt_d(flop_ratio(cd3, cf3), 1),
+    )
     n = n + 3
   }
   let gks = tb_ks.to_double() / tf_ks.to_double()

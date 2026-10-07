@@ -39,11 +39,19 @@ pub struct Cost {
   mut maxbits : Int
   /// ℝ 軌浮點運算次數（乘 + 加 + 比較；見 rcost.mbt 之 N-20）
   mut flops : Int64
+  /// 有理數乘法之**呼叫次數**（N-41）。
+  ///
+  /// 與 wmul 的差別是粒度：wmul 隨運算元位寬加權，故它量的是「真實代價」；
+  /// qmul 不加權，量的是「演算法做了幾次元素級乘法」。結構律的符號成本模型
+  /// （N-12 的 tmat、N-41 的 acost）預測的正是後者 —— 它們只看樹的形狀與
+  /// 維數，看不見係數膨脹。兩個粒度各有用途，混用會得到對不上的數字：
+  /// N-41 第一次把 acost 拿去對 wmul，差了 6 倍（180 vs 1111）。
+  mut qmul : Int64
 }
 
 ///|
 pub fn Cost::new() -> Cost {
-  { wmul: 0L, wadd: 0L, bigops: 0L, maxbits: 0, flops: 0L }
+  { wmul: 0L, wadd: 0L, bigops: 0L, maxbits: 0, flops: 0L, qmul: 0L, }
 }
 
 ///|
@@ -156,9 +164,9 @@ pub fn cq_make(c : Cost, n0 : BigInt, d0 : BigInt) -> Q {
   }
   let g = cz_gcd(c, n, d)
   if g == 1N {
-    { num: n, den: d }
+    { num: n, den: d, }
   } else {
-    { num: cz_div(c, n, g), den: cz_div(c, d, g) }
+    { num: cz_div(c, n, g), den: cz_div(c, d, g), }
   }
 }
 
@@ -178,6 +186,7 @@ pub fn cq_sub(c : Cost, x : Q, y : Q) -> Q {
 
 ///|
 pub fn cq_mul(c : Cost, x : Q, y : Q) -> Q {
+  c.qmul = c.qmul + 1L
   cq_make(c, cz_mul(c, x.num, y.num), cz_mul(c, x.den, y.den))
 }
 
@@ -444,7 +453,9 @@ pub fn zadj_crt(
   let h = hadamard_bound(a)
   let need = primes_needed(h, primes)
   let primes = ensure_primes(primes, need + 8)
-  let crts : Array[Array[Crt]] = Array::makei(n, _ => Array::makei(n, _ => Crt::new()))
+  let crts : Array[Array[Crt]] = Array::makei(n, _ => {
+    Array::makei(n, _ => Crt::new())
+  })
   let mut used = 0
   let mut skipped = 0
   let mut t = 0
@@ -663,12 +674,14 @@ pub fn qinv_gauss(a0 : Mat[Q], c : Cost) -> Mat[Q]? {
   let n = a0.mrows
   let m : Array[Array[Q]] = []
   for i in 0..<n {
-    let row = Array::makei(2 * n, j => if j < n {
-      a0.at(i, j)
-    } else if j - n == i {
-      Q::one()
-    } else {
-      Q::zero()
+    let row = Array::makei(2 * n, j => {
+      if j < n {
+        a0.at(i, j)
+      } else if j - n == i {
+        Q::one()
+      } else {
+        Q::zero()
+      }
     })
     m.push(row)
   }
@@ -745,7 +758,9 @@ fn certify_solution(
   for q in x {
     dx = big_lcm(dx, q.den)
   }
-  let xz = Array::makei(x.length(), i => cz_mul(c, x[i].num, cz_div(c, dx, x[i].den)))
+  let xz = Array::makei(x.length(), i => {
+    cz_mul(c, x[i].num, cz_div(c, dx, x[i].den))
+  })
   for i in 0..<n {
     let mut s = 0N
     for j in 0..<az[i].length() {
@@ -819,7 +834,7 @@ pub fn qsolve_crt(
           if stable {
             let okc = certify_solution(az, bz, x, c)
             if okc {
-              return { sol: Some(x), used, bad, certified: true }
+              return { sol: Some(x), used, bad, certified: true, }
             }
           }
         }
@@ -827,10 +842,10 @@ pub fn qsolve_crt(
     }
   }
   match prev {
-    None => { sol: None, used, bad, certified: false }
+    None => { sol: None, used, bad, certified: false, }
     Some(x) => {
       let okc = certify_solution(az, bz, x, c)
-      { sol: Some(x), used, bad, certified: okc }
+      { sol: Some(x), used, bad, certified: okc, }
     }
   }
 }
@@ -845,7 +860,9 @@ pub fn qinv_crt(
   let n = a.mrows
   let (d, az) = qmat_clear_denom(a)
   // A = Az / d ⇒ A⁻¹ = d · Az⁻¹
-  let crts : Array[Array[Crt]] = Array::makei(n, _ => Array::makei(n, _ => Crt::new()))
+  let crts : Array[Array[Crt]] = Array::makei(n, _ => {
+    Array::makei(n, _ => Crt::new())
+  })
   let mut used = 0
   let mut prev : Array[Q]? = None
   let mut t = 0
@@ -891,7 +908,9 @@ pub fn qinv_crt(
           prev = Some(x)
           if stable {
             // A⁻¹ = d · Az⁻¹
-            let inv = Mat::build(n, n, (i, j) => Q::make(d, 1N).mul(x[i * n + j]))
+            let inv = Mat::build(n, n, (i, j) => {
+              Q::make(d, 1N).mul(x[i * n + j])
+            })
             if certify_inverse(a, inv, c) {
               return (Some(inv), used, true)
             } else {
@@ -967,17 +986,21 @@ pub fn qrref_crt(a : Mat[Q], primes : Array[Int64], c : Cost) -> QRrefLift? {
   // 增廣 [Az | I]
   let aug : Array[Array[BigInt]] = []
   for i in 0..<rows {
-    let row : Array[BigInt] = Array::makei(cols + rows, j => if j < cols {
-      az[i][j]
-    } else if j - cols == i {
-      1N
-    } else {
-      0N
+    let row : Array[BigInt] = Array::makei(cols + rows, j => {
+      if j < cols {
+        az[i][j]
+      } else if j - cols == i {
+        1N
+      } else {
+        0N
+      }
     })
     aug.push(row)
   }
   let w = cols + rows
-  let crts : Array[Array[Crt]] = Array::makei(rows, _ => Array::makei(w, _ => Crt::new()))
+  let crts : Array[Array[Crt]] = Array::makei(rows, _ => {
+    Array::makei(w, _ => Crt::new())
+  })
   let mut used = 0
   let mut best_rank = -1
   let mut best_piv : Array[Int] = []
@@ -1048,9 +1071,9 @@ pub fn qrref_crt(a : Mat[Q], primes : Array[Int64], c : Cost) -> QRrefLift? {
           if stable {
             let rmat = Mat::build(rows, cols, (i, j) => x[i * w + j])
             // T = (Az 之轉換) ；對 A = Az/d 而言 T_A = T · d
-            let tmat = Mat::build(rows, rows, (i, j) => x[i * w + cols + j].mul(
-              Q::make(d, 1N),
-            ))
+            let tmat = Mat::build(rows, rows, (i, j) => {
+              x[i * w + cols + j].mul(Q::make(d, 1N))
+            })
             let okc = certify_rref(a, rmat, tmat, c)
             return Some({
               rmat,
@@ -1192,17 +1215,17 @@ pub fn qlsq_crt(
           }
           prev = Some(x)
           if stable && certify_solution(gz, hz, x, c) {
-            return { sol: Some(x), used, bad, certified: true }
+            return { sol: Some(x), used, bad, certified: true, }
           }
         }
       }
     }
   }
   match prev {
-    None => { sol: None, used, bad, certified: false }
+    None => { sol: None, used, bad, certified: false, }
     Some(x) => {
       let okc = certify_solution(gz, hz, x, c)
-      { sol: Some(x), used, bad, certified: okc }
+      { sol: Some(x), used, bad, certified: okc, }
     }
   }
 }
@@ -1304,12 +1327,14 @@ pub fn qldlt_crt(g : Mat[Q], primes : Array[Int64], c : Cost) -> QLdlt? {
           if stable {
             let lmat = Mat::build(n, n, (i, j) => x[i * n + j])
             // D 對應之是 Gz = dd·G 之分解 ⇒ 真正之 D 要除以 dd
-            let dvec = Array::makei(n, i => match x[n * n + i].div(Q::make(dd, 1N)) {
-              Some(v) => v
-              None => Q::zero()
+            let dvec = Array::makei(n, i => {
+              match x[n * n + i].div(Q::make(dd, 1N)) {
+                Some(v) => v
+                None => Q::zero()
+              }
             })
             let okc = certify_ldlt(g, lmat, dvec, c)
-            return Some({ lmat, dvec, used, certified: okc })
+            return Some({ lmat, dvec, used, certified: okc, })
           }
         }
       }
@@ -1448,8 +1473,12 @@ pub fn accel_bench_table() -> Array[AccelStat] {
 
   // 6. ℚ[x] 乘法（deg 64）
   let d = 64
-  let fp0 = Array::makei(d, _ => Q::frac(rng.next_small(99), rng.next_range(1, 40)))
-  let gp0 = Array::makei(d, _ => Q::frac(rng.next_small(99), rng.next_range(1, 40)))
+  let fp0 = Array::makei(d, _ => {
+    Q::frac(rng.next_small(99), rng.next_range(1, 40))
+  })
+  let gp0 = Array::makei(d, _ => {
+    Q::frac(rng.next_small(99), rng.next_range(1, 40))
+  })
   let c9 = Cost::new()
   let rb9 = qpoly_mul(fp0, gp0, c9)
   let c10 = Cost::new()
@@ -1472,13 +1501,13 @@ pub fn accel_bench_table() -> Array[AccelStat] {
 
   // 7. ℤ[x] gcd（deg 16 互質對照）
   let du = 16
-  let fz : Array[BigInt] = Array::makei(du + 1, _ => BigInt::from_int(
-    rng.next_range(-30, 30),
-  ))
+  let fz : Array[BigInt] = Array::makei(du + 1, _ => {
+    BigInt::from_int(rng.next_range(-30, 30))
+  })
   fz[du] = 1N
-  let gz : Array[BigInt] = Array::makei(du, _ => BigInt::from_int(
-    rng.next_range(-30, 30),
-  ))
+  let gz : Array[BigInt] = Array::makei(du, _ => {
+    BigInt::from_int(rng.next_range(-30, 30))
+  })
   gz[du - 1] = 1N
   let fq = Array::makei(fz.length(), i => Q::make(fz[i], 1N))
   let gq = Array::makei(gz.length(), i => Q::make(gz[i], 1N))

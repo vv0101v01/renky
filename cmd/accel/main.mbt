@@ -87,7 +87,12 @@ fn main {
   println("")
   println("╔" + line(96) + "╗")
   println(
-    "║" + padw("  加速層實測報告 · K/L/M 群 · 純 CRT 篩選與 Fp 層級重建", 96) + "║",
+    "║" +
+    padw(
+      "  加速層實測報告 · K/L/M 群 · 純 CRT 篩選與 Fp 層級重建",
+      96,
+    ) +
+    "║",
   )
   println("╚" + line(96) + "╝")
   println("")
@@ -97,7 +102,9 @@ fn main {
   println(
     "              ⌈bits(a)/64⌉·⌈bits(b)/64⌉ 次單字乘法，與平台無關，可重現、可審計。",
   )
-  println("度量二（參考）：單調時鐘之掛鐘時間（微秒），依平台而異，不作為增益之依據。")
+  println(
+    "度量二（參考）：單調時鐘之掛鐘時間（微秒），依平台而異，不作為增益之依據。",
+  )
   println("")
 
   // ---- 成本模型表 ----
@@ -123,7 +130,7 @@ fn main {
       nwin = nwin + 1
     }
     let gs = if g >= 1000.0 {
-      "×" + (g.to_int64()).to_string()
+      "×" + g.to_int64().to_string()
     } else {
       "×" + fd(g, 2)
     }
@@ -162,7 +169,9 @@ fn main {
   println("")
 
   // ---- 分派器網格 ----
-  println("【分派器 δ 之決策網格】pred_fast·5 < pred_base·4 時才切換（25% 安全邊際）")
+  println(
+    "【分派器 δ 之決策網格】pred_fast·5 < pred_base·4 時才切換（25% 安全邊際）",
+  )
   println("")
   println(
     padw("ℤ 行列式 n＼位元", 18) +
@@ -198,7 +207,13 @@ fn main {
     println(row)
   }
   println("")
-  println(padw("ℚ 線性解 n＼資料位元", 20) + padl("4", 9) + padl("8", 9) + padl("16", 9) + padl("32", 9))
+  println(
+    padw("ℚ 線性解 n＼資料位元", 20) +
+    padl("4", 9) +
+    padl("8", 9) +
+    padl("16", 9) +
+    padl("32", 9),
+  )
   for n in [4, 6, 8, 12, 20] {
     let mut row = padw("n = " + n.to_string(), 20)
     for b in [4, 8, 16, 32] {
@@ -219,11 +234,21 @@ fn main {
     (if pl.use_fast { "加速" } else { "不加速" }),
   )
   println("")
-  println("【掛鐘時間】上表全部實例之合計：" + fd(elapsed, 1) + " µs（僅供參考）")
+  println(
+    "【掛鐘時間】上表全部實例之合計：" +
+    fd(elapsed, 1) +
+    " µs（僅供參考）",
+  )
   println("")
   println("【正向性之形式陳述（定理 Λ3-13）】")
-  println("  若 δ(params) = true ⇒ cost_fast(params) < cost_base(params)，")
-  println("  則「基準 ⊕ δ 分派」之成本逐點 ≤ 基準成本，系統必為正向優化。")
-  println("  目錄 K-10 / L-10 / M-08 於參數網格上實測此蘊含式，無一反例。")
+  println(
+    "  若 δ(params) = true ⇒ cost_fast(params) < cost_base(params)，",
+  )
+  println(
+    "  則「基準 ⊕ δ 分派」之成本逐點 ≤ 基準成本，系統必為正向優化。",
+  )
+  println(
+    "  目錄 K-10 / L-10 / M-08 於參數網格上實測此蘊含式，無一反例。",
+  )
   println("")
 }

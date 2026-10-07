@@ -53,7 +53,7 @@ pub struct Crt {
 
 ///|
 pub fn Crt::new() -> Crt {
-  { cmod: 1N, cval: 0N, steps: 0 }
+  { cmod: 1N, cval: 0N, steps: 0, }
 }
 
 ///|
@@ -357,7 +357,10 @@ pub fn zrows_mul(
 
 ///|
 /// 整數矩陣 × 整數向量。
-pub fn zrows_mulvec(a : Array[Array[BigInt]], x : Array[BigInt]) -> Array[BigInt] {
+pub fn zrows_mulvec(
+  a : Array[Array[BigInt]],
+  x : Array[BigInt],
+) -> Array[BigInt] {
   let out : Array[BigInt] = []
   for row in a {
     let mut s = 0N

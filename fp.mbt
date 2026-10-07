@@ -37,7 +37,7 @@ pub struct FpCtx {
 
 ///|
 pub fn FpCtx::make(p : Int64) -> FpCtx {
-  { pmod: p, ops: 0L, adds: 0L }
+  { pmod: p, ops: 0L, adds: 0L, }
 }
 
 ///|
@@ -216,7 +216,7 @@ pub struct FpMat {
 
 ///|
 pub fn FpMat::make(r : Int, c : Int) -> FpMat {
-  { fr: r, fc: c, fd: Array::make(r * c, 0L) }
+  { fr: r, fc: c, fd: Array::make(r * c, 0L), }
 }
 
 ///|
@@ -231,7 +231,11 @@ pub fn FpMat::set(self : FpMat, i : Int, j : Int, v : Int64) -> Unit {
 
 ///|
 pub fn FpMat::copy(self : FpMat) -> FpMat {
-  { fr: self.fr, fc: self.fc, fd: Array::makei(self.fd.length(), i => self.fd[i]) }
+  {
+    fr: self.fr,
+    fc: self.fc,
+    fd: Array::makei(self.fd.length(), i => self.fd[i]),
+  }
 }
 
 ///|
@@ -288,7 +292,8 @@ pub fn fp_of_qvec(v : Array[Q], ctx : FpCtx) -> Array[Int64]? {
     let dn = normmod((v[i].den % pb).to_int64(), ctx.pmod)
     match ctx.inv(dn) {
       None => return None
-      Some(di) => out[i] = ctx.mul(normmod((v[i].num % pb).to_int64(), ctx.pmod), di)
+      Some(di) =>
+        out[i] = ctx.mul(normmod((v[i].num % pb).to_int64(), ctx.pmod), di)
     }
   }
   Some(out)
@@ -398,7 +403,7 @@ pub fn fp_rref(a0 : FpMat, ctx : FpCtx) -> FpRref {
   } else {
     prod
   }
-  { rmat: a, rank: r, pivots, det }
+  { rmat: a, rank: r, pivots, det, }
 }
 
 ///|

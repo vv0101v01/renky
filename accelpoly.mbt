@@ -40,10 +40,9 @@ pub fn fpp_mul_evalinterp(
     return None
   }
   let xs = Array::makei(n, i => i.to_int64())
-  let ys = Array::makei(n, i => ctx.mul(
-    fpp_eval(fa, xs[i], ctx),
-    fpp_eval(fb, xs[i], ctx),
-  ))
+  let ys = Array::makei(n, i => {
+    ctx.mul(fpp_eval(fa, xs[i], ctx), fpp_eval(fb, xs[i], ctx))
+  })
   fpp_interp(xs, ys, ctx)
 }
 
@@ -225,7 +224,10 @@ pub fn screen_poly_mul(
 // ---------------------------------------------------------------------------
 
 ///|
-pub fn zpoly_from_roots_linear(roots : Array[BigInt], c : Cost) -> Array[BigInt] {
+pub fn zpoly_from_roots_linear(
+  roots : Array[BigInt],
+  c : Cost,
+) -> Array[BigInt] {
   let mut acc : Array[BigInt] = [1N]
   for r in roots {
     acc = zpoly_mul_school(acc, [-r, 1N], c)
@@ -316,7 +318,13 @@ pub fn qcharpoly_faddeev(a : Mat[Q], c : Cost) -> Array[Q] {
   let n = a.mrows
   let coeffs = Array::makei(n + 1, _ => Q::zero())
   coeffs[n] = Q::one()
-  let mut mk = Mat::build(n, n, (i, j) => if i == j { Q::one() } else { Q::zero() })
+  let mut mk = Mat::build(n, n, (i, j) => {
+    if i == j {
+      Q::one()
+    } else {
+      Q::zero()
+    }
+  })
   for k in 1..<(n + 1) {
     let am = Mat::build(n, n, (i, j) => {
       let mut s = Q::zero()
@@ -334,10 +342,12 @@ pub fn qcharpoly_faddeev(a : Mat[Q], c : Cost) -> Array[Q] {
       None => Q::zero()
     }
     coeffs[n - k] = ck
-    mk = Mat::build(n, n, (i, j) => if i == j {
-      cq_add(c, am.at(i, j), ck)
-    } else {
-      am.at(i, j)
+    mk = Mat::build(n, n, (i, j) => {
+      if i == j {
+        cq_add(c, am.at(i, j), ck)
+      } else {
+        am.at(i, j)
+      }
     })
   }
   coeffs
@@ -402,7 +412,7 @@ pub fn qpoly_divmod(
       }
     }
   }
-  (Some((qpoly_norm(q), qpoly_norm(r))))
+  Some((qpoly_norm(q), qpoly_norm(r)))
 }
 
 ///|
@@ -423,9 +433,11 @@ pub fn qpoly_gcd_euclid(a : Array[Q], b : Array[Q], c : Cost) -> Array[Q] {
     return []
   }
   let lead = x[x.length() - 1]
-  Array::makei(x.length(), i => match cq_div(c, x[i], lead) {
-    Some(v) => v
-    None => Q::zero()
+  Array::makei(x.length(), i => {
+    match cq_div(c, x[i], lead) {
+      Some(v) => v
+      None => Q::zero()
+    }
   })
 }
 
@@ -478,8 +490,12 @@ pub fn zpoly_gcd_crt(
       c.wmul = c.wmul + big_words(v)
       c.bigops = c.bigops + 1L
     }
-    let ff = fpp_norm(Array::makei(f.length(), i => normmod((f[i] % pb).to_int64(), p)))
-    let gg = fpp_norm(Array::makei(g.length(), i => normmod((g[i] % pb).to_int64(), p)))
+    let ff = fpp_norm(
+      Array::makei(f.length(), i => normmod((f[i] % pb).to_int64(), p)),
+    )
+    let gg = fpp_norm(
+      Array::makei(g.length(), i => normmod((g[i] % pb).to_int64(), p)),
+    )
     if ff.length() != f.length() || gg.length() != g.length() {
       // p 整除首項係數 ⇒ 壞素數
       c.absorb_fp(ctx)
@@ -524,7 +540,7 @@ pub fn zpoly_gcd_crt(
               Some((_q, r)) => r.length() == 0
               None => false
             }
-            return Some({ gcd: x, degmin, used, certified: okf && okg })
+            return Some({ gcd: x, degmin, used, certified: okf && okg, })
           }
         }
       }
@@ -532,7 +548,7 @@ pub fn zpoly_gcd_crt(
   }
   match prev {
     None => None
-    Some(x) => Some({ gcd: x, degmin, used, certified: false })
+    Some(x) => Some({ gcd: x, degmin, used, certified: false, })
   }
 }
 
@@ -585,8 +601,12 @@ pub fn qinterp_crt(
       c.wmul = c.wmul + big_words(v)
       c.bigops = c.bigops + 1L
     }
-    let fx = Array::makei(n, i => ctx.mul(normmod((xz[i] % pb).to_int64(), p), dxi))
-    let fy = Array::makei(n, i => ctx.mul(normmod((yz[i] % pb).to_int64(), p), dyi))
+    let fx = Array::makei(n, i => {
+      ctx.mul(normmod((xz[i] % pb).to_int64(), p), dxi)
+    })
+    let fy = Array::makei(n, i => {
+      ctx.mul(normmod((yz[i] % pb).to_int64(), p), dyi)
+    })
     let pl = match fpp_interp(fx, fy, ctx) {
       Some(v) => v
       None => {
@@ -623,7 +643,7 @@ pub fn qinterp_crt(
                 okall = false
               }
             }
-            return Some({ poly: qpoly_norm(x), used, certified: okall })
+            return Some({ poly: qpoly_norm(x), used, certified: okall, })
           }
         }
       }
@@ -631,7 +651,7 @@ pub fn qinterp_crt(
   }
   match prev {
     None => None
-    Some(x) => Some({ poly: qpoly_norm(x), used, certified: false })
+    Some(x) => Some({ poly: qpoly_norm(x), used, certified: false, })
   }
 }
 

@@ -92,7 +92,7 @@ pub fn ob_h02() -> Check {
   let rng = ob_rng()
   let mut ok = true
   let mut worst = 0.0
-  for _t in 0..<8 {
+  for _t in 0..<10 {
     let n = 3 + rng.next_below(3)
     let a = sym_matrix(n, rng)
     match ldlt(a) {
@@ -127,7 +127,7 @@ pub fn ob_h02() -> Check {
   mk_check(
     "H-02 LDLᵀ 與 Sylvester 慣性律",
     ok,
-    8,
+    10,
     "‖A−LDLᵀ‖_max = " + fmt_e(worst) + "；(p,z,m) 與譜一致",
   )
 }
@@ -203,7 +203,7 @@ pub fn ob_h05() -> Check {
   let rng = ob_rng()
   let mut ok = true
   let mut w = 0.0
-  for _t in 0..<8 {
+  for _t in 0..<10 {
     let n = 4 + rng.next_below(3)
     let a = gen_matrix(n, n, rng)
     let (q, h) = hessenberg(a)
@@ -225,7 +225,7 @@ pub fn ob_h05() -> Check {
   mk_check(
     "H-05 Hessenberg 化簡",
     ok,
-    8,
+    10,
     "‖A−QHQᵀ‖=" + fmt_e(w) + "；次對角以下為 0",
   )
 }
@@ -237,7 +237,7 @@ pub fn ob_h06() -> Check {
   let mut ok = true
   let mut w1 = 0.0
   let mut w2 = 0.0
-  for _t in 0..<8 {
+  for _t in 0..<10 {
     let n = 3 + rng.next_below(4)
     let a = sym_matrix(n, rng)
     let (lam, v) = jacobi_eigen(a, 300)
@@ -258,7 +258,7 @@ pub fn ob_h06() -> Check {
   mk_check(
     "H-06 Jacobi 譜分解",
     ok,
-    8,
+    10,
     "‖A−VΛVᵀ‖=" + fmt_e(w1) + "，‖VᵀV−I‖=" + fmt_e(w2),
   )
 }
@@ -269,7 +269,7 @@ pub fn ob_h07() -> Check {
   let rng = ob_rng()
   let mut ok = true
   let mut worst = 0.0
-  for _t in 0..<6 {
+  for _t in 0..<10 {
     let n = 4
     let a = sym_matrix(n, rng)
     let t = qr_iteration(a, 500)
@@ -287,7 +287,7 @@ pub fn ob_h07() -> Check {
   mk_check(
     "H-07 無位移 QR 迭代",
     ok,
-    6,
+    10,
     "對角元 → 特徵值，最大偏差 " + fmt_e(worst),
   )
 }
@@ -298,7 +298,7 @@ pub fn ob_h08() -> Check {
   let rng = ob_rng()
   let mut ok = true
   let mut w = 0.0
-  for _t in 0..<8 {
+  for _t in 0..<10 {
     let m = 5
     let n = 3
     let a = gen_matrix(m, n, rng)
@@ -330,7 +330,7 @@ pub fn ob_h08() -> Check {
   if w > 1.0e-9 {
     ok = false
   }
-  mk_check("H-08 Jacobi SVD", ok, 8, "‖A−UΣVᵀ‖=" + fmt_e(w))
+  mk_check("H-08 Jacobi SVD", ok, 10, "‖A−UΣVᵀ‖=" + fmt_e(w))
 }
 
 ///|
@@ -339,7 +339,7 @@ pub fn ob_h09() -> Check {
   let rng = ob_rng()
   let mut ok = true
   let mut w = 0.0
-  for _t in 0..<8 {
+  for _t in 0..<10 {
     let m = 5
     let n = 3
     let a = gen_matrix(m, n, rng)
@@ -362,7 +362,7 @@ pub fn ob_h09() -> Check {
   mk_check(
     "H-09 Moore–Penrose 偽逆",
     ok,
-    8,
+    10,
     "四條 Penrose 條件最大殘差 " + fmt_e(w),
   )
 }
@@ -373,7 +373,7 @@ pub fn ob_h10() -> Check {
   let rng = ob_rng()
   let mut ok = true
   let mut w = 0.0
-  for _t in 0..<8 {
+  for _t in 0..<10 {
     let n = 4
     let a = gen_matrix(n, n, rng)
     let (u, p) = polar_decomposition(a)
@@ -393,7 +393,7 @@ pub fn ob_h10() -> Check {
   mk_check(
     "H-10 極分解 A = UP",
     ok,
-    8,
+    10,
     "殘差 " + fmt_e(w) + "；P 之譜非負",
   )
 }
@@ -404,7 +404,7 @@ pub fn ob_h11() -> Check {
   let rng = ob_rng()
   let mut ok = true
   let mut w = 0.0
-  for _t in 0..<6 {
+  for _t in 0..<10 {
     let n = 3
     let a = gen_matrix(n, n, rng).scale(0.3)
     let e = expm(a)
@@ -424,7 +424,7 @@ pub fn ob_h11() -> Check {
   mk_check(
     "H-11 矩陣指數 expm",
     ok,
-    6,
+    10,
     "e^Ae^{−A}=I；det e^A = e^{tr A}；殘差 " + fmt_e(w),
   )
 }
@@ -435,7 +435,7 @@ pub fn ob_h12() -> Check {
   let rng = ob_rng()
   let mut ok = true
   let mut w = 0.0
-  for _t in 0..<8 {
+  for _t in 0..<10 {
     let n = 3 + rng.next_below(3)
     let a = spd_matrix(n, rng)
     let s = sqrtm_spd(a)
@@ -451,7 +451,7 @@ pub fn ob_h12() -> Check {
   mk_check(
     "H-12 對稱正定平方根",
     ok,
-    8,
+    10,
     "‖(√A)²−A‖ = " + fmt_e(w),
   )
 }
@@ -462,7 +462,7 @@ pub fn ob_h13() -> Check {
   let rng = ob_rng()
   let mut ok = true
   let mut worst = 0.0
-  for _t in 0..<8 {
+  for _t in 0..<10 {
     let n = 4
     let a = spd_matrix(n, rng)
     let (lam, _v) = jacobi_eigen(a, 300)
@@ -496,7 +496,7 @@ pub fn ob_h13() -> Check {
   mk_check(
     "H-13 冪迭代與 Rayleigh 商",
     ok,
-    8,
+    10,
     "λ̂_max 相對誤差 " + fmt_e(worst) + "；R(x) ∈ [λ_min,λ_max]",
   )
 }
@@ -506,13 +506,16 @@ pub fn ob_h13() -> Check {
 pub fn ob_h14() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<6 {
+  let mut n = 0
+  for _t in 0..<8 {
+    n = n + 1
     let a = gen_matrix(4, 4, rng)
     if cond2(a) < 1.0 - 1.0e-9 {
       ok = false
     }
   }
   // 正交矩陣
+  n = n + 1
   let (q, _r) = qr_householder(gen_matrix(5, 5, rng))
   if absd(cond2(q) - 1.0) > 1.0e-8 {
     ok = false
@@ -520,14 +523,15 @@ pub fn ob_h14() -> Check {
   // Hilbert 矩陣 H₆ 病態
   let h : RMat = Mat::build(6, 6, (i, j) => 1.0 / (i + j + 1).to_double())
   let kh = cond2(h)
+  n = n + 1
   if kh < 1.0e6 {
     ok = false
   }
   mk_check(
     "H-14 條件數 κ₂",
     ok,
-    8,
-    "κ₂(Q)=1；κ₂(H₆)≈" + fmt_e(kh),
+    n,
+    "8 個隨機 4×4 皆 κ₂ ≥ 1；κ₂(Q)=1；κ₂(H₆)≈" + fmt_e(kh),
   )
 }
 
@@ -537,7 +541,7 @@ pub fn ob_h15() -> Check {
   let rng = ob_rng()
   let mut ok = true
   let mut w = 0.0
-  for _t in 0..<8 {
+  for _t in 0..<10 {
     let n = 2 + rng.next_below(5)
     let a = spd_matrix(n, rng)
     let b = Array::makei(n, _ => rng.next_double() * 2.0)
@@ -550,7 +554,7 @@ pub fn ob_h15() -> Check {
   mk_check(
     "H-15 共軛梯度（≤ n 步）",
     ok,
-    8,
+    10,
     "恰 n 次迭代後 ‖Ax−b‖_max = " + fmt_e(w),
   )
 }
@@ -561,7 +565,7 @@ pub fn ob_h16() -> Check {
   let rng = ob_rng()
   let mut ok = true
   let mut w = 0.0
-  for _t in 0..<6 {
+  for _t in 0..<10 {
     let n = 5
     let a = spd_matrix(n, rng)
     let b = Array::makei(n, _ => rng.next_double())
@@ -571,7 +575,7 @@ pub fn ob_h16() -> Check {
   if w > 1.0e-7 {
     ok = false
   }
-  mk_check("H-16 Gauss–Seidel 迭代", ok, 6, "殘差 " + fmt_e(w))
+  mk_check("H-16 Gauss–Seidel 迭代", ok, 10, "殘差 " + fmt_e(w))
 }
 
 ///|
@@ -580,7 +584,7 @@ pub fn ob_h17() -> Check {
   let rng = ob_rng()
   let mut ok = true
   let mut w = 0.0
-  for _t in 0..<6 {
+  for _t in 0..<10 {
     let n = 5
     let a = sym_matrix(n, rng)
     let (q, t) = lanczos(a, n)
@@ -602,7 +606,7 @@ pub fn ob_h17() -> Check {
   mk_check(
     "H-17 Lanczos 三對角化",
     ok,
-    6,
+    10,
     "‖QᵀAQ−T‖ = " + fmt_e(w) + "；T 三對角",
   )
 }
@@ -613,7 +617,7 @@ pub fn ob_h18() -> Check {
   let rng = ob_rng()
   let mut ok = true
   let mut w = 0.0
-  for _t in 0..<6 {
+  for _t in 0..<10 {
     let n = 5
     let a = gen_matrix(n, n, rng)
     let (q, h) = arnoldi(a, n)
@@ -635,7 +639,7 @@ pub fn ob_h18() -> Check {
   mk_check(
     "H-18 Arnoldi 分解",
     ok,
-    6,
+    10,
     "‖QᵀAQ−H‖ = " + fmt_e(w) + "；H 上 Hessenberg",
   )
 }
@@ -647,7 +651,7 @@ pub fn ob_h19() -> Check {
   let mut ok = true
   let mut w = 0.0
   let mut cnt = 0
-  for n in [2, 3, 4, 5, 6, 8, 9, 12, 16] {
+  for n in [2, 3, 4, 5, 6, 8, 9, 10, 12, 16] {
     cnt = cnt + 1
     let f = dft_matrix(n)
     let id : CMat = Mat::ident(n)
@@ -689,7 +693,9 @@ pub fn ob_h20() -> Check {
   let rng = ob_rng()
   let mut ok = true
   let mut w = 0.0
+  let mut cnt = 0
   for n in [2, 4, 8, 16, 32] {
+    cnt = cnt + 2 // 每個尺寸兩條性質：FFT ≡ DFT、Parseval
     let f = dft_matrix(n)
     let x : Array[Cpx[Double]] = Array::makei(n, _ => {
       Cpx::mk(rng.next_double(), rng.next_double())
@@ -722,8 +728,9 @@ pub fn ob_h20() -> Check {
   mk_check(
     "H-20 FFT ≡ DFT",
     ok,
-    5,
-    "最大偏差 " + fmt_e(w) + "；Parseval 成立",
+    cnt,
+    "n ∈ {2,4,8,16,32} 各驗「FFT ≡ DFT」與「Parseval」兩條；最大偏差 " +
+    fmt_e(w),
   )
 }
 
@@ -732,7 +739,9 @@ pub fn ob_h20() -> Check {
 pub fn ob_h21() -> Check {
   let rng = ob_rng()
   let mut ok = true
+  let mut cnt = 0
   for k in 1..<6 {
+    cnt = cnt + 2 // 每階兩條性質：HᵀH = nI 且元素 ±1、FWHT ≡ 矩陣乘法
     let n = 1 << k
     let h = hadamard_matrix(k)
     if h.transpose().times(h).max_dev(Mat::ident(n).scale(n.to_double())) > 0.0 {
@@ -752,7 +761,7 @@ pub fn ob_h21() -> Check {
     }
   }
   mk_check(
-    "H-21 Hadamard 矩陣與 FWHT", ok, 5, "HᵀH = nI 精確成立；FWHT ≡ 矩陣乘法",
+    "H-21 Hadamard 矩陣與 FWHT", ok, cnt, "n ∈ {2,4,…,32} 各驗「HᵀH = nI 且元素 ±1」與「FWHT ≡ 矩陣乘法」兩條",
   )
 }
 
@@ -761,7 +770,9 @@ pub fn ob_h21() -> Check {
 pub fn ob_h22() -> Check {
   let mut ok = true
   let mut w = 0.0
+  let mut cnt = 0
   for k in 1..<6 {
+    cnt = cnt + 2 // 每階兩條性質：規範化後 HHᵀ = I、規範化前列兩兩正交
     let n = 1 << k
     let h = normalize_rows(haar_matrix(k))
     w = maxd(w, h.times(h.transpose()).max_dev(Mat::ident(n)))
@@ -784,7 +795,13 @@ pub fn ob_h22() -> Check {
   if w > 1.0e-10 {
     ok = false
   }
-  mk_check("H-22 Haar 正交基", ok, 5, "‖HHᵀ−I‖ = " + fmt_e(w))
+  mk_check(
+    "H-22 Haar 正交基",
+    ok,
+    cnt,
+    "n ∈ {2,4,…,32} 各驗「規範化後 HHᵀ = I」與「規範化前列兩兩正交」兩條；‖HHᵀ−I‖ = " +
+    fmt_e(w),
+  )
 }
 
 ///|
@@ -793,7 +810,7 @@ pub fn ob_h23() -> Check {
   let rng = ob_rng()
   let mut ok = true
   let mut w = 0.0
-  for _t in 0..<8 {
+  for _t in 0..<10 {
     let n = 4
     let a = sym_matrix(n, rng)
     let (lam, _v) = jacobi_eigen(a, 300)
@@ -823,7 +840,7 @@ pub fn ob_h23() -> Check {
   mk_check(
     "H-23 譜不變量",
     ok,
-    8,
+    10,
     "tr=Σλ、det=Πλ、‖A‖_F²=Σλ²、ρ=max|λ|；偏差 " + fmt_e(w),
   )
 }
@@ -920,22 +937,22 @@ pub fn ob_h25() -> Check {
   let rng = ob_rng()
   let s : IPSpace[Array[Double], Double] = euclidean_space(4)
   let cs : Array[Check] = []
-  for c in check_vector_space_axioms(s.vs, rng, 12) {
+  for c in check_vector_space_axioms(s.vs, rng, 3) {
     cs.push(c)
   }
-  for c in check_inner_axioms(s, rng, 12) {
+  for c in check_inner_axioms(s, rng, 3) {
     cs.push(c)
   }
   let sp : IPSpace[Poly[Double], Double] = poly_space_l2(5)
-  for c in check_inner_axioms(sp, rng, 12) {
+  for c in check_inner_axioms(sp, rng, 3) {
     cs.push(c)
   }
   let r = check_all("H-25", cs)
   mk_check(
     "H-25 ℝ 軌道公理（相對 ε 比較）",
     r.ok,
-    r.trials,
-    "Double 軌道以相對 ε=10⁻⁹ 判等；結論與 ℚ 軌道一致",
+    cs.length(),
+    "ℝ⁴ 之 V1–V11 + I1–I7 加 P₅ 之 I1–I7，共 25 條公理（結構性下限，每條 3 次抽樣）；Double 軌道以相對 ε=10⁻⁹ 判等，結論與 ℚ 軌道一致",
   )
 }
 
@@ -954,7 +971,7 @@ fn qquat(rng : Rng) -> Quat[Q] {
 pub fn ob_i01() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<60 {
+  for _t in 0..<10 {
     let p = qquat(rng)
     let q = qquat(rng)
     if !p.qmul(q).qnorm2().eq(p.qnorm2().mul(q.qnorm2())) {
@@ -962,7 +979,7 @@ pub fn ob_i01() -> Check {
     }
   }
   mk_check(
-    "I-01 Euler 四平方恆等式", ok, 60, "N(pq) = N(p)N(q)（精確 ℚ）",
+    "I-01 Euler 四平方恆等式", ok, 10, "N(pq) = N(p)N(q)（精確 ℚ）",
   )
 }
 
@@ -971,7 +988,7 @@ pub fn ob_i01() -> Check {
 pub fn ob_i02() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<40 {
+  for _t in 0..<10 {
     let p = qquat(rng)
     let q = qquat(rng)
     if !p.qmul(q).qconj().qeq(q.qconj().qmul(p.qconj())) {
@@ -996,7 +1013,7 @@ pub fn ob_i02() -> Check {
     }
   }
   mk_check(
-    "I-02 共軛反自同構與逆元", ok, 40, "‾(pq)=‾q‾p；q⁻¹q = q q⁻¹ = 1",
+    "I-02 共軛反自同構與逆元", ok, 10, "‾(pq)=‾q‾p；q⁻¹q = q q⁻¹ = 1",
   )
 }
 
@@ -1005,7 +1022,7 @@ pub fn ob_i02() -> Check {
 pub fn ob_i03() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<30 {
+  for _t in 0..<10 {
     let p = qquat(rng)
     let q = qquat(rng)
     let lp : Mat[Q] = quat_left_matrix(p)
@@ -1029,7 +1046,7 @@ pub fn ob_i03() -> Check {
     }
   }
   mk_check(
-    "I-03 左乘矩陣 L_q", ok, 30, "L_{pq}=L_pL_q；LᵀL=N(q)I₄；det = N(q)²",
+    "I-03 左乘矩陣 L_q", ok, 10, "L_{pq}=L_pL_q；LᵀL=N(q)I₄；det = N(q)²",
   )
 }
 
@@ -1044,6 +1061,10 @@ pub fn ob_i04() -> Check {
     Quat::qone(),
     Quat::qi(),
     Quat::mk(Q::frac(8, 17), Q::zero(), Q::zero(), Q::frac(15, 17)),
+    Quat::mk(Q::frac(1, 3), Q::frac(2, 3), Q::frac(2, 3), Q::zero()),
+    Quat::mk(Q::frac(2, 7), Q::frac(3, 7), Q::frac(6, 7), Q::zero()),
+    Quat::mk(Q::frac(7, 9), Q::frac(4, 9), Q::frac(4, 9), Q::zero()),
+    Quat::mk(Q::zero(), Q::frac(3, 5), Q::zero(), Q::frac(4, 5)),
   ]
   let mut ok = true
   for q in units {
@@ -1080,6 +1101,9 @@ pub fn ob_i05() -> Check {
   let mut cnt = 0
   for p in units {
     for q in units {
+      if cnt >= 10 {
+        continue
+      }
       cnt = cnt + 1
       let lhs : Mat[Q] = quat_to_rot3(p.qmul(q))
       let rhs = (quat_to_rot3(p) : Mat[Q]).times(quat_to_rot3(q))
@@ -1115,7 +1139,7 @@ pub fn ob_i05() -> Check {
 pub fn ob_i06() -> Check {
   let rng = ob_rng()
   let mut ok = true
-  for _t in 0..<30 {
+  for _t in 0..<10 {
     let p = qquat(rng)
     let q = qquat(rng)
     let mp : Mat[Cpx[Q]] = quat_to_c2(p)
@@ -1144,7 +1168,7 @@ pub fn ob_i06() -> Check {
     ok = false
   }
   mk_check(
-    "I-06 ℍ ↪ M₂(ℂ) 代數嵌入", ok, 30, "保加法/乘法；det = N(q)；‾q ↦ M*；單位 ↦ SU(2)",
+    "I-06 ℍ ↪ M₂(ℂ) 代數嵌入", ok, 10, "保加法/乘法；det = N(q)；‾q ↦ M*；單位 ↦ SU(2)",
   )
 }
 
@@ -1157,7 +1181,7 @@ pub fn ob_i07() -> Check {
   let mut ok = s.vs.dim == 4 * n
   let half = Q::frac(1, 2)
   let u = Quat::mk(half, half, half, half) // 單位四元數
-  for _t in 0..<25 {
+  for _t in 0..<10 {
     let x : Array[Quat[Q]] = Array::makei(n, _ => qquat(rng))
     let y : Array[Quat[Q]] = Array::makei(n, _ => qquat(rng))
     // 定義式
@@ -1182,7 +1206,7 @@ pub fn ob_i07() -> Check {
     }
   }
   mk_check(
-    "I-07 ℍⁿ 實內積空間", ok, 25, "dim_ℝ = 4n；單位四元數之左右乘皆為等距",
+    "I-07 ℍⁿ 實內積空間", ok, 10, "dim_ℝ = 4n；單位四元數之左右乘皆為等距",
   )
 }
 

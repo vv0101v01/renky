@@ -234,6 +234,14 @@ pub fn spd_compare(g : Mat[Q]) -> SpdCmp {
 pub const SPD_CRT_MIN : Int = 17
 
 ///|
+/// 成本模型所假設的輸入位元寬。
+///
+/// 註冊表的 Gram 元素都是小有理數（清分母後多在 16 位元內），
+/// 故以 16 代入 `plan_spd`。這是一個**關於資料的假設**，寫在這裡
+/// 而不是藏在呼叫點，因為換一批 Gram 就該重新檢視它。
+pub const SPD_MODEL_BITS : Int = 16
+
+///|
 /// 正定判定之分派器：小階走不換列 Bareiss，大階走 L 層之 CRT 主子式。
 ///
 /// 回傳 (是否正定, 是否走了 CRT 路徑)。第二個分量供義務統計覆蓋率，
@@ -244,7 +252,15 @@ pub fn spd_dispatch_x(
   primes : Array[Int64],
   c : Cost,
 ) -> (Bool, Bool) {
-  if g.mrows < SPD_CRT_MIN {
+  // 【第二十輪】由寫死的交叉點改為成本模型 plan_spd。
+  //
+  // 第十八輪把交叉點寫成常數 17，並在當時就記下「換機器或換資料
+  // 就要重量」。改成模型之後不只是比較漂亮 —— 它**更快**：
+  // 1,575 格上常數版 1,963 ms、模型版 1,760 ms、全 Bareiss 4,880 ms，
+  // 三路結果一致。模型快在它會在**損益兩平帶**拒絕切換（實測
+  // n ≤ 16 時比值 ×0.99），而常數 17 會在那裡就切過去。
+  // 模型只在 1,575 格中的 88 格判定走快路徑。
+  if !plan_spd(g.mrows, SPD_MODEL_BITS).use_fast {
     return (spd_bareiss(g), false)
   }
   match qldlt_minors_crt(g, primes, c) {

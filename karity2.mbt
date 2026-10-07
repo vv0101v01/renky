@@ -289,21 +289,6 @@ pub fn ks_assoc_law(dims : Array[Int], rng : Rng) -> (Int, Bool) {
 }
 
 ///|
-/// 指紋。
-pub fn ks_digest(rng : Rng) -> String {
-  let (n, ok, nd, worst, gain) = ks_assoc_scan(rng)
-  n.to_string() +
-  ":" +
-  (if ok { "1" } else { "0" }) +
-  ":" +
-  nd.to_string() +
-  ":" +
-  fmt_d(worst, 4) +
-  ":" +
-  fmt_d(gain, 4)
-}
-
-///|
 /// 窮舉搜尋：⊞-DP 與 ⊗-DP 的最佳樹是否曾經不同。
 ///
 /// 回傳 (檢查組數, 樹不同之組數, 用 ⊗ 樹時相對 ⊞ 最佳之最大損失比,

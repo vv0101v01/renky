@@ -8,6 +8,8 @@ import {
 // Values
 pub const SPD_CRT_MIN : Int = 17
 
+pub const SPD_MODEL_BITS : Int = 16
+
 pub fn absd(Double) -> Double
 
 pub fn acc_apriori_cell(Int, Int) -> (Int64, Int64, Bool)
@@ -82,7 +84,25 @@ pub fn assoc_right(Int) -> AssocTree
 
 pub fn atan2_own(Double, Double) -> Double
 
+pub fn audit_by_cat() -> Array[(String, Int)]
+
+pub fn audit_by_group() -> Array[(String, Int, Int, Int, Int, Int, Int)]
+
+pub fn audit_by_track() -> Array[(String, Int)]
+
+pub fn audit_rows() -> Array[AuditRow]
+
+pub fn audit_score(AuditRow) -> Int
+
+pub fn audit_score_hist() -> Array[Int]
+
+pub fn audit_weakest(Int) -> Array[(String, Int, String)]
+
 pub fn[V] axiom_suite(String, IPSpace[V, Q], Int) -> Check
+
+pub fn band_spd(Int, Int, Rng) -> Mat[Q]
+
+pub fn band_width(Mat[Q]) -> Int
 
 pub fn bdiag_assoc_elem(Mat[Q], Mat[Q], Mat[Q]) -> Bool
 
@@ -111,6 +131,10 @@ pub fn binom(Int, Int) -> Int
 pub fn binom_i(Int, Int) -> Int64
 
 pub fn bitrev_index(Int, Int) -> Int
+
+pub fn block_upper_solve(Mat[Q], Mat[Q], Mat[Q], Array[Q], Array[Q], Cost) -> Array[Q]?
+
+pub fn[F] blocks4(Mat[F], Mat[F], Mat[F], Mat[F]) -> Mat[F]
 
 pub fn c21_scan(Rng, Int) -> C21Report
 
@@ -153,6 +177,10 @@ pub fn canonicalize(SpaceExpr) -> SpaceExpr
 pub fn catalogue() -> Array[Algo]
 
 pub fn category_counts() -> Array[(String, Int)]
+
+pub fn cauchy_det(Array[Q], Array[Q]) -> Q?
+
+pub fn cauchy_mat(Array[Q], Array[Q]) -> Mat[Q]?
 
 pub fn[V, F : Scalar] cauchy_schwarz_slack(IPSpace[V, F], V, V) -> F
 
@@ -231,6 +259,8 @@ pub fn check_law_samples_vac(String, (Mat[Q], Mat[Q]) -> Mat[Q], (Mat[Q], Cost) 
 pub fn[V, F : Scalar] check_vector_space_axioms(VSpace[V, F], Rng, Int) -> Array[Check]
 
 pub fn cholesky(Mat[Double]) -> Mat[Double]?
+
+pub fn[F] circ2_mat(Array[F], Int, Int) -> Mat[F]
 
 pub fn[F] circ_mat(Array[F]) -> Mat[F]
 
@@ -380,6 +410,16 @@ pub fn content_suspects() -> Array[(String, String, String, String)]
 
 pub fn content_table(Array[Verdict47]) -> String
 
+pub fn[F : Scalar] conv2(Array[F], Array[F], Int, Int) -> Array[F]
+
+pub fn[F : Scalar] conv2_linear(Array[F], Array[F], Int, Int) -> Array[F]
+
+pub fn[F : Scalar] conv2_via_dft(Mat[F], Mat[F], Array[F], Array[F]) -> Array[F]
+
+pub fn conv_direct_fp(Array[Int64], Array[Int64], FpCtx) -> Array[Int64]
+
+pub fn conv_fft_fp(Array[Int64], Array[Int64], Int64, FpCtx) -> Array[Int64]?
+
 pub fn[F : Scalar] coord_ipspace(String, Int, Mat[F]?) -> IPSpace[Array[F], F]
 
 pub fn[F : Scalar] coord_vspace(String, Int) -> VSpace[Array[F], F]
@@ -492,6 +532,8 @@ pub fn dense_sym_sq_gram_cost(Mat[Q], Mat[Q], Mat[Q], Cost) -> Mat[Q]
 
 pub fn[F : Scalar] deriv_matrix(Int) -> Mat[F]
 
+pub fn dft_direct_fp(Array[Int64], Int64, FpCtx) -> (Array[Int64], Int)
+
 pub fn dft_matrix(Int) -> Mat[Cpx[Double]]
 
 pub fn[F : Scalar] diag_matrix_space(Int) -> IPSpace[Mat[F], F]
@@ -507,6 +549,30 @@ pub fn distrib_elem_check(Mat[Q], Mat[Q], Mat[Q]) -> Bool
 pub fn distrib_wrong_blind(Mat[Q], Mat[Q], Mat[Q]) -> Bool
 
 pub fn[V, F] double_dual_embed(IPSpace[V, F], V) -> Array[F]
+
+pub fn dsl_check(Array[DslLaw]) -> Array[DslErr]
+
+pub fn dsl_compile(String) -> (Array[OblSpec], Array[DslErr])
+
+pub fn dsl_demo_spec() -> OblSpec
+
+pub fn dsl_fields() -> Array[String]
+
+pub fn dsl_get(DslLaw, String) -> String
+
+pub fn dsl_law_source() -> String
+
+pub fn dsl_lex(String) -> (Array[DslToken], Array[DslErr])
+
+pub fn dsl_parse(Array[DslToken]) -> (Array[DslLaw], Array[DslErr])
+
+pub fn dsl_print(OblSpec) -> String
+
+pub fn dsl_required() -> Array[String]
+
+pub fn dsl_spec_eq(OblSpec, OblSpec) -> Bool
+
+pub fn dsl_to_spec(DslLaw) -> OblSpec
 
 pub fn[V, F : Scalar] dual_eval(IPSpace[V, F], Array[F], V) -> F
 
@@ -567,6 +633,8 @@ pub fn f_tensor_scan(Rng, Int) -> FReport
 pub fn fact_i(Int) -> Int64
 
 pub fn fft(Array[Cpx[Double]]) -> Array[Cpx[Double]]
+
+pub fn fft_radix2(Array[Int64], Int64, FpCtx) -> (Array[Int64], Int)
 
 pub fn fit_affine(Array[(Int, Int, Int)]) -> (Int, Int, Int)?
 
@@ -700,6 +768,10 @@ pub fn gen_oblig_src_r(OblSpec) -> String?
 
 pub fn[F : Scalar] generalized_cross(Int, Array[Array[F]]) -> Array[F]
 
+pub fn gershgorin_bounds(Mat[Q]) -> (Q, Q, Bool)
+
+pub fn good_thomas_maps(Int, Int) -> (Array[Int], Array[Int])
+
 pub fn gram_apply_check(Rng) -> (Int, Int)
 
 pub fn[F : Scalar] gram_change_of_basis(Mat[F], Mat[F]) -> Mat[F]
@@ -722,6 +794,12 @@ pub fn hadamard_bound(Array[Array[@bigint.BigInt]]) -> @bigint.BigInt
 
 pub fn hadamard_matrix(Int) -> Mat[Double]
 
+pub fn[F : Scalar] hadamard_vec(Array[F], Array[F]) -> Array[F]
+
+pub fn[F] hankel(Array[F], Int) -> Mat[F]
+
+pub fn has_sub(String, String) -> Bool
+
 pub fn[F : Scalar] herm_matrix_space(Int) -> IPSpace[Mat[Cpx[F]], F]
 
 pub fn hessenberg(Mat[Double]) -> (Mat[Double], Mat[Double])
@@ -737,6 +815,10 @@ pub fn hs_gram_ref(Mat[Q], Mat[Q], Cost) -> Mat[Q]
 pub fn inertia(Array[Double]) -> (Int, Int, Int)
 
 pub fn inertia_label((Int, Int, Int)) -> String
+
+pub fn int_gcd(Int, Int) -> Int
+
+pub fn inv_mod_small(Int, Int) -> Int
 
 pub fn[V, F] ip(IPSpace[V, F], V, V) -> F
 
@@ -815,6 +897,8 @@ pub fn kron_matvec_q(Mat[Q], Mat[Q], Array[Q]) -> Array[Q]
 pub fn[F : Scalar] kron_matvec_s(Mat[F], Mat[F], Array[F]) -> Array[F]
 
 pub fn[F : Scalar] kron_sesq(Mat[F], Mat[F], Array[F], Array[F]) -> F
+
+pub fn kron_solve(Mat[Q], Mat[Q], Array[Q], Cost) -> Array[Q]?
 
 pub fn kron_sum(Mat[Double], Mat[Double]) -> Mat[Double]
 
@@ -911,6 +995,8 @@ pub fn[V, F : Scalar] least_squares(IPSpace[V, F], Array[V], V) -> (Array[F], Do
 pub fn[F : Scalar] legendre_rec(Int) -> Array[Poly[F]]
 
 pub fn[V, F : Scalar] linearly_independent(IPSpace[V, F], Array[V]) -> Bool
+
+pub fn low_rank(Mat[Q], Mat[Q]) -> Mat[Q]
 
 pub fn[F : Scalar] madj(Mat[F]) -> Mat[F]
 
@@ -1354,6 +1440,22 @@ pub fn ob_n09() -> Check
 
 pub fn ob_n10() -> Check
 
+pub fn ob_n100() -> Check
+
+pub fn ob_n101() -> Check
+
+pub fn ob_n102() -> Check
+
+pub fn ob_n103() -> Check
+
+pub fn ob_n104() -> Check
+
+pub fn ob_n105() -> Check
+
+pub fn ob_n106() -> Check
+
+pub fn ob_n107() -> Check
+
 pub fn ob_n11() -> Check
 
 pub fn ob_n12() -> Check
@@ -1494,6 +1596,26 @@ pub fn ob_n88() -> Check
 
 pub fn ob_n89() -> Check
 
+pub fn ob_n90() -> Check
+
+pub fn ob_n91() -> Check
+
+pub fn ob_n92() -> Check
+
+pub fn ob_n93() -> Check
+
+pub fn ob_n94() -> Check
+
+pub fn ob_n95() -> Check
+
+pub fn ob_n96() -> Check
+
+pub fn ob_n97() -> Check
+
+pub fn ob_n98() -> Check
+
+pub fn ob_n99() -> Check
+
 pub fn ob_rng() -> Rng
 
 pub fn obl_demo_spec() -> OblSpec
@@ -1596,7 +1718,11 @@ pub fn pick_path(Int) -> String
 
 pub fn pinv(Mat[Double], Double) -> Mat[Double]
 
+pub fn plan_conv(Int) -> AccelPlan
+
 pub fn plan_qsolve(Int, Int) -> AccelPlan
+
+pub fn plan_spd(Int, Int) -> AccelPlan
 
 pub fn plan_synth(SpaceExpr) -> Bool
 
@@ -1848,6 +1974,8 @@ pub fn rep_str(String, Int) -> String
 
 pub fn[V, F : Scalar] retwist(IPSpace[V, F], Mat[F]) -> IPSpace[V, F]
 
+pub fn[F : Scalar] rev_perm(Int) -> Mat[F]
+
 pub fn rgrid_label() -> String
 
 pub fn[V, F : Scalar] riesz_vector(IPSpace[V, F], Array[F]) -> V
@@ -2020,6 +2148,8 @@ pub fn[F : Scalar] shalf() -> F
 
 pub fn shape_count(Int, Int, Int) -> Int64
 
+pub fn sherman_morrison(Mat[Q], Array[Q], Array[Q]) -> Mat[Q]?
+
 pub fn shom(SpaceExpr, SpaceExpr) -> SpaceExpr
 
 pub fn[F : Scalar] simag_unit() -> F?
@@ -2164,6 +2294,8 @@ pub fn sub_digest(Rng) -> String
 
 pub fn sub_scan(Rng) -> (Int, Int, Int64, Int64, Int, Int)
 
+pub fn[F] submat(Mat[F], Int, Int, Int, Int) -> Mat[F]
+
 pub fn subset_index_table(Int, Int) -> Array[Int]
 
 pub fn subset_label(Array[Int]) -> String
@@ -2173,6 +2305,8 @@ pub fn subsets_k(Int, Int) -> Array[Array[Int]]
 pub fn[V, F : Scalar] subspace_of(String, IPSpace[V, F], Array[V]) -> IPSpace[V, F]
 
 pub fn svd_jacobi(Mat[Double], Int) -> (Mat[Double], Array[Double], Mat[Double])
+
+pub fn sylvester_matrix(Mat[Q], Mat[Q]) -> Mat[Q]
 
 pub fn sylvester_solve(Mat[Q], Mat[Q], Mat[Q], Cost) -> Mat[Q]?
 
@@ -2204,6 +2338,10 @@ pub fn synth_spec_aux(PhiSpec, SpaceExpr, Cost) -> (Mat[Q]?, Q)
 
 pub fn synth_spec_compare(PhiSpec, SpaceExpr) -> (Bool, Int64, Int64, String, Int)
 
+pub fn[F : Scalar] tdft(Mat[F], Mat[F], Array[F]) -> Array[F]
+
+pub fn[F : Scalar] tdft_conj(Mat[F], Mat[F], Array[F]) -> Array[F]
+
 pub fn[F : Scalar] tensor_operator(Mat[F], Mat[F]) -> Mat[F]
 
 pub fn[A, B, F : Scalar] tensor_pure(IPSpace[A, F], IPSpace[B, F], A, B) -> Array[F]
@@ -2215,6 +2353,8 @@ pub fn[A, B, F : Scalar] tensor_space_g(IPSpace[A, F], IPSpace[B, F], Mat[F], Ma
 pub fn tensor_space_lazy(IPSpace[Array[Q], Q], IPSpace[Array[Q], Q], Mat[Q], Mat[Q]) -> IPSpace[Array[Q], Q]
 
 pub fn[A, B, F : Scalar] tensor_space_lazy_s(IPSpace[A, F], IPSpace[B, F], Mat[F], Mat[F]) -> IPSpace[Array[F], F]
+
+pub fn[F : Scalar] tidft(Mat[F], Mat[F], Array[F]) -> Array[F]
 
 pub fn tinv_best(SpaceExpr) -> Int64
 
@@ -2243,6 +2383,12 @@ pub fn tmat(SpaceExpr) -> Int64
 pub fn tmat2(SpaceExpr) -> (Int64, Int64)
 
 pub fn to_complex(Mat[Double]) -> Mat[Cpx[Double]]
+
+pub fn[F] toeplitz(Array[F], Int) -> Mat[F]
+
+pub fn[F : Scalar] toeplitz_circ_symbol(Array[F], Int) -> Array[F]
+
+pub fn[F : Scalar] toeplitz_mul_via_circ(Array[F], Int, Array[F]) -> Array[F]
 
 pub fn[F : Scalar] traceless_space(Int) -> IPSpace[Mat[F], F]
 
@@ -2356,6 +2502,8 @@ pub fn[F : Scalar] wedge_full(Int, Array[F], Array[F]) -> Array[F]
 
 pub fn[F : Scalar] wedge_vectors(Int, Array[Array[F]]) -> Array[F]
 
+pub fn woodbury(Mat[Q], Mat[Q], Mat[Q], Mat[Q], Cost) -> Mat[Q]?
+
 pub fn wrong_sym_sq_gram(Mat[Q], Mat[Q]) -> Mat[Q]
 
 pub fn wwords(Int64) -> Int64
@@ -2456,6 +2604,19 @@ pub fn AssocTree::alabel(Self) -> String
 pub fn AssocTree::anodes(Self) -> Int
 pub fn AssocTree::aprod(Self, Array[Int]) -> Int64
 pub fn AssocTree::kscost(Self, Array[Int]) -> Int64
+
+pub struct AuditRow {
+  acode : String
+  azh : String
+  agroup : String
+  acat : String
+  atrack : String
+  abytes : Int
+  actrl : Bool
+  acost : Bool
+  athm : Bool
+  aneg : Bool
+}
 
 pub struct C21Report {
   w5cells : Int
@@ -2618,6 +2779,41 @@ pub struct DCensus {
   cov : (Int, Int, Int)
   misses : Array[String]
   digest : String
+}
+
+pub struct DslErr {
+  emsg : String
+  epos : DslPos
+}
+pub fn DslErr::show(Self) -> String
+
+pub struct DslLaw {
+  lcode : String
+  lkeys : Array[String]
+  lvals : Array[String]
+  lpos : Array[DslPos]
+  lat : DslPos
+}
+
+pub struct DslPos {
+  dline : Int
+  dcol : Int
+}
+pub fn DslPos::show(Self) -> String
+
+pub enum DslTok {
+  TLaw
+  TIdent(String)
+  TStr(String)
+  TLBrace
+  TRBrace
+  TEq
+  TEof
+}
+
+pub struct DslToken {
+  tk : DslTok
+  tpos : DslPos
 }
 
 pub struct FLaw {

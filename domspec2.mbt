@@ -282,20 +282,3 @@ pub fn gram_apply_check(rng : Rng) -> (Int, Int) {
   }
   (corpus.length(), ok)
 }
-
-///|
-/// 指紋。
-pub fn sub_digest(rng : Rng) -> String {
-  let (n, same, td, ts, win, lose) = sub_scan(rng)
-  n.to_string() +
-  ":" +
-  same.to_string() +
-  ":" +
-  td.to_string() +
-  ":" +
-  ts.to_string() +
-  ":" +
-  win.to_string() +
-  ":" +
-  lose.to_string()
-}

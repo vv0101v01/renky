@@ -119,22 +119,6 @@ pub fn ipow_i(x : Int64, n : Int) -> Int64 {
   acc
 }
 
-///|
-/// BigInt 快速冪（精確，用於有理數冪與階乘型常數）。
-pub fn ipow_big(x : BigInt, n : Int) -> BigInt {
-  let mut acc : BigInt = 1N
-  let mut b = x
-  let mut e = n
-  while e > 0 {
-    if e % 2 == 1 {
-      acc = acc * b
-    }
-    b = b * b
-    e = e / 2
-  }
-  acc
-}
-
 // ---------------------------------------------------------------------------
 // 【演算法 003】Newton–Raphson 平方根（自行實作，不借 builtin sqrt）
 // 定義：對 a ≥ 0 求 √a，迭代 x_{k+1} = (x_k + a/x_k)/2。
@@ -362,34 +346,4 @@ pub fn fmt_e(x : Double) -> String {
     e = e - 1
   }
   (if neg { "-" } else { "" }) + fmt_d(v, 3) + "e" + e.to_string()
-}
-
-///|
-/// 右補空白至寬度 n。
-pub fn pad_r(s : String, n : Int) -> String {
-  let mut t = s
-  while t.length() < n {
-    t = t + " "
-  }
-  t
-}
-
-///|
-/// 左補空白至寬度 n。
-pub fn pad_l(s : String, n : Int) -> String {
-  let mut t = s
-  while t.length() < n {
-    t = " " + t
-  }
-  t
-}
-
-///|
-/// 重複字元。
-pub fn rep_str(s : String, n : Int) -> String {
-  let mut t = ""
-  for _i in 0..<n {
-    t = t + s
-  }
-  t
 }

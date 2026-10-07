@@ -142,15 +142,6 @@ pub fn tri_memo_stats() -> (Int, Int, Int) {
 }
 
 ///|
-/// 清空備忘錄（義務中用來做可重複的量測）。
-pub fn tri_memo_reset() -> Unit {
-  g_trimemo.mkeys.clear()
-  g_trimemo.mvals.clear()
-  g_trimemo.mhits = 0
-  g_trimemo.mmiss = 0
-}
-
-///|
 /// 兩側對照用：刻意往備忘錄塞一個錯的結果。
 ///
 /// 存在於產品程式碼中是刻意的 —— 對照若只活在測試檔裡，
@@ -192,12 +183,6 @@ pub struct OblMemo {
 pub let g_oblmemo : OblMemo = { okeys: [], ovals: [], ohits: 0, omiss: 0, }
 
 ///|
-/// 命中／未命中／鍵數。
-pub fn obl_memo_stats() -> (Int, Int, Int) {
-  (g_oblmemo.ohits, g_oblmemo.omiss, g_oblmemo.okeys.length())
-}
-
-///|
 /// 執行（或取回）一條目錄義務之布林結果。
 ///
 /// ## 為何這一處可以記憶體化
@@ -234,4 +219,15 @@ pub fn obl_memo_run(code : String, f : () -> Check) -> Bool {
   g_oblmemo.okeys.push(code)
   g_oblmemo.ovals.push(v)
   v
+}
+
+///| （隔離標記）本函式全專案未被呼叫，但依賴本套件私有內部，故留在原處。
+
+///|
+/// 清空備忘錄（義務中用來做可重複的量測）。
+pub fn tri_memo_reset() -> Unit {
+  g_trimemo.mkeys.clear()
+  g_trimemo.mvals.clear()
+  g_trimemo.mhits = 0
+  g_trimemo.mmiss = 0
 }

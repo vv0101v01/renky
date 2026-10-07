@@ -266,25 +266,6 @@ pub fn op_rule_provenance(rng : Rng) -> (Int, Int, Int) {
 }
 
 ///|
-/// 指紋。
-pub fn op_digest(rng : Rng) -> String {
-  let (np, ns, nc, same, td, ts, win) = op_scan(rng)
-  np.to_string() +
-  ":" +
-  ns.to_string() +
-  ":" +
-  nc.to_string() +
-  ":" +
-  same.to_string() +
-  ":" +
-  td.to_string() +
-  ":" +
-  ts.to_string() +
-  ":" +
-  win.to_string()
-}
-
-///|
 /// ## 守門：手寫的那條規則才是錯的
 ///
 /// 第一次把 N-40 接上中端時，40 個 (Φ, 式) 組合有 **3 個對不上**。

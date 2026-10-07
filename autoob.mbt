@@ -270,15 +270,6 @@ pub fn pick_control_rule(spec : OblSpec) -> String? {
 }
 
 ///|
-/// 生成器量測到的三個數字（門檻由此而來，不是瞎寫的）
-pub fn obl_measure(spec : OblSpec) -> (Bool, Double, Int)? {
-  match obl_measure_full(spec) {
-    Some((h, g, v, _b, _f)) => Some((h, g, v))
-    None => None
-  }
-}
-
-///|
 /// 完整量測：(成立, 增益, 空洞樣本數, 直接路徑字乘法, 分解路徑字乘法)。
 ///
 /// 生成器寫進條目的每一個數字都來自這裡 —— 條目裡不該出現任何

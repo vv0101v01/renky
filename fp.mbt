@@ -294,22 +294,6 @@ pub fn fp_of_q(a : Mat[Q], ctx : FpCtx) -> FpMat? {
 }
 
 ///|
-/// ℚ 向量之約化。
-pub fn fp_of_qvec(v : Array[Q], ctx : FpCtx) -> Array[Int64]? {
-  let out = Array::make(v.length(), 0L)
-  let pb = BigInt::from_int64(ctx.pmod)
-  for i in 0..<v.length() {
-    let dn = normmod((v[i].den % pb).to_int64(), ctx.pmod)
-    match ctx.inv(dn) {
-      None => return None
-      Some(di) =>
-        out[i] = ctx.mul(normmod((v[i].num % pb).to_int64(), ctx.pmod), di)
-    }
-  }
-  Some(out)
-}
-
-///|
 /// 矩陣乘法 mod p。
 pub fn fp_matmul(a : FpMat, b : FpMat, ctx : FpCtx) -> FpMat {
   let m = FpMat::make(a.fr, b.fc)
@@ -414,12 +398,6 @@ pub fn fp_rref(a0 : FpMat, ctx : FpCtx) -> FpRref {
     prod
   }
   { rmat: a, rank: r, pivots, det, }
-}
-
-///|
-/// 行列式 mod p（完全消去版；供需要 RREF 之場合）。
-pub fn fp_det(a : FpMat, ctx : FpCtx) -> Int64 {
-  fp_rref(a, ctx).det
 }
 
 ///|
@@ -688,38 +666,6 @@ pub fn fpp_norm(a : Array[Int64]) -> Array[Int64] {
 }
 
 ///|
-/// 𝔽p[x] 次數：去除尾端零係數後之最高次。
-pub fn fpp_deg(a : Array[Int64]) -> Int {
-  fpp_norm(a).length() - 1
-}
-
-///|
-/// 𝔽p[x] 加法（係數逐項模 p）。
-pub fn fpp_add(a : Array[Int64], b : Array[Int64], ctx : FpCtx) -> Array[Int64] {
-  let n = if a.length() > b.length() { a.length() } else { b.length() }
-  let out = Array::make(n, 0L)
-  for i in 0..<n {
-    let x = if i < a.length() { a[i] } else { 0L }
-    let y = if i < b.length() { b[i] } else { 0L }
-    out[i] = ctx.add(x, y)
-  }
-  fpp_norm(out)
-}
-
-///|
-/// 𝔽p[x] 減法（係數逐項模 p）。
-pub fn fpp_sub(a : Array[Int64], b : Array[Int64], ctx : FpCtx) -> Array[Int64] {
-  let n = if a.length() > b.length() { a.length() } else { b.length() }
-  let out = Array::make(n, 0L)
-  for i in 0..<n {
-    let x = if i < a.length() { a[i] } else { 0L }
-    let y = if i < b.length() { b[i] } else { 0L }
-    out[i] = ctx.sub(x, y)
-  }
-  fpp_norm(out)
-}
-
-///|
 /// 卷積乘法：(fg)_k = Σ_{i+j=k} f_i g_j。
 pub fn fpp_mul(a : Array[Int64], b : Array[Int64], ctx : FpCtx) -> Array[Int64] {
   if a.length() == 0 || b.length() == 0 {
@@ -821,16 +767,6 @@ pub fn fpp_gcd(a : Array[Int64], b : Array[Int64], ctx : FpCtx) -> Array[Int64] 
     Some(u) => fpp_scale(x, u, ctx)
     None => x
   }
-}
-
-///|
-/// 由根造首一多項式 ∏(x − rᵢ)（積樹之基礎情形即線性因式）。
-pub fn fpp_from_roots(roots : Array[Int64], ctx : FpCtx) -> Array[Int64] {
-  let mut acc : Array[Int64] = [1L]
-  for r in roots {
-    acc = fpp_mul(acc, [ctx.neg(normmod(r, ctx.pmod)), 1L], ctx)
-  }
-  acc
 }
 
 ///|

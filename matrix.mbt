@@ -855,12 +855,6 @@ pub fn[F : Scalar] is_unitary(a : Mat[F]) -> Bool {
 }
 
 ///|
-/// AA* = A*A ?
-pub fn[F : Scalar] is_normal(a : Mat[F]) -> Bool {
-  a.times(a.adjointm()).equals(a.adjointm().times(a))
-}
-
-///|
 /// 上三角？
 pub fn[F : Scalar] is_upper(a : Mat[F]) -> Bool {
   for i in 0..<a.mrows {

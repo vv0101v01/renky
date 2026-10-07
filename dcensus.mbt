@@ -76,17 +76,6 @@ pub fn dc_ip(sp : IPSpace[Array[Q], Q], x : Array[Q], y : Array[Q]) -> Q {
 }
 
 ///|
-/// 判零。
-pub fn dc_is_zero(v : Array[Q]) -> Bool {
-  for c in v {
-    if !Q::is_zero(c) {
-      return false
-    }
-  }
-  true
-}
-
-///|
 /// 正交集之截斷長度：min(dim, 6)。用於 Fourier／Bessel／Parseval 三條，
 /// 使成本在 28 維的格上仍然有界；k = dim 時即為完整正交基。
 pub fn dc_onb_k(sp : IPSpace[Array[Q], Q]) -> Int {
@@ -680,12 +669,6 @@ pub fn dcensus_core(step : Int, maxdim : Int, codes : Array[String]) -> DCensus 
 }
 
 ///|
-/// 全量普查：23 × 35 × 7 = 5,635 格。`maxdim` 為構造後維數上限（0 = 不設限）。
-pub fn dcensus_scan(maxdim : Int) -> DCensus {
-  dcensus_core(1, maxdim, [])
-}
-
-///|
 /// 分層抽樣（義務用）。
 ///
 /// 命題 N52-3（分層仍覆蓋全表）：步長 step 與表長互質時，固定 i 後
@@ -700,79 +683,6 @@ pub fn dcensus_stratum(step : Int, maxdim : Int) -> DCensus {
 /// 只跑指定演算法子集。
 pub fn dcensus_subset(codes : Array[String], maxdim : Int) -> DCensus {
   dcensus_core(1, maxdim, codes)
-}
-
-///|
-/// 逐演算法統計：(代碼, 通過, 總數)。
-pub fn dcensus_by_algo(maxdim : Int) -> Array[(String, Int, Int)] {
-  let out : Array[(String, Int, Int)] = []
-  for a in d_registry() {
-    let c = dcensus_core(1, maxdim, [a.dcode])
-    out.push((a.dcode, c.pass, c.cells))
-  }
-  out
-}
-
-///|
-/// 逐構造子統計：(記號, 通過, 總數)。
-pub fn dcensus_by_comb(maxdim : Int) -> Array[(String, Int, Int)] {
-  let out : Array[(String, Int, Int)] = []
-  for c in comb7_registry() {
-    let mut ok = 0
-    let mut tot = 0
-    for r in space_registry() {
-      let d = (c.cdim)(r.sdim)
-      if maxdim > 0 && d > maxdim {
-        continue
-      }
-      let sp = comb7_space(r, c)
-      for a in d_registry() {
-        let key = dcell_key(a.dcode, c.csym, r.sname)
-        tot = tot + 1
-        if (a.drun)(sp, dcell_rng(key)) {
-          ok = ok + 1
-        }
-      }
-    }
-    out.push((c.csym, ok, tot))
-  }
-  out
-}
-
-///|
-/// 逐空間族統計：(族名, 通過, 總數)。
-pub fn dcensus_by_family(maxdim : Int) -> Array[(String, Int, Int)] {
-  let out : Array[(String, Int, Int)] = []
-  for r in space_registry() {
-    let mut ok = 0
-    let mut tot = 0
-    for c in comb7_registry() {
-      let d = (c.cdim)(r.sdim)
-      if maxdim > 0 && d > maxdim {
-        continue
-      }
-      let sp = comb7_space(r, c)
-      for a in d_registry() {
-        let key = dcell_key(a.dcode, c.csym, r.sname)
-        tot = tot + 1
-        if (a.drun)(sp, dcell_rng(key)) {
-          ok = ok + 1
-        }
-      }
-    }
-    let mut found = false
-    for t in 0..<out.length() {
-      if out[t].0 == r.fam {
-        out[t] = (r.fam, out[t].1 + ok, out[t].2 + tot)
-        found = true
-        break
-      }
-    }
-    if !found {
-      out.push((r.fam, ok, tot))
-    }
-  }
-  out
 }
 
 // ---------------------------------------------------------------------------

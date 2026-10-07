@@ -637,36 +637,6 @@ pub fn law_sum_det(rng : Rng, sizes : Array[(Int, Int)]) -> LawVerdict {
   )
 }
 
-///|
-/// 律表：把一組判決整理成可列印之表（供報告與反律庫使用）
-pub fn law_table(vs : Array[LawVerdict]) -> String {
-  let out : Array[String] = []
-  out.push(
-    "| 結構律 | 成立 | 試驗 | 直接法字乘 | 分解法字乘 | 總增益 | 逐尺寸 |",
-  )
-  out.push("| --- | :-: | --: | --: | --: | --: | --- |")
-  for v in vs {
-    out.push(
-      "| " +
-      v.lname +
-      " | " +
-      (if v.holds { "✔" } else { "✘" }) +
-      " | " +
-      v.ltrials.to_string() +
-      " | " +
-      v.base_cost.to_string() +
-      " | " +
-      v.fast_cost.to_string() +
-      " | **×" +
-      fmt_d(v.lgain(), 2) +
-      "** | " +
-      v.ldetail +
-      " |",
-    )
-  }
-  out.join("\n")
-}
-
 // ---------------------------------------------------------------------------
 // 【演算法 173】對偶反演律（N-05）
 //
@@ -1914,6 +1884,8 @@ pub fn law_search_std(rng : Rng) -> Array[LawCand] {
   law_cache.push(t)
   t
 }
+
+///| （隔離標記）本函式全專案未被呼叫，但依賴本套件私有內部，故留在原處。
 
 ///|
 /// 快取是否已命中過（供 N-35 義務自證「第二次確實沒有重跑」）。

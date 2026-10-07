@@ -80,25 +80,6 @@ pub fn kron_bilinear(a : Mat[Q], b : Mat[Q], x : Array[Q], y : Array[Q]) -> Q {
   acc
 }
 
-///|
-/// 分塊對角 (A ⊕ B) 之雙線性型，不物化。
-pub fn bdiag_bilinear(a : Mat[Q], b : Mat[Q], x : Array[Q], y : Array[Q]) -> Q {
-  let na = a.mrows
-  let nb = b.mrows
-  let mut acc = Q::zero()
-  for i in 0..<na {
-    for j in 0..<na {
-      acc = acc.add(x[i].mul(a.at(i, j)).mul(y[j]))
-    }
-  }
-  for i in 0..<nb {
-    for j in 0..<nb {
-      acc = acc.add(x[na + i].mul(b.at(i, j)).mul(y[na + j]))
-    }
-  }
-  acc
-}
-
 // ---------------------------------------------------------------------------
 //  Kronecker 之 LDLᵀ 證書
 // ---------------------------------------------------------------------------
@@ -311,40 +292,6 @@ pub fn distrib_elem_check(p : Mat[Q], q : Mat[Q], r : Mat[Q]) -> Bool {
     }
   }
   true
-}
-
-///|
-/// 分配律之雙線性抽樣檢查，兩側皆以 Kronecker 結構現算。
-///
-/// 左式 xᵀ(P⊗M)y 以定理 K-1；右式把 σ 重排後的向量切成兩塊，
-/// 分別以 xᵀ(P⊗Q)y 與 xᵀ(P⊗R)y 相加。單次 Θ(d_P·d_M·(d_P+d_M))，
-/// 相較逐元比對之 Θ(d_P²d_M²) 在大三元組上便宜一個量級。
-pub fn distrib_bilinear_check(
-  p : Mat[Q],
-  q : Mat[Q],
-  r : Mat[Q],
-  x : Array[Q],
-  y : Array[Q],
-) -> Bool {
-  let dp = p.mrows
-  let dq = q.mrows
-  let dr = r.mrows
-  let d = dp * (dq + dr)
-  let m = qblock_diag(q, r)
-  let lhs = kron_bilinear(p, m, x, y)
-  let sg = f_distrib_sigma(dp, dq, dr)
-  let sx : Array[Q] = Array::makei(d, _ => Q::zero())
-  let sy : Array[Q] = Array::makei(d, _ => Q::zero())
-  for u in 0..<d {
-    sx[sg(u)] = x[u]
-    sy[sg(u)] = y[u]
-  }
-  let npq = dp * dq
-  let x1 : Array[Q] = Array::makei(npq, i => sx[i])
-  let y1 : Array[Q] = Array::makei(npq, i => sy[i])
-  let x2 : Array[Q] = Array::makei(dp * dr, i => sx[npq + i])
-  let y2 : Array[Q] = Array::makei(dp * dr, i => sy[npq + i])
-  lhs.eq(kron_bilinear(p, q, x1, y1).add(kron_bilinear(p, r, x2, y2)))
 }
 
 ///|
@@ -612,44 +559,6 @@ pub fn kron_ldlt_elem_pre(
   pb : Mat[Q],
 ) -> (Bool, Bool) {
   let okfac = pa.equals(a) && pb.equals(b)
-  let nb = b.mrows
-  let d = a.mrows * nb
-  let mut okidx = true
-  for u in 0..<d {
-    let ua = u / nb
-    let ub = u % nb
-    for v in 0..<d {
-      if !pa
-        .at(ua, v / nb)
-        .mul(pb.at(ub, v % nb))
-        .eq(a.at(ua, v / nb).mul(b.at(ub, v % nb))) {
-        okidx = false
-      }
-    }
-  }
-  (okfac, okidx)
-}
-
-///|
-/// 逐元驗證（自行計算因子之 LDLᵀ 重組）。
-///
-/// 大批呼叫時請改用 `kron_ldlt_elem_pre` 並把重組提到迴圈外。
-pub fn kron_ldlt_elem(
-  a : Mat[Q],
-  b : Mat[Q],
-  la : Mat[Q],
-  lb : Mat[Q],
-  da : Array[Q],
-  db : Array[Q],
-) -> (Bool, Bool) {
-  // (1) 因子側：L D Lᵀ 逐元等於原矩陣。這一側是**完整**的 ——
-  //     由命題 K-6，乘積側逐元成立 ⟺ 兩個因子各自成立，
-  //     故因子側驗完即等於把 n_An_B 階的等式驗完，不必物化。
-  let pa = ldlt_product(la, da)
-  let pb = ldlt_product(lb, db)
-  let okfac = pa.equals(a) && pb.equals(b)
-  // (2) 索引分解側：驗證實作把 u 拆成 (u/n_B, u%n_B) 的方式與
-  //     命題 K-6 的推導一致。因子積已算好，故每元 O(1)。
   let nb = b.mrows
   let d = a.mrows * nb
   let mut okidx = true

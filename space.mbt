@@ -84,61 +84,15 @@ pub fn[V, F] vadd(s : VSpace[V, F], a : V, b : V) -> V {
 }
 
 ///|
-/// 空間介面之負元：s.neg(a)。
-pub fn[V, F] vneg(s : VSpace[V, F], a : V) -> V {
-  (s.neg)(a)
-}
-
-///|
 /// a − b ≔ a + (−b)
 pub fn[V, F] vsub(s : VSpace[V, F], a : V, b : V) -> V {
   (s.add)(a, (s.neg)(b))
 }
 
 ///|
-/// 空間介面之純量乘：s.smul(c, a)。
-pub fn[V, F] vsmul(s : VSpace[V, F], c : F, a : V) -> V {
-  (s.smul)(c, a)
-}
-
-///|
-/// 空間介面之相等判定（相容於公理 V6 之等價關係）。
-pub fn[V, F] veq_(s : VSpace[V, F], a : V, b : V) -> Bool {
-  (s.veq)(a, b)
-}
-
-///|
-/// 空間介面之列印（元素之文字表示）。
-pub fn[V, F] vshow_(s : VSpace[V, F], a : V) -> String {
-  (s.vshow)(a)
-}
-
-///|
 /// 取座標：元素在其基底下之係數 αᵢ。
 pub fn[V, F] vcoord(s : VSpace[V, F], a : V) -> Array[F] {
   (s.coord)(a)
-}
-
-///|
-/// 由座標展開：Σ αᵢ eᵢ（vcoord 之逆）。
-pub fn[V, F] vexpand(s : VSpace[V, F], c : Array[F]) -> V {
-  (s.expand)(c)
-}
-
-///|
-/// 取樣一元素（確定性亂數流；Schwartz–Zippel 檢驗用）。
-pub fn[V, F] vsample(s : VSpace[V, F], rng : Rng) -> V {
-  (s.sample)(rng)
-}
-
-///|
-/// Σ xᵢ
-pub fn[V, F] vsum(s : VSpace[V, F], xs : Array[V]) -> V {
-  let mut acc = s.zero
-  for x in xs {
-    acc = (s.add)(acc, x)
-  }
-  acc
 }
 
 ///|
@@ -153,33 +107,15 @@ pub fn[V, F] vlincomb(s : VSpace[V, F], cs : Array[F], xs : Array[V]) -> V {
 }
 
 ///|
-/// c·x + y
-pub fn[V, F] vaxpy(s : VSpace[V, F], c : F, x : V, y : V) -> V {
-  (s.add)((s.smul)(c, x), y)
-}
-
-///|
 /// 內積 ⟨x,y⟩
 pub fn[V, F] ip(s : IPSpace[V, F], x : V, y : V) -> F {
   (s.inner)(x, y)
 }
 
 ///|
-/// ‖x‖² = ⟨x,x⟩ ∈ 𝔽（實且非負）
-pub fn[V, F] ip_norm2(s : IPSpace[V, F], x : V) -> F {
-  (s.inner)(x, x)
-}
-
-///|
 /// ‖x‖ 之雙精度值（√⟨x,x⟩）
 pub fn[V, F : Scalar] ip_norm(s : IPSpace[V, F], x : V) -> Double {
   sqrt_newton(F::s_to_double((s.inner)(x, x)))
-}
-
-///|
-/// d(x,y) = ‖x−y‖
-pub fn[V, F : Scalar] ip_dist(s : IPSpace[V, F], x : V, y : V) -> Double {
-  ip_norm(s, vsub(s.vs, x, y))
 }
 
 ///|
@@ -490,4 +426,12 @@ pub fn[V, F : Scalar] check_inner_axioms(
     mk_check("I7 第二變數共軛齊次", ok7, trials, "由 I2,I3 導出"),
   )
   res
+}
+
+///| （隔離標記）本函式全專案未被呼叫，但依賴本套件私有內部，故留在原處。
+
+///|
+/// d(x,y) = ‖x−y‖
+pub fn[V, F : Scalar] ip_dist(s : IPSpace[V, F], x : V, y : V) -> Double {
+  ip_norm(s, vsub(s.vs, x, y))
 }

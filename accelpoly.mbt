@@ -21,31 +21,6 @@
 //     C 管：整除性憑證（G | f ∧ G | g）、逐點值比對憑證。
 // ============================================================================
 
-///|
-/// 𝔽p[x] 之求值–逐點–插值乘法（𝔽[x] 層之純 CRT）。
-/// 【命題 Λ3-4】deg(fg) = deg f + deg g ≤ d，取 d+1 個互異點即可唯一還原。
-pub fn fpp_mul_evalinterp(
-  a : Array[Int64],
-  b : Array[Int64],
-  ctx : FpCtx,
-) -> Array[Int64]? {
-  let fa = fpp_norm(a)
-  let fb = fpp_norm(b)
-  if fa.length() == 0 || fb.length() == 0 {
-    return Some([])
-  }
-  let d = fa.length() + fb.length() - 2
-  let n = d + 1
-  if n.to_int64() >= ctx.pmod {
-    return None
-  }
-  let xs = Array::makei(n, i => i.to_int64())
-  let ys = Array::makei(n, i => {
-    ctx.mul(fpp_eval(fa, xs[i], ctx), fpp_eval(fb, xs[i], ctx))
-  })
-  fpp_interp(xs, ys, ctx)
-}
-
 // ---------------------------------------------------------------------------
 //  基準路徑：ℤ[x] 之 schoolbook 卷積（受計量）
 // ---------------------------------------------------------------------------
@@ -172,49 +147,6 @@ pub fn zpoly_mul_crt(
 //     證明：非零多項式於體上至多 d 個根。∎
 //     取 d ≤ 2·10³、p > 2³⁰ ⇒ 單點誤收機率 < 2·10⁻⁶；取 t 個獨立點 ⇒ ≤ (d/p)^t。
 // ---------------------------------------------------------------------------
-
-///|
-/// 篩：驗證 f·g = h（整係數）是否可能成立。回傳 false ⇒ 必不成立。
-pub fn screen_poly_mul(
-  a : Array[BigInt],
-  b : Array[BigInt],
-  h : Array[BigInt],
-  p : Int64,
-  pts : Int,
-  rng : Rng,
-  c : Cost,
-) -> Bool {
-  let ctx = FpCtx::make(p)
-  let pb = BigInt::from_int64(p)
-  for v in a {
-    c.wmul = c.wmul + big_words(v)
-    c.bigops = c.bigops + 1L
-  }
-  for v in b {
-    c.wmul = c.wmul + big_words(v)
-    c.bigops = c.bigops + 1L
-  }
-  for v in h {
-    c.wmul = c.wmul + big_words(v)
-    c.bigops = c.bigops + 1L
-  }
-  let fa = Array::makei(a.length(), i => normmod((a[i] % pb).to_int64(), p))
-  let fb = Array::makei(b.length(), i => normmod((b[i] % pb).to_int64(), p))
-  let fh = Array::makei(h.length(), i => normmod((h[i] % pb).to_int64(), p))
-  let mut okall = true
-  for _k in 0..<pts {
-    let t = normmod(rng.next_below(1000000).to_int64(), p)
-    let va = fpp_eval(fa, t, ctx)
-    let vb = fpp_eval(fb, t, ctx)
-    let vh = fpp_eval(fh, t, ctx)
-    if ctx.mul(va, vb) != vh {
-      okall = false
-      break
-    }
-  }
-  c.absorb_fp(ctx)
-  okall
-}
 
 // ---------------------------------------------------------------------------
 //  由根造多項式：線性累積 vs 積樹（operand balancing）
@@ -910,4 +842,135 @@ pub fn plan_zpolymul(d : Int, bits : Int) -> AccelPlan {
     k.to_string() +
     " 個素數",
   )
+}
+
+///|
+/// 循環卷積之分派（第二十輪）。
+///
+/// 基準：直接定義 Θ(n²)，n² 次模乘。
+/// 加速：三次 radix-2 FFT 加 n 次逐點乘，蝶形數 3·(n/2)·log₂n。
+///   每個蝶形含一次模乘與兩次模加減，再加上位元反轉置換與索引算術，
+///   以經驗因子 413/100 折算成「等效模乘」——該因子由下列實測網格校準。
+///
+/// ## 實測網格（𝔽p，每點 60 次，階數 = 向量長度）
+///
+/// ```text
+///   n      直接        FFT        比值
+///     8    0.41 ms    1.59 ms    ×0.26
+///    16    1.00 ms    2.50 ms    ×0.40
+///    32    3.32 ms    3.06 ms    ×1.08     ← 交叉點
+///    64    2.80 ms    2.36 ms    ×1.19
+///   128   10.56 ms    4.84 ms    ×2.18
+///   256   42.29 ms   10.55 ms    ×4.01
+///   512  160.55 ms   22.34 ms    ×7.19
+/// ```
+///
+/// 交叉點 n ≈ 32。小於它時三次變換的固定成本蓋過 Θ(n²) 的收益 ——
+/// **卷積定理在小尺寸上是淨虧的**，而這不是實作不好，是常數因子。
+pub fn plan_conv(n : Int) -> AccelPlan {
+  let nn = n.to_int64()
+  let pred_base = nn * nn
+  let mut lg = 0L
+  let mut t = 1
+  while t < n {
+    t = t * 2
+    lg = lg + 1L
+  }
+  let butterflies = 3L * nn / 2L * lg
+  let pred_fast = 413L * butterflies / 100L + nn
+  decide(
+    "循環卷積",
+    pred_base,
+    pred_fast,
+    "n = " + n.to_string() + "，蝶形 " + butterflies.to_string() + " 次",
+  )
+}
+
+///|
+/// 正定判定之分派（第二十輪：由寫死的交叉點 17 改為成本模型）。
+///
+/// 基準：不換列 Bareiss。中間量為**精確整數子式**，第 k 步的位元數約
+///   k·(b + log k)，故總成本 ≈ (n³/3)·w²，w = 字數(0.5·n·(b+4))。
+/// 加速：L 層 CRT 主子式。每個素數一次 Θ(n³) 的 𝔽p LDLᵀ，
+///   另加 n² 次模約化與 n 個輸出各自的 Θ(k²) CRT 累積。
+///   素數個數 k = ⌈n(b+4)/31⌉（Hadamard 界）。
+///
+/// ## 實測網格（35 × 45 普查表之 1,575 個 Gram，依階數分段）
+///
+/// ```text
+///   階數區間      個數    Bareiss     CRT 主子式    比值
+///   ( 0, 16]      1378     121 ms       122 ms     ×0.99
+///   (16, 40]       142     248 ms       135 ms     ×1.84
+///   (40, 80]        35     583 ms       240 ms     ×2.43
+///   (80,  ∞)        20    2780 ms      1088 ms     ×2.55
+/// ```
+///
+/// 第十八輪把交叉點寫成常數 17，當時就記下「換機器或換資料就要重量」。
+/// 本版改成模型：同樣在 b = 16 時給出 n ≈ 17 的交叉點，但 b 變大時
+/// 交叉點會自動左移（係數膨脹讓 Bareiss 更早輸），這是常數做不到的。
+pub fn plan_spd(n : Int, bits : Int) -> AccelPlan {
+  let nn = n.to_int64()
+  let core = nn * nn * nn / 3L
+  let w = words_of_bits(n * (bits + 4) / 2)
+  let pred_base = core * w * w
+  let k = (n * (bits + 4) + 30) / 31
+  let kk = k.to_int64()
+  let pred_fast = kk * (core + nn * nn) + nn * kk * kk * 48L / 100L
+  decide(
+    "正定判定",
+    pred_base,
+    pred_fast,
+    "Bareiss 中間量 ≈ " +
+    (n * (bits + 4) / 2).to_string() +
+    " 位元（" +
+    w.to_string() +
+    " 字）；CRT 需 " +
+    k.to_string() +
+    " 個素數",
+  )
+}
+
+///| （隔離標記）本函式全專案未被呼叫，但依賴本套件私有內部，故留在原處。
+
+///|
+/// 篩：驗證 f·g = h（整係數）是否可能成立。回傳 false ⇒ 必不成立。
+pub fn screen_poly_mul(
+  a : Array[BigInt],
+  b : Array[BigInt],
+  h : Array[BigInt],
+  p : Int64,
+  pts : Int,
+  rng : Rng,
+  c : Cost,
+) -> Bool {
+  let ctx = FpCtx::make(p)
+  let pb = BigInt::from_int64(p)
+  for v in a {
+    c.wmul = c.wmul + big_words(v)
+    c.bigops = c.bigops + 1L
+  }
+  for v in b {
+    c.wmul = c.wmul + big_words(v)
+    c.bigops = c.bigops + 1L
+  }
+  for v in h {
+    c.wmul = c.wmul + big_words(v)
+    c.bigops = c.bigops + 1L
+  }
+  let fa = Array::makei(a.length(), i => normmod((a[i] % pb).to_int64(), p))
+  let fb = Array::makei(b.length(), i => normmod((b[i] % pb).to_int64(), p))
+  let fh = Array::makei(h.length(), i => normmod((h[i] % pb).to_int64(), p))
+  let mut okall = true
+  for _k in 0..<pts {
+    let t = normmod(rng.next_below(1000000).to_int64(), p)
+    let va = fpp_eval(fa, t, ctx)
+    let vb = fpp_eval(fb, t, ctx)
+    let vh = fpp_eval(fh, t, ctx)
+    if ctx.mul(va, vb) != vh {
+      okall = false
+      break
+    }
+  }
+  c.absorb_fp(ctx)
+  okall
 }

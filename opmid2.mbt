@@ -326,12 +326,6 @@ pub let g_unimemo : UniMemo = {
 }
 
 ///|
-/// 記憶體化之命中／未命中／是否有值。
-pub fn uni_memo_stats() -> (Int, Int, Bool) {
-  (g_unimemo.uhits, g_unimemo.umiss, g_unimemo.uhas)
-}
-
-///|
 /// 一元規則表（記憶體化）。
 ///
 /// ## 為何這裡可以記憶體化，而且不會讓任何主張變成恆真
@@ -575,25 +569,6 @@ pub fn uni_control_with(tbl : Array[UniRule], rng : Rng) -> (Int, Int) {
     }
   }
   (tot, broken)
-}
-
-///|
-/// 指紋。
-pub fn uni_digest(rng : Rng) -> String {
-  let (n, h, i, s, td, ts, w) = uni_scan(rng)
-  n.to_string() +
-  ":" +
-  h.to_string() +
-  ":" +
-  i.to_string() +
-  ":" +
-  s.to_string() +
-  ":" +
-  td.to_string() +
-  ":" +
-  ts.to_string() +
-  ":" +
-  w.to_string()
 }
 
 ///|

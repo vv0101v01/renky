@@ -333,12 +333,6 @@ pub fn spec_scan(rng : Rng) -> (Int, Int, Int, Int64, Int64, Int, Int) {
 }
 
 ///|
-/// 逐形狀之增益表：(形狀, 試驗數, 通用成本, 特化成本)。
-pub fn spec_by_shape(rng : Rng) -> Array[(String, Int, Int64, Int64)] {
-  spec_report(rng).shapes
-}
-
-///|
 /// 規範化對派工的影響（N-53 → N-54 的接點）：
 /// 同一式，量「原式特化」與「規範化後特化」的成本。
 /// 回傳 (式數, 規範化後更便宜之數, 原式總成本, 規範後總成本, 一致數)。
@@ -381,25 +375,6 @@ pub fn spec_should(e : SpaceExpr) -> Bool {
 }
 
 ///|
-/// 判準之混淆表：(判走且確實贏, 判走但輸, 判不走但其實會贏, 判不走且確實不贏)。
-pub fn spec_confusion(rng : Rng) -> (Int, Int, Int, Int) {
-  spec_report(rng).cs
-}
-
-///|
-/// 指紋：語料條數、形狀序列、兩路成本。
-pub fn spec_digest(rng : Rng) -> String {
-  let (t, same, _, c1, c2, _, _) = spec_scan(rng)
-  t.to_string() +
-  ":" +
-  same.to_string() +
-  ":" +
-  c1.to_string() +
-  ":" +
-  c2.to_string()
-}
-
-///|
 /// 精煉判準：把實測找到的唯一一個誤判收進來。
 ///
 /// 命題 N54-4（扭曲於葉子上不划算，且與右端個數有關）：
@@ -417,14 +392,4 @@ pub fn spec_should_k(e : SpaceExpr, k : Int) -> Bool {
       }
     other => spec_has_path(other)
   }
-}
-
-///|
-/// 兩個判準在同一組試驗（每式 k = 1 與 k = 3）上的混淆表。
-/// 回傳 ((結構判準 tp,fp,fn,tn), (精煉判準 tp,fp,fn,tn), 試驗數)。
-pub fn spec_confusion_pair(
-  rng : Rng,
-) -> ((Int, Int, Int, Int), (Int, Int, Int, Int), Int) {
-  let r = spec_report(rng)
-  (r.cs, r.cr, r.trials)
 }

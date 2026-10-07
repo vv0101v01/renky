@@ -368,19 +368,6 @@ pub fn[F : Scalar] mpoly_space(
 }
 
 ///|
-/// 由指數向量與係數造多項式（方便測試）
-pub fn[F : Scalar] mpoly_of(
-  m : Int,
-  items : Array[(Array[Int], F)],
-) -> MPoly[F] {
-  let ts : Array[Term[F]] = []
-  for it in items {
-    ts.push({ expo: it.0, tc: it.1, })
-  }
-  mp_normalize(m, ts)
-}
-
-///|
 /// 線性替換 f ↦ f∘A（A 為 m×m 矩陣，xᵢ ↦ Σ_j a_{ij} x_j）
 /// 用於驗證 Bombieri 內積之么正不變性（命題 BW2）。
 pub fn[F : Scalar] mpoly_subst(f : MPoly[F], a : Mat[F]) -> MPoly[F] {
@@ -409,4 +396,19 @@ pub fn[F : Scalar] mpoly_subst(f : MPoly[F], a : Mat[F]) -> MPoly[F] {
     acc = acc.mpadd(p.mpscale(t.tc))
   }
   acc
+}
+
+///| （隔離標記）本函式全專案未被呼叫，但依賴本套件私有內部，故留在原處。
+
+///|
+/// 由指數向量與係數造多項式（方便測試）
+pub fn[F : Scalar] mpoly_of(
+  m : Int,
+  items : Array[(Array[Int], F)],
+) -> MPoly[F] {
+  let ts : Array[Term[F]] = []
+  for it in items {
+    ts.push({ expo: it.0, tc: it.1, })
+  }
+  mp_normalize(m, ts)
 }

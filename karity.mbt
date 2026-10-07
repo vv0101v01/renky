@@ -474,49 +474,6 @@ pub struct KLaw {
 }
 
 ///|
-/// 【演算法】k 元定律掃描：固定一組因子，對 (Φ, ⊙) 全掃。
-///
-/// 只掃 C = ⊗ —— ⊕ 的 k 元鏈是分塊對角，組裝零成本，結合順序無意義；
-/// ⊞ 的 k 元鏈需要另一套成本模型（Σ 與 ⊗ 混用），本輪不處理。
-/// 不處理的理由寫在這裡，而不是讓它悄悄缺席。
-pub fn klaw_scan(dims : Array[Int], rng : Rng, tree : AssocTree) -> Array[KLaw] {
-  let parts : Array[Mat[Q]] = []
-  for d in dims {
-    parts.push(rand_gram(rng, d))
-  }
-  let out : Array[KLaw] = []
-  let pairs : Array[(String, String)] = [
-    ("inv", "⊗"),
-    ("sq", "⊗"),
-    ("cube", "⊗"),
-    ("tr̃ans", "⊗"),
-    ("adj", "⊗ₛ"),
-    ("det", "^"),
-    ("trace", "·"),
-    ("rank", "·"),
-  ]
-  for pr in pairs {
-    let (ph, rl) = pr
-    match check_law_k(ph, "⊗", rl, parts, tree) {
-      Some(v) =>
-        out.push({
-          kname: ph + " / ⊗^" + dims.length().to_string() + " / " + rl,
-          kk: dims.length(),
-          kverd: v.kholds,
-          kg: v.kgain(),
-          kasmfrac: if v.kbase <= 0L {
-            0.0
-          } else {
-            v.kasm.to_double() / v.kbase.to_double()
-          },
-        })
-      None => ()
-    }
-  }
-  out
-}
-
-///|
 /// k = 2 退化性檢查（命題 202-2）。
 ///
 /// 對定律表的全部 72 個候選，逐一比較二元路徑與 k 元路徑的**輸出矩陣**
@@ -580,4 +537,49 @@ pub fn karity_degenerate_diff(
     }
   }
   bad
+}
+
+///| （隔離標記）本函式全專案未被呼叫，但依賴本套件私有內部，故留在原處。
+
+///|
+/// 【演算法】k 元定律掃描：固定一組因子，對 (Φ, ⊙) 全掃。
+///
+/// 只掃 C = ⊗ —— ⊕ 的 k 元鏈是分塊對角，組裝零成本，結合順序無意義；
+/// ⊞ 的 k 元鏈需要另一套成本模型（Σ 與 ⊗ 混用），本輪不處理。
+/// 不處理的理由寫在這裡，而不是讓它悄悄缺席。
+pub fn klaw_scan(dims : Array[Int], rng : Rng, tree : AssocTree) -> Array[KLaw] {
+  let parts : Array[Mat[Q]] = []
+  for d in dims {
+    parts.push(rand_gram(rng, d))
+  }
+  let out : Array[KLaw] = []
+  let pairs : Array[(String, String)] = [
+    ("inv", "⊗"),
+    ("sq", "⊗"),
+    ("cube", "⊗"),
+    ("tr̃ans", "⊗"),
+    ("adj", "⊗ₛ"),
+    ("det", "^"),
+    ("trace", "·"),
+    ("rank", "·"),
+  ]
+  for pr in pairs {
+    let (ph, rl) = pr
+    match check_law_k(ph, "⊗", rl, parts, tree) {
+      Some(v) =>
+        out.push({
+          kname: ph + " / ⊗^" + dims.length().to_string() + " / " + rl,
+          kk: dims.length(),
+          kverd: v.kholds,
+          kg: v.kgain(),
+          kasmfrac: if v.kbase <= 0L {
+            0.0
+          } else {
+            v.kasm.to_double() / v.kbase.to_double()
+          },
+        })
+      None => ()
+    }
+  }
+  out
 }

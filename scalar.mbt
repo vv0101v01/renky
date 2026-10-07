@@ -82,47 +82,6 @@ pub fn[F : Scalar] ssub(a : F, b : F) -> F {
 }
 
 ///|
-/// a / b ≔ a · b⁻¹（b = 0 回 None）
-pub fn[F : Scalar] sdiv(a : F, b : F) -> F? {
-  match F::s_inv(b) {
-    Some(ib) => Some(F::s_mul(a, ib))
-    None => None
-  }
-}
-
-///|
-/// |a|² = a·‾a ∈ P ∪ {0}
-pub fn[F : Scalar] sabs2(a : F) -> F {
-  F::s_mul(a, F::s_conj(a))
-}
-
-///|
-/// Σ aᵢ
-pub fn[F : Scalar] ssum(xs : Array[F]) -> F {
-  let mut acc = F::s_zero()
-  for x in xs {
-    acc = F::s_add(acc, x)
-  }
-  acc
-}
-
-///|
-/// Π aᵢ
-pub fn[F : Scalar] sprod(xs : Array[F]) -> F {
-  let mut acc = F::s_one()
-  for x in xs {
-    acc = F::s_mul(acc, x)
-  }
-  acc
-}
-
-///|
-/// n · a（ℤ‑模結構）
-pub fn[F : Scalar] sntimes(n : Int, a : F) -> F {
-  F::s_mul(F::s_from_int(n), a)
-}
-
-///|
 /// aⁿ（快速冪，n ≥ 0）
 pub fn[F : Scalar] spow(a : F, n : Int) -> F {
   let mut acc = F::s_one()
@@ -154,21 +113,6 @@ pub fn[F : Scalar] sis_pos(a : F) -> Bool {
 /// 是否為非負實元素
 pub fn[F : Scalar] sis_nonneg(a : F) -> Bool {
   sis_real(a) && F::s_cmp_re(a, F::s_zero()) >= 0
-}
-
-///|
-/// 1/2 ∈ 𝔽（特徵 0 ⇒ 2 可逆；極化恆等式需要）
-pub fn[F : Scalar] shalf() -> F {
-  F::s_from_frac(1, 2)
-}
-
-///|
-/// 虛數單位 i（若 𝔽 不含 i 則回 None）
-pub fn[F : Scalar] simag_unit() -> F? {
-  // i 之特徵：i² = −1
-  let cand = F::s_from_frac(0, 1)
-  ignore(cand)
-  None
 }
 
 // ---------------------------------------------------------------------------

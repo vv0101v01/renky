@@ -9,7 +9,9 @@
 
 ///|
 fn main {
-  let spec = @hilbert.obl_demo_spec()
+  // 【第二十一輪】規格由 DSL 編譯而來，不再手寫結構。
+  // DSL 原始碼見 @hilbert.dsl_law_source()；編譯器見 dsl.mbt。
+  let spec = @hilbert.dsl_demo_spec()
   match @hilbert.gen_oblig_src(spec) {
     Some(src) => println(src)
     None =>

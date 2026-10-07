@@ -390,27 +390,3 @@ pub fn canon_scan(rng : Rng) -> (Int, Int, Int, Int) {
   }
   (corpus.length(), snd, stb, moved)
 }
-
-///|
-/// 指紋。
-pub fn midend2_digest(rng : Rng) -> String {
-  let (n, _, ch, sm, dr, ta, td) = rw_dp_scan(rng)
-  let (_, snd, stb, mv) = canon_scan(rng)
-  n.to_string() +
-  ":" +
-  ch.to_string() +
-  ":" +
-  sm.to_string() +
-  ":" +
-  dr.to_string() +
-  ":" +
-  ta.to_string() +
-  ":" +
-  td.to_string() +
-  ":" +
-  snd.to_string() +
-  ":" +
-  stb.to_string() +
-  ":" +
-  mv.to_string()
-}

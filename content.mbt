@@ -391,27 +391,3 @@ pub fn content_scan_std(rng : Rng) -> Array[Verdict47] {
   }
   cont_cache[0]
 }
-
-///|
-/// 可讀輸出（供 cmd/lawsearch）
-pub fn content_table(xs : Array[Verdict47]) -> String {
-  let lines : Array[String] = []
-  lines.push("複合律\t原裁決\t空洞\t全函式裁決\t恆值？")
-  for x in xs {
-    if !x.vold && !x.vnew {
-      continue
-    }
-    lines.push(
-      x.vname +
-      "\t" +
-      (if x.vold { "成立" } else { "推翻" }) +
-      "\t" +
-      x.vbot.to_string() +
-      "\t" +
-      (if x.vnew { "成立" } else { "**推翻**" }) +
-      "\t" +
-      (if x.vconst { "恆值" } else { "有內容" }),
-    )
-  }
-  lines.join("\n")
-}

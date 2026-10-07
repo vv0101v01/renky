@@ -15,12 +15,6 @@ pub fn[F : Scalar] arr_add(a : Array[F], b : Array[F]) -> Array[F] {
 }
 
 ///|
-/// 座標向量減法
-pub fn[F : Scalar] arr_sub(a : Array[F], b : Array[F]) -> Array[F] {
-  Array::makei(a.length(), i => ssub(a[i], b[i]))
-}
-
-///|
 /// 座標向量取負
 pub fn[F : Scalar] arr_neg(a : Array[F]) -> Array[F] {
   Array::makei(a.length(), i => F::s_neg(a[i]))

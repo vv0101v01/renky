@@ -497,18 +497,6 @@ pub fn rcompose_confusion_dom(xs : Array[RCompLaw]) -> (Int, Int, Int, Int) {
 }
 
 ///|
-/// 帶退化樣本（兩側皆零）之成立裁決數 —— ℝ 軌版的「沒有內容」
-pub fn rcompose_degen_count(xs : Array[RCompLaw]) -> Int {
-  let mut k = 0
-  for x in xs {
-    if x.yholds && x.ydegen > 0 {
-      k = k + 1
-    }
-  }
-  k
-}
-
-///|
 /// 依名查複合律。
 pub fn rcomp_find(xs : Array[RCompLaw], name : String) -> RCompLaw? {
   for x in xs {

@@ -369,20 +369,3 @@ pub fn ek_control(rng : Rng) -> (Int, Int) {
   }
   (tot, caught)
 }
-
-///|
-/// 指紋。
-pub fn ek_digest(rng : Rng) -> String {
-  let (n, same, td, ts, win, lose) = ek_scan(rng)
-  n.to_string() +
-  ":" +
-  same.to_string() +
-  ":" +
-  td.to_string() +
-  ":" +
-  ts.to_string() +
-  ":" +
-  win.to_string() +
-  ":" +
-  lose.to_string()
-}

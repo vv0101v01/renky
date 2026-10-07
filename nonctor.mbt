@@ -275,22 +275,3 @@ pub fn quotient_not_a_rule(rng : Rng) -> (Int, Int) {
   }
   (tot, wrong)
 }
-
-///|
-/// 指紋。
-pub fn nonctor_digest() -> String {
-  let rows = nonctor_scan()
-  let mut s = ""
-  for r in rows {
-    s = s +
-      r.1.to_string() +
-      "/" +
-      r.2.to_string() +
-      "/" +
-      r.3.to_string() +
-      "/" +
-      r.4.to_string() +
-      ";"
-  }
-  s
-}

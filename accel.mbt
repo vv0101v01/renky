@@ -559,31 +559,6 @@ pub fn screen_matmul(
   same
 }
 
-///|
-/// 整數矩陣恆等式之單素數篩（逐項比較像）。
-pub fn screen_zeq(
-  a : Array[Array[BigInt]],
-  b : Array[Array[BigInt]],
-  p : Int64,
-  c : Cost,
-) -> Bool {
-  let ctx = FpCtx::make(p)
-  charge_reduce_rows(c, a)
-  charge_reduce_rows(c, b)
-  let fa = fp_of_big(a, ctx)
-  let fb = fp_of_big(b, ctx)
-  c.absorb_fp(ctx)
-  if fa.fr != fb.fr || fa.fc != fb.fc {
-    return false
-  }
-  for i in 0..<fa.fd.length() {
-    if fa.fd[i] != fb.fd[i] {
-      return false
-    }
-  }
-  true
-}
-
 // ===========================================================================
 //  ℚ 層（L 群）：Fp 影像 + 有理數重建 + 事後憑證
 // ===========================================================================
@@ -1569,4 +1544,31 @@ pub fn accel_bench_table() -> Array[AccelStat] {
     certified: same14,
   })
   rows
+}
+
+///| （隔離標記）本函式全專案未被呼叫，但依賴本套件私有內部，故留在原處。
+
+///|
+/// 整數矩陣恆等式之單素數篩（逐項比較像）。
+pub fn screen_zeq(
+  a : Array[Array[BigInt]],
+  b : Array[Array[BigInt]],
+  p : Int64,
+  c : Cost,
+) -> Bool {
+  let ctx = FpCtx::make(p)
+  charge_reduce_rows(c, a)
+  charge_reduce_rows(c, b)
+  let fa = fp_of_big(a, ctx)
+  let fb = fp_of_big(b, ctx)
+  c.absorb_fp(ctx)
+  if fa.fr != fb.fr || fa.fc != fb.fc {
+    return false
+  }
+  for i in 0..<fa.fd.length() {
+    if fa.fd[i] != fb.fd[i] {
+      return false
+    }
+  }
+  true
 }

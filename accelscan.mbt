@@ -247,36 +247,6 @@ pub fn acc_scan_counter() -> (Int, Int, Double, Double, Int) {
 }
 
 ///|
-/// 重構後掃描：L-05′ 與 L-08′ 各跑小網格。
-/// 回傳 (格數, 全部正確數, L-05′ 最小增益, L-08′ 最小增益, 輸的格數)。
-pub fn acc_scan_fixed() -> (Int, Int, Double, Double, Int) {
-  let mut tot = 0
-  let mut ok = 0
-  let mut g5 = 1.0e18
-  let mut g8 = 1.0e18
-  let mut lose = 0
-  for s in acc_grid_small() {
-    for cell in [acc_cell_l05p(s.0 + 2, s.1), acc_cell_l08p(s.0, s.1)] {
-      tot = tot + 1
-      if cell.acok {
-        ok = ok + 1
-      }
-      let g = cell.gain()
-      if g <= 1.0 {
-        lose = lose + 1
-      }
-      if cell.accode == "L-05′" && g < g5 {
-        g5 = g
-      }
-      if cell.accode == "L-08′" && g < g8 {
-        g8 = g
-      }
-    }
-  }
-  (tot, ok, g5, g8, lose)
-}
-
-///|
 /// ν 是主因子之直接證據：同一個問題、同一組素數，只改「重建幾個數」。
 /// 回傳 (ν_舊, ν_新, 字乘_舊, 字乘_新, 增益比)。
 pub fn acc_nu_evidence(n : Int, bits : Int) -> (Int, Int, Int64, Int64, Double) {

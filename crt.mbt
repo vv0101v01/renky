@@ -359,23 +359,6 @@ pub fn zrows_mul(
 }
 
 ///|
-/// 整數矩陣 × 整數向量。
-pub fn zrows_mulvec(
-  a : Array[Array[BigInt]],
-  x : Array[BigInt],
-) -> Array[BigInt] {
-  let out : Array[BigInt] = []
-  for row in a {
-    let mut s = 0N
-    for j in 0..<row.length() {
-      s = s + row[j] * x[j]
-    }
-    out.push(s)
-  }
-  out
-}
-
-///|
 /// 整數列陣之最大位元長度（量度「係數膨脹」）。
 pub fn zrows_maxbits(a : Array[Array[BigInt]]) -> Int {
   let mut m = 0
@@ -399,21 +382,6 @@ pub fn qmat_bits(a : Mat[Q]) -> Int {
     for j in 0..<a.mcols {
       let q = a.at(i, j)
       let b = big_bits(q.num) + big_bits(q.den)
-      if b > m {
-        m = b
-      }
-    }
-  }
-  m
-}
-
-///|
-/// 整數列陣之資料位元寬。
-pub fn zrows_bits(a : Array[Array[BigInt]]) -> Int {
-  let mut m = 1
-  for row in a {
-    for v in row {
-      let b = big_bits(v)
       if b > m {
         m = b
       }

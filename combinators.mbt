@@ -111,6 +111,36 @@ pub fn[A, B, F : Scalar] tensor_space(
 }
 
 ///|
+/// 張量積，因子 Gram 由呼叫端提供。
+///
+/// 【為何需要】`tensor_space(p,q)` 內部呼叫 `gram_of_space(p)` 與
+/// `gram_of_space(q)`，而後者以 d² 次內積呼叫重建因子的 Gram（Θ(d³)）。
+/// 在一張 45 × 45 的配對表裡，同一個因子的 Gram 會被重算 45 次 ——
+/// 這是純粹的共用子式重複，與「張量積怎麼定義」無關。
+///
+/// 【定理】若 g1 = gram_of_space(p) 且 g2 = gram_of_space(q)，則
+/// `tensor_space_g(p,q,g1,g2)` 與 `tensor_space(p,q)` 回傳**同一個**
+/// 內積空間（維數相同、Gram 逐元相同、內積函數由同一個 coord_ipspace
+/// 產生）。證明：`tensor_space` 的輸出只透過 g1、g2 依賴 p、q，
+/// 其餘部分逐字相同。∎（N-84 之義務在 45 個空間上逐對核對）
+pub fn[A, B, F : Scalar] tensor_space_g(
+  p : IPSpace[A, F],
+  q : IPSpace[B, F],
+  g1 : Mat[F],
+  g2 : Mat[F],
+) -> IPSpace[Array[F], F] {
+  let d1 = p.vs.dim
+  let d2 = q.vs.dim
+  let g = mkron(g1, g2)
+  let sp = coord_ipspace(p.vs.vname + " ⊗ " + q.vs.vname, d1 * d2, Some(g))
+  {
+    vs: sp.vs,
+    ipname: "⟨x₁⊗x₂,y₁⊗y₂⟩ = ⟨x₁,y₁⟩⟨x₂,y₂⟩（Gram = G₁⊗G₂）",
+    inner: sp.inner,
+  }
+}
+
+///|
 /// 純張量 x ⊗ y 之座標（外積）
 pub fn[A, B, F : Scalar] tensor_pure(
   p : IPSpace[A, F],

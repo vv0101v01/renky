@@ -110,6 +110,8 @@ pub fn binom_i(Int, Int) -> Int64
 
 pub fn bitrev_index(Int, Int) -> Int
 
+pub fn c21_scan(Rng, Int) -> C21Report
+
 pub fn c7_blind_pred(Int, Mat[Q], Cost) -> Bool
 
 pub fn c7_braid_witness(Int, Int, Int, Mat[Q], Mat[Q]) -> Bool
@@ -250,6 +252,10 @@ pub fn comb14_registry() -> Array[CombRec]
 
 pub fn comb14_stats() -> (Int, Int, Int, Int, Int, Int, String)
 
+pub fn comb21_new() -> Array[CombRec]
+
+pub fn comb35_registry() -> Array[CombRec]
+
 pub fn comb7_digest() -> String
 
 pub fn comb7_dim_stats() -> (Int, Int, Int)
@@ -274,13 +280,25 @@ pub fn comb7_spd(SpaceRec, CombRec) -> Bool
 
 pub fn comb_by_name(String) -> ((Mat[Q], Mat[Q]) -> Mat[Q])?
 
+pub fn comb_clamp_k(Int, Int) -> Int
+
+pub fn comb_diag_scale(Int) -> Mat[Q]
+
 pub fn comb_embed(Int, Int) -> Mat[Q]
 
 pub fn comb_half_sel(Int) -> Mat[Q]
 
 pub fn comb_partner() -> SpaceExpr
 
+pub fn comb_partner3() -> SpaceExpr
+
 pub fn comb_registry() -> Array[(String, (Mat[Q], Mat[Q]) -> Mat[Q])]
+
+pub fn comb_rev_perm(Int) -> Mat[Q]
+
+pub fn comb_sel_odd(Int) -> Mat[Q]
+
+pub fn comb_sel_range(Int, Int, Int) -> Mat[Q]
 
 pub fn comb_src(String, String, String) -> String?
 
@@ -744,15 +762,23 @@ pub fn kron_assoc_elem(Mat[Q], Mat[Q], Mat[Q]) -> Bool
 
 pub fn kron_bilinear(Mat[Q], Mat[Q], Array[Q], Array[Q]) -> Q
 
+pub fn[F : Scalar] kron_bilinear_s_noconj(Mat[F], Mat[F], Array[F], Array[F]) -> F
+
 pub fn kron_det_modp(Mat[Q], Mat[Q], FpCtx) -> Int64?
 
 pub fn kron_ldlt_check(Mat[Q], Mat[Q], Mat[Q], Mat[Q], Array[Q], Array[Q], Array[Q]) -> Bool
 
 pub fn kron_ldlt_diag(Array[Q], Array[Q]) -> Array[Q]
 
+pub fn kron_ldlt_elem(Mat[Q], Mat[Q], Mat[Q], Mat[Q], Array[Q], Array[Q]) -> (Bool, Bool)
+
 pub fn kron_matvec(Cost, Array[Mat[Double]], Array[Double]) -> Array[Double]
 
 pub fn kron_matvec_q(Mat[Q], Mat[Q], Array[Q]) -> Array[Q]
+
+pub fn[F : Scalar] kron_matvec_s(Mat[F], Mat[F], Array[F]) -> Array[F]
+
+pub fn[F : Scalar] kron_sesq(Mat[F], Mat[F], Array[F], Array[F]) -> F
 
 pub fn kron_sum(Mat[Double], Mat[Double]) -> Mat[Double]
 
@@ -1423,6 +1449,10 @@ pub fn ob_n84() -> Check
 pub fn ob_n85() -> Check
 
 pub fn ob_n86() -> Check
+
+pub fn ob_n87() -> Check
+
+pub fn ob_n88() -> Check
 
 pub fn ob_rng() -> Rng
 
@@ -2132,6 +2162,8 @@ pub fn[A, B, F : Scalar] tensor_space_g(IPSpace[A, F], IPSpace[B, F], Mat[F], Ma
 
 pub fn tensor_space_lazy(IPSpace[Array[Q], Q], IPSpace[Array[Q], Q], Mat[Q], Mat[Q]) -> IPSpace[Array[Q], Q]
 
+pub fn[A, B, F : Scalar] tensor_space_lazy_s(IPSpace[A, F], IPSpace[B, F], Mat[F], Mat[F]) -> IPSpace[Array[F], F]
+
 pub fn tinv_best(SpaceExpr) -> Int64
 
 pub fn tinv_best2(SpaceExpr) -> (Int64, Int64)
@@ -2357,6 +2389,21 @@ pub fn AssocTree::anodes(Self) -> Int
 pub fn AssocTree::aprod(Self, Array[Int]) -> Int64
 pub fn AssocTree::kscost(Self, Array[Int]) -> Int64
 
+pub struct C21Report {
+  w5cells : Int
+  w5sym : Int
+  w5dim : Int
+  w5spd : Int
+  w5nonzero : Int
+  w5cs : Int
+  w5rz : Int
+  w5rzrun : Int
+  w5inst : Int
+  w5dmax : Int
+  w5dsum : Int
+  w5digest : String
+}
+
 pub struct C7Cell {
   k7c : String
   k7s : String
@@ -2517,6 +2564,9 @@ pub struct FLaw {
   l7assoc_run : Int
   l7dimtri : Int
   l7dimtot : Int
+  l7axis0 : Int
+  l7axis1 : Int
+  l7axis2 : Int
 }
 
 pub struct FPre {

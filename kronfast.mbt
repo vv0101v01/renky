@@ -471,3 +471,182 @@ pub fn bdiag_assoc_elem(a : Mat[Q], b : Mat[Q], c : Mat[Q]) -> Bool {
   // 以實際建構之兩種括號法對帳（小階，仍物化但階數為 na+nb+nc ≤ 36）
   qblock_diag(qblock_diag(a, b), c).equals(qblock_diag(a, qblock_diag(b, c)))
 }
+
+// ---------------------------------------------------------------------------
+//  §25.6 第 2 筆：複數軌
+// ---------------------------------------------------------------------------
+
+///|
+/// (A ⊗ B)·x 之一般純量版（定理 K-1），對任何 `Scalar` 皆成立。
+///
+/// 第十四輪的 `kron_matvec_q` 只服務 ℚ 軌；本式以 `Scalar` 為界，
+/// 故 ℂ（`Cpx[Q]`）亦可用。證明與 K-1 相同 —— 推導只用到
+/// 結合律、分配律與乘法交換，不涉及共軛。
+pub fn[F : Scalar] kron_matvec_s(
+  a : Mat[F],
+  b : Mat[F],
+  x : Array[F],
+) -> Array[F] {
+  let na = a.mrows
+  let nb = b.mrows
+  let t : Array[Array[F]] = Array::makei(na, _ => {
+    Array::makei(nb, _ => F::s_zero())
+  })
+  for k in 0..<na {
+    for l in 0..<nb {
+      let mut acc = F::s_zero()
+      for j in 0..<nb {
+        acc = F::s_add(acc, F::s_mul(x[k * nb + j], b.at(l, j)))
+      }
+      t[k][l] = acc
+    }
+  }
+  let out : Array[F] = Array::makei(na * nb, _ => F::s_zero())
+  for i in 0..<na {
+    for k in 0..<na {
+      let aik = a.at(i, k)
+      if !F::s_is_zero(aik) {
+        for l in 0..<nb {
+          out[i * nb + l] = F::s_add(out[i * nb + l], F::s_mul(aik, t[k][l]))
+        }
+      }
+    }
+  }
+  out
+}
+
+///|
+/// Sesquilinear 形 ⟨x,y⟩ = Σ (A⊗B)[u][v]·x_u·conj(y_v)，不物化 A ⊗ B。
+///
+/// ## 為何不能沿用 ℚ 版
+///
+/// `coord_ipspace` 的內積約定是第二變數取共軛（`F::s_conj(b[j])`）。
+/// ℚ 的共軛是恆等，所以第十四輪的 ℚ 版看起來「剛好對」；
+/// 到了 ℂ 就不對了 —— 這不是效能差異，是**算出不同的數**。
+/// 故共軛必須顯式出現在式子裡：先對 y 取共軛再走 K-1。
+pub fn[F : Scalar] kron_sesq(
+  a : Mat[F],
+  b : Mat[F],
+  x : Array[F],
+  y : Array[F],
+) -> F {
+  let yc : Array[F] = Array::makei(y.length(), i => F::s_conj(y[i]))
+  let v = kron_matvec_s(a, b, yc)
+  let mut acc = F::s_zero()
+  for i in 0..<v.length() {
+    acc = F::s_add(acc, F::s_mul(x[i], v[i]))
+  }
+  acc
+}
+
+///|
+/// 惰性張量積空間（任意 `Scalar`，含 ℂ 軌），不物化 Gram。
+///
+/// 定理 K-4 之一般版：對 g1 = gram_of_space(p)、g2 = gram_of_space(q)，
+/// 本式與 `tensor_space(p,q)` 回傳同一個空間。
+pub fn[A, B, F : Scalar] tensor_space_lazy_s(
+  p : IPSpace[A, F],
+  q : IPSpace[B, F],
+  g1 : Mat[F],
+  g2 : Mat[F],
+) -> IPSpace[Array[F], F] {
+  let d1 = p.vs.dim
+  let d2 = q.vs.dim
+  let base : IPSpace[Array[F], F] = coord_ipspace(
+    p.vs.vname + " ⊗ " + q.vs.vname,
+    d1 * d2,
+    None,
+  )
+  {
+    vs: base.vs,
+    ipname: "⟨x₁⊗x₂,y₁⊗y₂⟩ = ⟨x₁,y₁⟩⟨x₂,y₂⟩（保持 Kronecker 結構，不物化 Gram）",
+    inner: (x, y) => kron_sesq(g1, g2, x, y),
+  }
+}
+
+// ---------------------------------------------------------------------------
+//  §25.6 第 4 筆：免物化的逐元驗證
+// ---------------------------------------------------------------------------
+
+///|
+/// ## 命題 K-6（Kronecker LDLᵀ 之逐元分解）
+///
+/// 記 u = u_a·n_B + u_b、v = v_a·n_B + v_b，則
+///
+/// ```text
+///   [(L_A⊗L_B)(D_A⊗D_B)(L_A⊗L_B)ᵀ][u][v]
+///     = Σ_{t_a,t_b} L_A[u_a][t_a]L_B[u_b][t_b]·D_A[t_a]D_B[t_b]·L_A[v_a][t_a]L_B[v_b][t_b]
+///     = (L_A D_A L_Aᵀ)[u_a][v_a] · (L_B D_B L_Bᵀ)[u_b][v_b]
+/// ```
+///
+/// 推論：全式逐元等於 A ⊗ B **⟺** 兩個因子各自 L D Lᵀ = 原矩陣。
+///
+/// 這把第十四輪的「隨機雙線性抽樣」換成完整覆蓋：因子側 Θ(n³) 逐元驗完，
+/// 乘積側的索引分解以 O(1) 每元驗完，兩者都不物化 n_An_B 階矩陣。
+/// 抽樣之所以原本難以取代，是因為「逐元驗證」被預設成要先有那個矩陣；
+/// 命題 K-6 說不必。
+///
+/// 回傳 (因子側是否逐元成立, 乘積側索引分解是否逐元成立)。
+pub fn kron_ldlt_elem(
+  a : Mat[Q],
+  b : Mat[Q],
+  la : Mat[Q],
+  lb : Mat[Q],
+  da : Array[Q],
+  db : Array[Q],
+) -> (Bool, Bool) {
+  // (1) 因子側：L D Lᵀ 逐元等於原矩陣。這一側是**完整**的 ——
+  //     由命題 K-6，乘積側逐元成立 ⟺ 兩個因子各自成立，
+  //     故因子側驗完即等於把 n_An_B 階的等式驗完，不必物化。
+  let prod = (l : Mat[Q], d : Array[Q]) => {
+    let n = l.mrows
+    Mat::build(n, n, (i, j) => {
+      let mut acc = Q::zero()
+      for t in 0..<n {
+        acc = acc.add(l.at(i, t).mul(d[t]).mul(l.at(j, t)))
+      }
+      acc
+    })
+  }
+  let pa = prod(la, da)
+  let pb = prod(lb, db)
+  let okfac = pa.equals(a) && pb.equals(b)
+  // (2) 索引分解側：驗證實作把 u 拆成 (u/n_B, u%n_B) 的方式與
+  //     命題 K-6 的推導一致。因子積已算好，故每元 O(1)。
+  let nb = b.mrows
+  let d = a.mrows * nb
+  let mut okidx = true
+  for u in 0..<d {
+    let ua = u / nb
+    let ub = u % nb
+    for v in 0..<d {
+      if !pa
+        .at(ua, v / nb)
+        .mul(pb.at(ub, v % nb))
+        .eq(a.at(ua, v / nb).mul(b.at(ub, v % nb))) {
+        okidx = false
+      }
+    }
+  }
+  (okfac, okidx)
+}
+
+///|
+/// 刻意**不取共軛**的雙線性型 —— 僅供 N-88 之兩側對照使用。
+///
+/// 在 ℚ 軌它與 `kron_sesq` 同值（ℚ 之共軛為恆等），
+/// 在 ℂ 軌它算出不同的數。這正是第十四輪的 ℚ 版無法直接服務
+/// 複數軌的原因：差別不是效能，是**算出不同的答案**。
+pub fn[F : Scalar] kron_bilinear_s_noconj(
+  a : Mat[F],
+  b : Mat[F],
+  x : Array[F],
+  y : Array[F],
+) -> F {
+  let v = kron_matvec_s(a, b, y)
+  let mut acc = F::s_zero()
+  for i in 0..<v.length() {
+    acc = F::s_add(acc, F::s_mul(x[i], v[i]))
+  }
+  acc
+}

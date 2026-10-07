@@ -508,9 +508,13 @@ pub struct FLaw {
   /// (P⊗Q)⊗R = P⊗(Q⊗R) 逐元相等（不需置換）
   l7assoc_ten : Int
   l7assoc_run : Int
-  /// 45³ = 91,125 個三元組之維數層檢查
+  /// 45³ 維數層檢查（第十五輪起恆為 0：該掃描已移除，見 f_law_scan 之說明）
   l7dimtri : Int
   l7dimtot : Int
+  /// 三軸各自完整：每個空間都在每個位置出現過之空間數（應皆為 |registry|）
+  l7axis0 : Int
+  l7axis1 : Int
+  l7axis2 : Int
 }
 
 ///|
@@ -573,24 +577,28 @@ pub fn f_law_scan(assoccap : Int) -> FLaw {
       }
     }
   }
-  // (0) 維數層：45³ = 91,125 個三元組全跑（純整數，約 1 ms）
-  let mut dimtri = 0
-  let mut dimtot = 0
-  for a in sps {
-    for b in sps {
-      for cc in sps {
-        dimtot = dimtot + 1
-        if a.sdim * (b.sdim + cc.sdim) == a.sdim * b.sdim + a.sdim * cc.sdim {
-          dimtri = dimtri + 1
-        }
-      }
-    }
-  }
+  // (0) 【第十五輪】45³ = 91,125 之維數層掃描**已移除**。
+  //     dim P·(dim Q + dim R) = dim P·dim Q + dim P·dim R 是整數乘法
+  //     的分配律，對任何三個正整數恆成立 —— 它不依賴 Gram、不依賴
+  //     空間，跑 91,125 次只是把同一條算術恆等式抄 91,125 遍。
+  //     它曾佔全庫實例數的 47.5%（191,716 中的 91,125），
+  //     而提供的訊號是 0。**實例數不是覆蓋率**，把恆真的東西
+  //     乘上組合數來充數，會讓這個指標失去意義。
+  //     維數公式之實質驗證在 N-81／N-87 逐格對帳 cdim 與 sdim。
+  let dimtri = 0
+  let dimtot = 0
   // (1) Gram 層：三軸各自完整 —— 任一軸可取遍 45 個空間，其餘兩軸為族代表。
   //     全 45³ 於 Gram 層實測約需 89 秒，故不跑；此設計保證**每一個空間
   //     都在每一個位置上出現過**，而不是只在第一個位置。
   let mut tri = 0
   let mut dist = 0
+  // 【第十五輪，§25.6 第 5 筆】三軸完整不再靠手寫布林式。
+  // 下面在掃描的同時記錄「每個空間是否真的在每個位置出現過」，
+  // 由 f_axis_complete 回報；義務據此斷言，故新增空間時若條件
+  // 失效會當場紅燈，而不是靜靜地少驗一軸。
+  let seen0 : Array[Bool] = Array::makei(sps.length(), _ => false)
+  let seen1 : Array[Bool] = Array::makei(sps.length(), _ => false)
+  let seen2 : Array[Bool] = Array::makei(sps.length(), _ => false)
   let mut wrong = 0
   let mut wrongable = 0
   let mut blind = 0
@@ -607,6 +615,9 @@ pub fn f_law_scan(assoccap : Int) -> FLaw {
           continue
         }
         tri = tri + 1
+        seen0[ip] = true
+        seen1[iq] = true
+        seen2[ir] = true
         let dp = p.sdim
         let dq = q.sdim
         let dr = r.sdim
@@ -656,5 +667,32 @@ pub fn f_law_scan(assoccap : Int) -> FLaw {
     l7assoc_run: arun,
     l7dimtri: dimtri,
     l7dimtot: dimtot,
+    l7axis0: {
+      let mut k = 0
+      for v in seen0 {
+        if v {
+          k = k + 1
+        }
+      }
+      k
+    },
+    l7axis1: {
+      let mut k = 0
+      for v in seen1 {
+        if v {
+          k = k + 1
+        }
+      }
+      k
+    },
+    l7axis2: {
+      let mut k = 0
+      for v in seen2 {
+        if v {
+          k = k + 1
+        }
+      }
+      k
+    },
   }
 }

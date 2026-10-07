@@ -63,7 +63,6 @@ pub fn f_family_reps() -> Array[SpaceRec] {
   out
 }
 
-
 // ---------------------------------------------------------------------------
 //  每空間之預算量
 //
@@ -87,7 +86,7 @@ pub struct FPre {
 pub fn f_precompute() -> Array[FPre] {
   let out : Array[FPre] = []
   for s in space_registry_x() {
-    out.push({ pdet: mdet(s.sg), ptr: s.sg.trace(), pspd: spd_bareiss(s.sg) })
+    out.push({ pdet: mdet(s.sg), ptr: s.sg.trace(), pspd: spd_bareiss(s.sg), })
   }
   out
 }
@@ -110,11 +109,7 @@ pub fn f_kron_at(gb : Mat[Q], ga : Mat[Q], x : Int, y : Int) -> Q {
 /// 故檢查置換等距不必物化 P、也不必做兩次 Θ(d³) 矩陣乘法 —— Θ(d²) 即可。
 /// 本庫在 N-82 用的是矩陣乘法版本；此處的指標版本在 d = 144 時
 /// 省下約 d/2 = 72 倍的工作。
-pub fn f_perm_congruent(
-  g1 : Mat[Q],
-  g2 : Mat[Q],
-  sigma : (Int) -> Int,
-) -> Bool {
+pub fn f_perm_congruent(g1 : Mat[Q], g2 : Mat[Q], sigma : (Int) -> Int) -> Bool {
   let d = g1.mrows
   if g2.mrows != d {
     return false
@@ -348,7 +343,9 @@ pub fn f_tensor_scan(rng : Rng, ipcap : Int, spdcap : Int) -> FReport {
       // 行列式恆等：只在小配對上直接算 det(A⊗B)，否則不算（不假裝算過）
       if d <= spdcap {
         ndetrun = ndetrun + 1
-        let want = qpow_fast(c, pre[ia].pdet, db).mul(qpow_fast(c, pre[ib].pdet, da))
+        let want = qpow_fast(c, pre[ia].pdet, db).mul(
+          qpow_fast(c, pre[ib].pdet, da),
+        )
         if mdet(g).eq(want) {
           ndet = ndet + 1
         }

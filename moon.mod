@@ -8,7 +8,7 @@ version = "0.1.2"
 
 readme = "README.md"
 
-repository = ""
+repository = "https://github.com/vv0101v01/renky"
 
 license = "Apache-2.0"
 

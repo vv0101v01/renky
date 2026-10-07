@@ -601,11 +601,9 @@ pub fn f_law_scan(assoccap : Int) -> FLaw {
   for ip, p in sps {
     for iq, q in sps {
       for ir, r in sps {
-        if !(
-            (isrep[iq] && isrep[ir]) ||
-            (isrep[ip] && isrep[ir]) ||
-            (isrep[ip] && isrep[iq]),
-          ) {
+        if !((isrep[iq] && isrep[ir]) ||
+          (isrep[ip] && isrep[ir]) ||
+          (isrep[ip] && isrep[iq])) {
           continue
         }
         tri = tri + 1
@@ -626,7 +624,7 @@ pub fn f_law_scan(assoccap : Int) -> FLaw {
             blind = blind + 1
           }
           // 盲點預測：相等 ⟺ G_P = G_Q
-          if caught == !(p.sg.equals(q.sg)) {
+          if caught == !p.sg.equals(q.sg) {
             blindok = blindok + 1
           }
         }

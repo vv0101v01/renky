@@ -37,7 +37,9 @@ pub fn kron_matvec_q(a : Mat[Q], b : Mat[Q], x : Array[Q]) -> Array[Q] {
   let na = a.mrows
   let nb = b.mrows
   // T = X · Bᵀ ：T[k][l] = Σ_j X[k][j]·B[l][j]
-  let t : Array[Array[Q]] = Array::makei(na, _ => Array::makei(nb, _ => Q::zero()))
+  let t : Array[Array[Q]] = Array::makei(na, _ => {
+    Array::makei(nb, _ => Q::zero())
+  })
   for k in 0..<na {
     for l in 0..<nb {
       let mut acc = Q::zero()
@@ -80,12 +82,7 @@ pub fn kron_bilinear(a : Mat[Q], b : Mat[Q], x : Array[Q], y : Array[Q]) -> Q {
 
 ///|
 /// 分塊對角 (A ⊕ B) 之雙線性型，不物化。
-pub fn bdiag_bilinear(
-  a : Mat[Q],
-  b : Mat[Q],
-  x : Array[Q],
-  y : Array[Q],
-) -> Q {
+pub fn bdiag_bilinear(a : Mat[Q], b : Mat[Q], x : Array[Q], y : Array[Q]) -> Q {
   let na = a.mrows
   let nb = b.mrows
   let mut acc = Q::zero()
@@ -282,24 +279,28 @@ pub fn distrib_elem_check(p : Mat[Q], q : Mat[Q], r : Mat[Q]) -> Bool {
   let d = dp * dm
   let npq = dp * dq
   // M = Q ⊕ R 之取元
-  let mat = (i : Int, j : Int) => if i < dq && j < dq {
-    q.at(i, j)
-  } else if i >= dq && j >= dq {
-    r.at(i - dq, j - dq)
-  } else {
-    Q::zero()
+  let mat = (i : Int, j : Int) => {
+    if i < dq && j < dq {
+      q.at(i, j)
+    } else if i >= dq && j >= dq {
+      r.at(i - dq, j - dq)
+    } else {
+      Q::zero()
+    }
   }
   // σ：左式指標 → 右式指標
   let sg = f_distrib_sigma(dp, dq, dr)
   // 右式 blockdiag(P⊗Q, P⊗R) 之取元
-  let rhs = (x : Int, y : Int) => if x < npq && y < npq {
-    p.at(x / dq, y / dq).mul(q.at(x % dq, y % dq))
-  } else if x >= npq && y >= npq {
-    let a = x - npq
-    let b = y - npq
-    p.at(a / dr, b / dr).mul(r.at(a % dr, b % dr))
-  } else {
-    Q::zero()
+  let rhs = (x : Int, y : Int) => {
+    if x < npq && y < npq {
+      p.at(x / dq, y / dq).mul(q.at(x % dq, y % dq))
+    } else if x >= npq && y >= npq {
+      let a = x - npq
+      let b = y - npq
+      p.at(a / dr, b / dr).mul(r.at(a % dr, b % dr))
+    } else {
+      Q::zero()
+    }
   }
   for u in 0..<d {
     let su = sg(u)
@@ -359,22 +360,26 @@ pub fn distrib_wrong_blind(p : Mat[Q], q : Mat[Q], r : Mat[Q]) -> Bool {
   let d = dp * dm
   let npq = dp * dq
   let sg = f_distrib_sigma(dp, dq, dr)
-  let mat = (i : Int, j : Int) => if i < dq && j < dq {
-    q.at(i, j)
-  } else if i >= dq && j >= dq {
-    r.at(i - dq, j - dq)
-  } else {
-    Q::zero()
+  let mat = (i : Int, j : Int) => {
+    if i < dq && j < dq {
+      q.at(i, j)
+    } else if i >= dq && j >= dq {
+      r.at(i - dq, j - dq)
+    } else {
+      Q::zero()
+    }
   }
   // 錯式：第二塊用 Q⊗R 而非 P⊗R
-  let wrong = (x : Int, y : Int) => if x < npq && y < npq {
-    p.at(x / dq, y / dq).mul(q.at(x % dq, y % dq))
-  } else if x >= npq && y >= npq {
-    let a = x - npq
-    let b = y - npq
-    q.at(a / dr, b / dr).mul(r.at(a % dr, b % dr))
-  } else {
-    Q::zero()
+  let wrong = (x : Int, y : Int) => {
+    if x < npq && y < npq {
+      p.at(x / dq, y / dq).mul(q.at(x % dq, y % dq))
+    } else if x >= npq && y >= npq {
+      let a = x - npq
+      let b = y - npq
+      q.at(a / dr, b / dr).mul(r.at(a % dr, b % dr))
+    } else {
+      Q::zero()
+    }
   }
   for u in 0..<d {
     let su = sg(u)
@@ -445,14 +450,16 @@ pub fn bdiag_assoc_elem(a : Mat[Q], b : Mat[Q], c : Mat[Q]) -> Bool {
   let nb = b.mrows
   let nc = c.mrows
   let d = na + nb + nc
-  let pick = (i : Int, j : Int) => if i < na && j < na {
-    a.at(i, j)
-  } else if i >= na && i < na + nb && j >= na && j < na + nb {
-    b.at(i - na, j - na)
-  } else if i >= na + nb && j >= na + nb {
-    c.at(i - na - nb, j - na - nb)
-  } else {
-    Q::zero()
+  let pick = (i : Int, j : Int) => {
+    if i < na && j < na {
+      a.at(i, j)
+    } else if i >= na && i < na + nb && j >= na && j < na + nb {
+      b.at(i - na, j - na)
+    } else if i >= na + nb && j >= na + nb {
+      c.at(i - na - nb, j - na - nb)
+    } else {
+      Q::zero()
+    }
   }
   for u in 0..<d {
     for v in 0..<d {

@@ -130,10 +130,12 @@ pub fn ob_n86() -> Check {
           }
           if tpos >= 0 {
             k2poisonable = k2poisonable + 1
-            let bad : Array[Q] = Array::makei(d, i => if i == tpos {
-              dd[i].add(Q::one())
-            } else {
-              dd[i]
+            let bad : Array[Q] = Array::makei(d, i => {
+              if i == tpos {
+                dd[i].add(Q::one())
+              } else {
+                dd[i]
+              }
             })
             if !kron_ldlt_check(a.sg, b.sg, la, lb, bad, x, y) {
               k2poison = k2poison + 1
@@ -168,7 +170,11 @@ pub fn ob_n86() -> Check {
       }
       k3n = k3n + 1
       let qd = mdet(mkron(a.sg, b.sg))
-      match (kron_det_modp(a.sg, b.sg, ctx), fp_of_q(Mat::build(1, 1, (_, _) => qd), ctx)) {
+      match
+        (
+          kron_det_modp(a.sg, b.sg, ctx),
+          fp_of_q(Mat::build(1, 1, (_, _) => qd), ctx),
+        ) {
         (Some(got), Some(qm)) => {
           if got == qm.get(0, 0) {
             k3ok = k3ok + 1

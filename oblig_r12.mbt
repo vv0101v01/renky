@@ -165,9 +165,9 @@ pub fn ob_n79() -> Check {
       Some(h) => h
       None => g
     }
-    if !(c7_hodge_fixed(gi)) {
+    if !c7_hodge_fixed(gi) {
       wrongable = wrongable + 1
-      if !(cfw_codim1(g, c).equals(fast)) {
+      if !cfw_codim1(g, c).equals(fast) {
         wrongcaught = wrongcaught + 1
       }
     }
@@ -187,10 +187,7 @@ pub fn ob_n79() -> Check {
   let rats : Array[Double] = []
   for m in [3, 4, 5, 6, 7, 8, 9, 10] {
     let aa = Mat::build(m, m, (_, _) => qr(rrng))
-    let gg = aa
-      .transpose()
-      .times(aa)
-      .plus(Mat::ident(m).scale(Q::of_int(m)))
+    let gg = aa.transpose().times(aa).plus(Mat::ident(m).scale(Q::of_int(m)))
     let ca2 = Cost::new()
     let _ = compound(gg, m - 1, ca2)
     let cb2 = Cost::new()
@@ -203,7 +200,7 @@ pub fn ob_n79() -> Check {
       mono = false
     }
   }
-  if !(mono) || rats[rats.length() - 1] < 5.0 {
+  if !mono || rats[rats.length() - 1] < 5.0 {
     ok = false
   }
   // 小 n 時封閉式反而較慢（要做一次完整反矩陣），這是真的，照實記
@@ -330,9 +327,9 @@ pub fn ob_n80() -> Check {
       idn = idn + 1
     }
     // 兩側對照：只作用一次對偶者，在 G ≠ I 的格必須被抓到
-    if !(c7_is_ident(g)) {
+    if !c7_is_ident(g) {
       singleable = singleable + 1
-      if !(cfw_bidual(g, c).equals(g)) {
+      if !cfw_bidual(g, c).equals(g) {
         single = single + 1
       }
     }

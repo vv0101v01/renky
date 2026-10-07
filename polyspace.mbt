@@ -21,6 +21,7 @@ pub struct Poly[F] {
 }
 
 ///|
+/// 由係數陣列造多項式（低次在前）。
 pub fn[F] Poly::of(c : Array[F]) -> Poly[F] {
   { coef: c, }
 }
@@ -91,6 +92,7 @@ pub fn[F : Scalar] Poly::psub(self : Poly[F], o : Poly[F]) -> Poly[F] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 多項式乘法（學校法；加速層另有 qpoly_mul）。
 pub fn[F : Scalar] Poly::pmul(self : Poly[F], o : Poly[F]) -> Poly[F] {
   let n = self.coef.length()
   let m = o.coef.length()
@@ -115,10 +117,17 @@ pub fn[F : Scalar] Poly::pmul(self : Poly[F], o : Poly[F]) -> Poly[F] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// Horner 求值 p(t)。
 pub fn[F : Scalar] Poly::eval(self : Poly[F], t : F) -> F {
   let mut acc = F::s_zero()
   for k = self.coef.length() - 1; k >= 0; k = k - 1 {
     acc = F::s_add(F::s_mul(acc, t), self.coef[k])
+  } where {
+    proof_invariant: k >= 0,
+    proof_invariant: k < self.coef.length(),
+    proof_reasoning: (
+      #| k 每輪減 1，下界為 −1，故至多 self.coef.length() 輪後終止（Horner 求值）。
+    ),
   }
   acc
 }
@@ -126,9 +135,15 @@ pub fn[F : Scalar] Poly::eval(self : Poly[F], t : F) -> F {
 ///|
 /// 合成 p∘q
 pub fn[F : Scalar] Poly::compose(self : Poly[F], q : Poly[F]) -> Poly[F] {
-  let mut acc : Poly[F] = { coef: [], }
+  let mut acc = Poly::{ coef: [], }
   for k = self.coef.length() - 1; k >= 0; k = k - 1 {
     acc = acc.pmul(q).padd({ coef: [self.coef[k]], })
+  } where {
+    proof_invariant: k >= 0,
+    proof_invariant: k < self.coef.length(),
+    proof_reasoning: (
+      #| k 每輪減 1，下界為 −1，故至多 self.coef.length() 輪後終止（合成由高次至常數項）。
+    ),
   }
   acc
 }
@@ -139,6 +154,7 @@ pub fn[F : Scalar] Poly::compose(self : Poly[F], q : Poly[F]) -> Poly[F] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 形式導數 p'(x)。
 pub fn[F : Scalar] Poly::deriv(self : Poly[F]) -> Poly[F] {
   let n = self.coef.length()
   if n <= 1 {
@@ -366,15 +382,16 @@ pub fn[F : Scalar] vandermonde_det_formula(nodes : Array[F]) -> F {
 // ---------------------------------------------------------------------------
 
 ///|
+/// Lagrange 插值：以節點值重建次數 < n 之多項式（Θ(n²)）。
 pub fn[F : Scalar] lagrange_interp(
   nodes : Array[F],
   values : Array[F],
 ) -> Poly[F] {
   let n = nodes.length()
-  let mut acc : Poly[F] = { coef: [F::s_zero()], }
+  let mut acc = Poly::{ coef: [F::s_zero()], }
   for k in 0..<n {
     // ℓ_k
-    let mut num : Poly[F] = { coef: [F::s_one()], }
+    let mut num = Poly::{ coef: [F::s_one()], }
     let mut den = F::s_one()
     for j in 0..<n {
       if j != k {
@@ -455,8 +472,9 @@ pub fn[F : Scalar] chebyshev_rec(n : Int) -> Array[Poly[F]] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 由根造多項式 Π (x − rᵢ)（領一化，見 J 群）。
 pub fn[F : Scalar] poly_from_roots(roots : Array[F]) -> Poly[F] {
-  let mut acc : Poly[F] = { coef: [F::s_one()], }
+  let mut acc = Poly::{ coef: [F::s_one()], }
   for r in roots {
     acc = acc.pmul({ coef: [F::s_neg(r), F::s_one()], })
   }
@@ -470,6 +488,7 @@ pub fn[F : Scalar] poly_from_roots(roots : Array[F]) -> Poly[F] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 微分算子於單項式基之矩陣（超對角為 1..n）。
 pub fn[F : Scalar] deriv_matrix(n : Int) -> Mat[F] {
   Mat::build(n, n, (i, j) => {
     if j == i + 1 {

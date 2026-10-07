@@ -346,7 +346,7 @@ pub fn apriori_verdict_table() -> Array[(String, Int, Int, Int64, Int64, Bool)] 
     // ── ℚ 線性解 ──
     let r2 = ob_rng()
     let a2 = qmat_bitwidth(r2, n, n, bits)
-    let bv = Array::makei(n, _ => Q::s_rand(r2))
+    let bv = Array::makei(n, _ => Scalar::s_rand(r2))
     let c3 = Cost::new()
     let s1 = qsolve_crt(a2, bv, ps, c3)
     let c4 = Cost::new()

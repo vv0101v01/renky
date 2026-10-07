@@ -244,6 +244,7 @@ fn in_suspects(o : String, i : String, c : String, r : String) -> Bool {
 }
 
 ///|
+/// 內容律（Λᵏ 與 det 之相容性）掃描；subset 控制是否用小子集。
 pub fn content_scan_sel(
   tbl : Array[LawCand],
   subset : Bool,
@@ -376,11 +377,13 @@ let cont_cache : Array[Array[Verdict47]] = []
 let cont_miss : Array[Int] = [0]
 
 ///|
+/// 內容律掃描之漏檢數（良態下應為 0，義務 H-25 檢此計數器）。
 pub fn cont_miss_count() -> Int {
   cont_miss[0]
 }
 
 ///|
+/// 內容律標準掃描（固定亂數流，可重現）。
 pub fn content_scan_std(rng : Rng) -> Array[Verdict47] {
   if cont_cache.length() == 0 {
     cont_miss[0] = cont_miss[0] + 1

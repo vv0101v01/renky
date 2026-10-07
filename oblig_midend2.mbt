@@ -170,7 +170,7 @@ pub fn ob_n64() -> Check {
     ] {
     tot = tot + 1
     let nn = e.sdim()
-    let rhs = Mat::build(nn, 2, (_i, _j) => Q::s_rand(r3))
+    let rhs = Mat::build(nn, 2, (_i, _j) => Scalar::s_rand(r3))
     let direct = dense_solve_mat(e, rhs, Cost::new())
     let (c, p) = canon_perm(e)
     let got = match spec_solve_mat2(c, perm_rows(p, rhs), Cost::new()) {
@@ -189,7 +189,7 @@ pub fn ob_n64() -> Check {
   // ── 兩側對照：故意用錯的置換，還原必須失敗 ──────────────
   let r4 = ob_rng()
   let e2 = STensor(SLeaf("Z", rand_gram(r4, 3)), SLeaf("A", rand_gram(r4, 2)))
-  let rhs2 = Mat::build(6, 1, (_i, _j) => Q::s_rand(r4))
+  let rhs2 = Mat::build(6, 1, (_i, _j) => Scalar::s_rand(r4))
   let (c2, p2) = canon_perm(e2)
   let bad = Array::makei(p2.length(), i => p2[(i + 1) % p2.length()])
   let truth = dense_solve_mat(e2, rhs2, Cost::new())

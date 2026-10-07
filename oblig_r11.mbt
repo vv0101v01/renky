@@ -199,10 +199,7 @@ pub fn ob_n76() -> Check {
     [Q::zero(), Q::one(), Q::of_int(3)],
     [Q::zero(), Q::zero(), Q::one()],
   ])
-  let bad3 : Mat[Q] = Mat::of_rows([
-    [Q::one(), Q::one()],
-    [Q::one(), Q::one()],
-  ])
+  let bad3 : Mat[Q] = Mat::of_rows([[Q::one(), Q::one()], [Q::one(), Q::one()]])
   let mut nrej = 0
   for b in [bad1, bad2, bad3] {
     if !is_positive_definite(b) && !spd_bareiss(b) {
@@ -244,9 +241,11 @@ pub fn ob_n76() -> Check {
 pub fn ob_n77() -> Check {
   let mut ok = true
   let ts = tri_tables()
-  let byname = (nm : String) => match tri_by_name(nm) {
-    Some(x) => x
-    None => ts[0]
+  let byname = (nm : String) => {
+    match tri_by_name(nm) {
+      Some(x) => x
+      None => ts[0]
+    }
   }
   let bk = byname("空間⊥")
   let c0 = byname("構造子₀")
@@ -280,7 +279,7 @@ pub fn ob_n77() -> Check {
     ok = false
   }
   // (4) 兩側對照：被下毒的備忘錄必須被同一個比對抓到
-  let bogus : TriCensus = {
+  let bogus = TriCensus::{
     tcells: direct.tcells,
     tpass: direct.tpass,
     tdmax: direct.tdmax,

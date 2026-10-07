@@ -41,6 +41,7 @@ pub fn cmp_registry() -> Array[
 }
 
 ///|
+/// 依名取出量測登記表之比較函式（回 (n, m, base, fast, …) 之量測函式）。
 pub fn cmp_by_name(nm : String) -> (() -> (Int, Int, Int64, Int64, Int, Int))? {
   for e in cmp_registry() {
     if e.0 == nm {

@@ -170,7 +170,7 @@ pub fn ob_n51() -> Check {
   // Λ² 在 5 個「維數 3 且 Gram = I」的空間上同理 —— 兩者皆為定理，
   // 不是冗員；義務記錄實測向量並要求每個構造子至少移動 1 個空間。
   let mv = comb7_moved()
-  let want = [35, 35, 17, 30, 35, 35, 35]
+  let want : ReadOnlyArray[Int] = [35, 35, 17, 30, 35, 35, 35]
   if mv.length() != 7 {
     ok = false
   }

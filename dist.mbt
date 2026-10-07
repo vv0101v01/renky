@@ -81,6 +81,7 @@ pub fn law_diff(
 let samp_turn : Array[Int] = [0]
 
 ///|
+/// 混合分佈取樣器：吐 ℚ 矩陣（若干確定性構造 + 亂數項混合，避免巧合退化成恆等式）。
 pub fn samp_mixed(rng : Rng, n : Int) -> Mat[Q] {
   let k = samp_turn[0] % 3
   samp_turn[0] = samp_turn[0] + 1
@@ -92,6 +93,7 @@ pub fn samp_mixed(rng : Rng, n : Int) -> Mat[Q] {
 }
 
 ///|
+/// 重置取樣器之計數與狀態（義務重跑時保證可重現）。
 pub fn samp_reset() -> Unit {
   samp_turn[0] = 0
 }
@@ -105,6 +107,7 @@ pub fn samp_reset() -> Unit {
 let law_fixed_cache : Array[Array[LawCand]] = []
 
 ///|
+/// 固定亂數流之結構律搜尋（同一 seed 每次得到相同律表）。
 pub fn law_search_fixed(rng : Rng) -> Array[LawCand] {
   if law_fixed_cache.length() == 0 {
     law_fixed_cache.push(law_search_samples(rng, law_samples_mixed()))

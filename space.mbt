@@ -78,11 +78,13 @@ pub struct IPSpace[V, F] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 空間介面之加法：s.add(a, b)（公理 V1）。
 pub fn[V, F] vadd(s : VSpace[V, F], a : V, b : V) -> V {
   (s.add)(a, b)
 }
 
 ///|
+/// 空間介面之負元：s.neg(a)。
 pub fn[V, F] vneg(s : VSpace[V, F], a : V) -> V {
   (s.neg)(a)
 }
@@ -94,31 +96,37 @@ pub fn[V, F] vsub(s : VSpace[V, F], a : V, b : V) -> V {
 }
 
 ///|
+/// 空間介面之純量乘：s.smul(c, a)。
 pub fn[V, F] vsmul(s : VSpace[V, F], c : F, a : V) -> V {
   (s.smul)(c, a)
 }
 
 ///|
+/// 空間介面之相等判定（相容於公理 V6 之等價關係）。
 pub fn[V, F] veq_(s : VSpace[V, F], a : V, b : V) -> Bool {
   (s.veq)(a, b)
 }
 
 ///|
+/// 空間介面之列印（元素之文字表示）。
 pub fn[V, F] vshow_(s : VSpace[V, F], a : V) -> String {
   (s.vshow)(a)
 }
 
 ///|
+/// 取座標：元素在其基底下之係數 αᵢ。
 pub fn[V, F] vcoord(s : VSpace[V, F], a : V) -> Array[F] {
   (s.coord)(a)
 }
 
 ///|
+/// 由座標展開：Σ αᵢ eᵢ（vcoord 之逆）。
 pub fn[V, F] vexpand(s : VSpace[V, F], c : Array[F]) -> V {
   (s.expand)(c)
 }
 
 ///|
+/// 取樣一元素（確定性亂數流；Schwartz–Zippel 檢驗用）。
 pub fn[V, F] vsample(s : VSpace[V, F], rng : Rng) -> V {
   (s.sample)(rng)
 }
@@ -198,6 +206,7 @@ pub struct Check {
 }
 
 ///|
+/// 造一筆檢定結果 Check（名稱、成敗、實例數、細節）。
 pub fn mk_check(
   name : String,
   ok : Bool,

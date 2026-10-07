@@ -80,7 +80,7 @@ pub struct TriMemo {
 
 ///|
 /// 全域單例。
-let g_trimemo : TriMemo = { mkeys: [], mvals: [], mhits: 0, mmiss: 0 }
+let g_trimemo : TriMemo = { mkeys: [], mvals: [], mhits: 0, mmiss: 0, }
 
 ///|
 /// 一張表之內容摘要（名稱 + 全部表項標籤）。

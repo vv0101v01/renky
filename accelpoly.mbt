@@ -51,6 +51,7 @@ pub fn fpp_mul_evalinterp(
 // ---------------------------------------------------------------------------
 
 ///|
+/// ℤ[x] 學校乘法 Θ(n²)（加速層之對照基準）。
 pub fn zpoly_mul_school(
   a : Array[BigInt],
   b : Array[BigInt],
@@ -224,6 +225,7 @@ pub fn screen_poly_mul(
 // ---------------------------------------------------------------------------
 
 ///|
+/// 由根造 ℤ[x]：線性（左摺）積樹 —— 保留為誠實反例，分派器在該處正確拒絕加速。
 pub fn zpoly_from_roots_linear(
   roots : Array[BigInt],
   c : Cost,
@@ -236,6 +238,7 @@ pub fn zpoly_from_roots_linear(
 }
 
 ///|
+/// 由根造 ℤ[x]：平衡積樹（積樹高度 Θ(log t)，係數成長較緩）。
 pub fn zpoly_from_roots_tree(roots : Array[BigInt], c : Cost) -> Array[BigInt] {
   let n = roots.length()
   if n == 0 {
@@ -268,6 +271,7 @@ pub fn zpoly_from_roots_tree(roots : Array[BigInt], c : Cost) -> Array[BigInt] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// ℤ 特徵多項式：多點求值 + Lagrange 插值（整數係數，取模提升）。
 pub fn zcharpoly_interp(
   a : Array[Array[BigInt]],
   primes : Array[Int64],
@@ -358,6 +362,7 @@ pub fn qcharpoly_faddeev(a : Mat[Q], c : Cost) -> Array[Q] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// ℚ[x] 正規化：去除尾端零係數（保持次數語意）。
 pub fn qpoly_norm(a : Array[Q]) -> Array[Q] {
   let mut n = a.length()
   while n > 0 && a[n - 1].is_zero() {
@@ -367,6 +372,7 @@ pub fn qpoly_norm(a : Array[Q]) -> Array[Q] {
 }
 
 ///|
+/// ℚ[x] 乘法（帶成本記帳；通分母後整數乘法）。
 pub fn qpoly_mul(a : Array[Q], b : Array[Q], c : Cost) -> Array[Q] {
   if a.length() == 0 || b.length() == 0 {
     return []
@@ -383,6 +389,7 @@ pub fn qpoly_mul(a : Array[Q], b : Array[Q], c : Cost) -> Array[Q] {
 }
 
 ///|
+/// ℚ[x] 帶餘除法：回 (商, 餘)。
 pub fn qpoly_divmod(
   a : Array[Q],
   b : Array[Q],
@@ -411,6 +418,13 @@ pub fn qpoly_divmod(
         r[k - db + j] = cq_sub(c, r[k - db + j], cq_mul(c, co, bb[j]))
       }
     }
+  } where {
+    proof_invariant: k - db >= 0,
+    proof_invariant: k < r.length(),
+    proof_reasoning: (
+      #| k 每輪減 1 且下界為 db，故最多 dq + 1 輪後 k = db − 1 而終止；
+      #| 期間 k ≥ db 故 k − db ≥ 0，且 k ≤ r.length() − 1，故索引 k − db + j 皆在界內。
+    ),
   }
   Some((qpoly_norm(q), qpoly_norm(r)))
 }
@@ -455,6 +469,7 @@ pub fn qpoly_gcd_euclid(a : Array[Q], b : Array[Q], c : Cost) -> Array[Q] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// ℚ[x] gcd 之 CRT 提升結果：模篩 + 有理重建之輸出。
 pub struct QGcdLift {
   gcd : Array[Q]
   degmin : Int
@@ -463,6 +478,7 @@ pub struct QGcdLift {
 }
 
 ///|
+/// ℤ[x] gcd：多模 𝔽p gcd + CRT 提升（內容–本原分解以控係數成長）。
 pub fn zpoly_gcd_crt(
   f : Array[BigInt],
   g : Array[BigInt],
@@ -559,6 +575,7 @@ pub fn zpoly_gcd_crt(
 // ---------------------------------------------------------------------------
 
 ///|
+/// ℚ 插值之 CRT 提升結果。
 pub struct QInterpLift {
   poly : Array[Q]
   used : Int
@@ -566,6 +583,7 @@ pub struct QInterpLift {
 }
 
 ///|
+/// ℚ 插值：𝔽p 分層求值 + 有理重建 + 後驗證。
 pub fn qinterp_crt(
   xs : Array[Q],
   ys : Array[Q],
@@ -638,6 +656,13 @@ pub fn qinterp_crt(
               let mut acc = Q::zero()
               for k = x.length() - 1; k >= 0; k = k - 1 {
                 acc = cq_add(c, cq_mul(c, acc, xs[i]), x[k])
+              } where {
+                proof_invariant: k >= 0,
+                proof_invariant: k < x.length(),
+                proof_reasoning: (
+                  #| k 每輪減 1 且下界為 −1，故至多 x.length() 輪後終止（Horner 由高次至常數項）。
+                  #| 期間索引 k 落在 [0, x.length()) 內。
+                ),
               }
               if !acc.eq(ys[i]) {
                 okall = false
@@ -689,6 +714,7 @@ pub fn qinterp_lagrange(xs : Array[Q], ys : Array[Q], c : Cost) -> Array[Q] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// ℚ[x] 乘法：CRT 篩選路徑（以多模重建係數），回 (乘積, 用模數個數)。
 pub fn qpoly_mul_crt(
   a : Array[Q],
   b : Array[Q],
@@ -748,6 +774,7 @@ fn words_of_bits(b : Int) -> Int64 {
 pub let accel_margin_num : Int64 = 5L
 
 ///|
+/// 加速餘裕之固定分母（判準用；成本比須低於 1/4 才分派加速）。
 pub let accel_margin_den : Int64 = 4L
 
 ///|

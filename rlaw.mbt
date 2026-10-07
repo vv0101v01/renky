@@ -340,6 +340,7 @@ let rlaw_cache : Array[Array[LawCand]] = []
 let rlaw_miss : Array[Int] = [0]
 
 ///|
+/// ℝ 軌結構律標準搜尋（固定亂數流，可重現）。
 pub fn rlaw_search_std(rng : Rng) -> Array[LawCand] {
   if rlaw_cache.length() == 0 {
     rlaw_miss[0] = rlaw_miss[0] + 1
@@ -349,6 +350,7 @@ pub fn rlaw_search_std(rng : Rng) -> Array[LawCand] {
 }
 
 ///|
+/// ℝ 軌搜尋之漏檢數（良態下應為 0）。
 pub fn rlaw_miss_count() -> Int {
   rlaw_miss[0]
 }

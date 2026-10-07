@@ -227,7 +227,7 @@ pub fn op_control(rng : Rng) -> (Int, Int) {
       None => ()
       Some(r) => {
         tot = tot + 1
-        let bad = {
+        let bad = SynthRule::{
           sp0: r.sp0 + 1,
           sp1: r.sp1,
           sp2: r.sp2,

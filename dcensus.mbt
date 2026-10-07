@@ -282,7 +282,7 @@ pub fn d_registry() -> Array[DAlgo] {
       dname: "Riesz 表示定理",
       drun: (sp, rng) => {
         let n = sp.vs.dim
-        let c : Array[Q] = Array::makei(n, _ => Q::s_rand(rng))
+        let c : Array[Q] = Array::makei(n, _ => Scalar::s_rand(rng))
         let v = riesz_vector(sp, c)
         for i in 0..<n {
           if !Q::eq(dc_ip(sp, sp.vs.basis[i], v), c[i]) {
@@ -298,7 +298,7 @@ pub fn d_registry() -> Array[DAlgo] {
       dname: "伴隨算子之矩陣公式",
       drun: (sp, rng) => {
         let n = sp.vs.dim
-        let t : Mat[Q] = Mat::build(n, n, (_i, _j) => Q::s_rand(rng))
+        let t : Mat[Q] = Mat::build(n, n, (_i, _j) => Scalar::s_rand(rng))
         let ta = adjoint_matrix(sp, sp, t)
         for _trial in 0..<2 {
           let x = dc_vec(sp, rng)
@@ -797,7 +797,11 @@ pub fn dc_broken(kind : Int) -> IPSpace[Array[Q], Q] {
     })
     coord_ipspace("不定型 diag(1,−1,−1)", 3, Some(g))
   } else if kind == 1 {
-    let d = [[2, 1, 0], [0, 2, 1], [0, 0, 2]]
+    let d : ReadOnlyArray[ReadOnlyArray[Int]] = [
+      [2, 1, 0],
+      [0, 2, 1],
+      [0, 0, 2],
+    ]
     coord_ipspace(
       "非對稱型",
       3,
@@ -983,7 +987,7 @@ pub fn dcensus_report() -> (
       }
     }
   }
-  let cen : DCensus = {
+  let cen = DCensus::{
     cells,
     pass,
     fail: cells - pass,

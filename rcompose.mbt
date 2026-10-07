@@ -158,6 +158,7 @@ pub struct RCompLaw {
 }
 
 ///|
+/// 複合律之名（內圈∘外圈 之記號）。
 pub fn RCompLaw::yname(self : RCompLaw) -> String {
   self.youter + "∘" + self.yinner + "/" + self.ycomb + "/" + self.yrule
 }
@@ -508,6 +509,7 @@ pub fn rcompose_degen_count(xs : Array[RCompLaw]) -> Int {
 }
 
 ///|
+/// 依名查複合律。
 pub fn rcomp_find(xs : Array[RCompLaw], name : String) -> RCompLaw? {
   for x in xs {
     if x.yname() == name {
@@ -557,11 +559,13 @@ let rcomp_cache : Array[Array[RCompLaw]] = []
 let rcomp_miss : Array[Int] = [0]
 
 ///|
+/// 複合律掃描之漏檢數（良態下應為 0）。
 pub fn rcomp_miss_count() -> Int {
   rcomp_miss[0]
 }
 
 ///|
+/// 複合律標準掃描（固定亂數流，可重現）。
 pub fn rcompose_scan_std(rng : Rng) -> Array[RCompLaw] {
   if rcomp_cache.length() == 0 {
     rcomp_miss[0] = rcomp_miss[0] + 1

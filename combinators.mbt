@@ -15,6 +15,7 @@
 // ---------------------------------------------------------------------------
 
 ///|
+/// 空間之 Gram 矩陣：對基底逐對取內積。
 pub fn[V, F] gram_of_space(s : IPSpace[V, F]) -> Mat[F] {
   let n = s.vs.dim
   Mat::build(n, n, (i, j) => (s.inner)(s.vs.basis[i], s.vs.basis[j]))
@@ -36,6 +37,7 @@ pub fn[V, F] gram_of(s : IPSpace[V, F], xs : Array[V]) -> Mat[F] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 直和 V ⊕ W：維數相加，內積為正交和（⟨(a,b),(a',b')⟩ = ⟨a,a'⟩ + ⟨b,b'⟩）。
 pub fn[A, B, F : Scalar] direct_sum(
   p : IPSpace[A, F],
   q : IPSpace[B, F],
@@ -49,7 +51,7 @@ pub fn[A, B, F : Scalar] direct_sum(
   for b in q.vs.basis {
     basis.push((p.vs.zero, b))
   }
-  let vs : VSpace[(A, B), F] = {
+  let vs = VSpace::{
     vname: p.vs.vname + " ⊕ " + q.vs.vname,
     dim: d1 + d2,
     zero: (p.vs.zero, q.vs.zero),
@@ -90,6 +92,7 @@ pub fn[A, B, F : Scalar] direct_sum(
 // ---------------------------------------------------------------------------
 
 ///|
+/// 張量積 V ⊗ W：內積 ⟨a⊗b, a'⊗b'⟩ = ⟨a,a'⟩·⟨b,b'⟩。
 pub fn[A, B, F : Scalar] tensor_space(
   p : IPSpace[A, F],
   q : IPSpace[B, F],
@@ -151,6 +154,7 @@ pub fn[F : Scalar] partial_trace2(m : Mat[F], d1 : Int, d2 : Int) -> Mat[F] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 對偶空間 V*：經 Riesz 表示實作，內積取對偶配對。
 pub fn[V, F : Scalar] dual_space(p : IPSpace[V, F]) -> IPSpace[Array[F], F] {
   let n = p.vs.dim
   let g = gram_of_space(p)
@@ -193,6 +197,7 @@ pub fn[V, F] double_dual_embed(p : IPSpace[V, F], v : V) -> Array[F] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// Hom(V, W)（以 W ⊗ V* 實現；Hilbert–Schmidt 內積 ⟨T,S⟩ = tr(S*T)）。
 pub fn[A, B, F : Scalar] hom_space(
   p : IPSpace[A, F],
   q : IPSpace[B, F],
@@ -243,6 +248,7 @@ pub fn[A, B, F] matrix_of_map(
 // ---------------------------------------------------------------------------
 
 ///|
+/// 實化：ℂ-內積空間視為 ℝ-內積空間（維數翻倍，實部內積）。
 pub fn[V, F : Scalar] realify(p : IPSpace[V, Cpx[F]]) -> IPSpace[V, F] {
   let n = p.vs.dim
   let d = 2 * n
@@ -254,7 +260,7 @@ pub fn[V, F : Scalar] realify(p : IPSpace[V, Cpx[F]]) -> IPSpace[V, F] {
   for b in p.vs.basis {
     basis.push((p.vs.smul)(ic, b))
   }
-  let vs : VSpace[V, F] = {
+  let vs = VSpace::{
     vname: p.vs.vname + "（實化 dim_ℝ = " + d.to_string() + "）",
     dim: d,
     zero: p.vs.zero,
@@ -307,6 +313,7 @@ pub fn[V, F : Scalar] complex_structure_matrix(
 // ---------------------------------------------------------------------------
 
 ///|
+/// 內積扭曲：⟨x, y⟩_A = xᵀ A y（A 須正定，見 F6 之義務檢驗）。
 pub fn[V, F : Scalar] retwist(p : IPSpace[V, F], a : Mat[F]) -> IPSpace[V, F] {
   let n = p.vs.dim
   {

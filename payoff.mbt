@@ -33,6 +33,7 @@ pub enum Payoff {
 }
 
 ///|
+/// 效益之單行文字描述。
 pub fn Payoff::pdescribe(self : Payoff) -> String {
   match self {
     Speedup(g) => "加速 ×" + fmt_d(g, 2)

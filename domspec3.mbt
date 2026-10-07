@@ -235,7 +235,7 @@ pub fn ek_scan(rng : Rng) -> (Int, Int, Int64, Int64, Int, Int) {
   let mut lose = 0
   for e in corpus {
     let n = e.sdim()
-    let rhs = Mat::build(n, 2, (_i, _j) => Q::s_rand(rng))
+    let rhs = Mat::build(n, 2, (_i, _j) => Scalar::s_rand(rng))
     let c1 = Cost::new()
     let d = dense_solve_mat(e, rhs, c1)
     let c2 = Cost::new()
@@ -268,7 +268,7 @@ pub fn ek_by_shape(rng : Rng) -> Array[(String, Int, Int64, Int64)] {
     for e in corpus {
       if spec_shape(e) == nm {
         let n = e.sdim()
-        let rhs = Mat::build(n, 2, (_i, _j) => Q::s_rand(rng))
+        let rhs = Mat::build(n, 2, (_i, _j) => Scalar::s_rand(rng))
         let c1 = Cost::new()
         let _ = dense_solve_mat(e, rhs, c1)
         let c2 = Cost::new()
@@ -313,7 +313,7 @@ pub fn ksum_sylvester_check(rng : Rng) -> (Int, Int) {
   for cfg in [(3, 3), (4, 3), (2, 5), (4, 4)] {
     let ga = rand_gram(rng, cfg.0)
     let gb = rand_gram(rng, cfg.1)
-    let cm = Mat::build(cfg.0, cfg.1, (_i, _j) => Q::s_rand(rng))
+    let cm = Mat::build(cfg.0, cfg.1, (_i, _j) => Scalar::s_rand(rng))
     tot = tot + 1
     match sylvester_solve(ga, gb, cm, Cost::new()) {
       None => ()
@@ -342,7 +342,7 @@ pub fn ek_control(rng : Rng) -> (Int, Int) {
     let g = rand_gram(rng, cfg.0)
     let e = SExt(SLeaf("X", g), cfg.1)
     let n = e.sdim()
-    let rhs = Mat::build(n, 1, (_i, _j) => Q::s_rand(rng))
+    let rhs = Mat::build(n, 1, (_i, _j) => Scalar::s_rand(rng))
     let truth = dense_solve_mat(e, rhs, Cost::new())
     let wrong = compound(g, cfg.1, Cost::new()).times(rhs)
     tot = tot + 1
@@ -355,7 +355,7 @@ pub fn ek_control(rng : Rng) -> (Int, Int) {
   for cfg in [(3, 3), (4, 3)] {
     let ga = rand_gram(rng, cfg.0)
     let gb = rand_gram(rng, cfg.1)
-    let cm = Mat::build(cfg.0, cfg.1, (_i, _j) => Q::s_rand(rng))
+    let cm = Mat::build(cfg.0, cfg.1, (_i, _j) => Scalar::s_rand(rng))
     tot = tot + 1
     let negb = Mat::build(cfg.1, cfg.1, (i, j) => gb.at(i, j).neg())
     match

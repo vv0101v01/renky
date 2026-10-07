@@ -52,7 +52,7 @@ pub struct CombRec {
 /// 固定夥伴空間 W：維數 2，Gram [[2,1],[1,2]]（正定，非單位，
 /// 故 ⊗／⊕／⊞ 不會退化成「只是把維數變大」）。
 pub fn comb_partner() -> SpaceExpr {
-  let d = [[2, 1], [1, 2]]
+  let d : ReadOnlyArray[ReadOnlyArray[Int]] = [[2, 1], [1, 2]]
   SLeaf("W₂", Mat::build(2, 2, (i, j) => Q::of_int(d[i][j])))
 }
 

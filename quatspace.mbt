@@ -27,36 +27,43 @@ pub struct Quat[F] {
 }
 
 ///|
+/// 造四元數 w + xi + yj + zk。
 pub fn[F] Quat::mk(w : F, x : F, y : F, z : F) -> Quat[F] {
   { qw: w, qx: x, qy: y, qz: z, }
 }
 
 ///|
+/// 加法單位 0。
 pub fn[F : Scalar] Quat::qzero() -> Quat[F] {
   { qw: F::s_zero(), qx: F::s_zero(), qy: F::s_zero(), qz: F::s_zero(), }
 }
 
 ///|
+/// 乘法單位 1。
 pub fn[F : Scalar] Quat::qone() -> Quat[F] {
   { qw: F::s_one(), qx: F::s_zero(), qy: F::s_zero(), qz: F::s_zero(), }
 }
 
 ///|
+/// 生成元 i。
 pub fn[F : Scalar] Quat::qi() -> Quat[F] {
   { qw: F::s_zero(), qx: F::s_one(), qy: F::s_zero(), qz: F::s_zero(), }
 }
 
 ///|
+/// 生成元 j。
 pub fn[F : Scalar] Quat::qj() -> Quat[F] {
   { qw: F::s_zero(), qx: F::s_zero(), qy: F::s_one(), qz: F::s_zero(), }
 }
 
 ///|
+/// 生成元 k。
 pub fn[F : Scalar] Quat::qk() -> Quat[F] {
   { qw: F::s_zero(), qx: F::s_zero(), qy: F::s_zero(), qz: F::s_one(), }
 }
 
 ///|
+/// 四元數加法（逐分量）。
 pub fn[F : Scalar] Quat::qadd(self : Quat[F], o : Quat[F]) -> Quat[F] {
   {
     qw: F::s_add(self.qw, o.qw),
@@ -67,6 +74,7 @@ pub fn[F : Scalar] Quat::qadd(self : Quat[F], o : Quat[F]) -> Quat[F] {
 }
 
 ///|
+/// 四元數負元。
 pub fn[F : Scalar] Quat::qneg(self : Quat[F]) -> Quat[F] {
   {
     qw: F::s_neg(self.qw),
@@ -77,6 +85,7 @@ pub fn[F : Scalar] Quat::qneg(self : Quat[F]) -> Quat[F] {
 }
 
 ///|
+/// 四元數減法。
 pub fn[F : Scalar] Quat::qsub(self : Quat[F], o : Quat[F]) -> Quat[F] {
   self.qadd(o.qneg())
 }
@@ -98,6 +107,7 @@ pub fn[F : Scalar] Quat::qsmul(self : Quat[F], c : F) -> Quat[F] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 四元數乘法（Hamilton 乘法；非交換：ij = k、ji = −k）。
 pub fn[F : Scalar] Quat::qmul(self : Quat[F], o : Quat[F]) -> Quat[F] {
   let a = self
   let b = o
@@ -172,6 +182,7 @@ pub fn[F : Scalar] Quat::qdot(self : Quat[F], o : Quat[F]) -> F {
 }
 
 ///|
+/// 四元數相等判定（逐分量）。
 pub fn[F : Scalar] Quat::qeq(self : Quat[F], o : Quat[F]) -> Bool {
   F::s_eq(self.qw, o.qw) &&
   F::s_eq(self.qx, o.qx) &&
@@ -180,6 +191,7 @@ pub fn[F : Scalar] Quat::qeq(self : Quat[F], o : Quat[F]) -> Bool {
 }
 
 ///|
+/// 四元數文字輸出。
 pub fn[F : Scalar] Quat::text(self : Quat[F]) -> String {
   F::s_text(self.qw) +
   "+" +
@@ -197,6 +209,7 @@ pub fn[F : Scalar] Quat::text(self : Quat[F]) -> String {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 左乘矩陣 L_q：x ↦ qx 之 ℝ⁴ 線性映射。
 pub fn[F : Scalar] quat_left_matrix(q : Quat[F]) -> Mat[F] {
   let w = q.qw
   let x = q.qx
@@ -215,6 +228,7 @@ pub fn[F : Scalar] quat_left_matrix(q : Quat[F]) -> Mat[F] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 單位四元數 → SO(3) 旋轉矩陣（共軛作用之矩陣形式）。
 pub fn[F : Scalar] quat_to_rot3(q : Quat[F]) -> Mat[F] {
   let two = F::s_from_int(2)
   let w = q.qw
@@ -257,6 +271,7 @@ pub fn[F : Scalar] quat_to_rot3(q : Quat[F]) -> Mat[F] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// ℍ → ℂ^{2×2} 表示：q = (w + xi) + (y + zi)j ↔ [[a, b], [−b̄, ā]]。
 pub fn[F : Scalar] quat_to_c2(q : Quat[F]) -> Mat[Cpx[F]] {
   let a : Cpx[F] = Cpx::mk(q.qw, q.qx)
   let b : Cpx[F] = Cpx::mk(q.qy, q.qz)
@@ -311,7 +326,7 @@ pub fn[F : Scalar] quaternion_space(n : Int) -> IPSpace[Array[Quat[F]], F] {
       Quat::mk(c[4 * i], c[4 * i + 1], c[4 * i + 2], c[4 * i + 3])
     })
   }
-  let vs : VSpace[Array[Quat[F]], F] = {
+  let vs = VSpace::{
     vname: "ℍ^" +
     n.to_string() +
     "（" +

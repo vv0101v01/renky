@@ -192,6 +192,7 @@ pub fn absd(x : Double) -> Double {
 }
 
 ///|
+/// 雙精度取大。
 pub fn maxd(a : Double, b : Double) -> Double {
   if a > b {
     a
@@ -201,6 +202,7 @@ pub fn maxd(a : Double, b : Double) -> Double {
 }
 
 ///|
+/// 雙精度取小。
 pub fn mind(a : Double, b : Double) -> Double {
   if a < b {
     a

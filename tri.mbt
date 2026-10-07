@@ -111,7 +111,7 @@ pub fn tri_tables() -> Array[TriTable] {
 /// 三個壞 Gram 放進空間軸，格值才會分裂，敏感度才量得出東西。
 pub fn tri_broken_items() -> Array[TriItem] {
   let xs : Array[TriItem] = []
-  let names = ["不定型", "非對稱型", "退化型"]
+  let names : ReadOnlyArray[String] = ["不定型", "非對稱型", "退化型"]
   for k in 0..<3 {
     let g = gram_of_space(dc_broken(k))
     xs.push(TiSpace({ sname: names[k], fam: "擾動", sdim: g.mrows, sg: g, }))

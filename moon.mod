@@ -22,8 +22,13 @@ keywords = [
 
 preferred_target = "wasm"
 
-// 只關閉「trait impl 自動推廣為方法」之提示：本專案一律以 Trait::method 明確呼叫。
+// 警告政策：
+// 1. impl 之方法掛載一律以顯式 extend 宣告（見 rational.mbt / complex.mbt）；
+//    本專案一律以 Trait::method 明確呼叫，故該處以 #deprecated 標記推廣。
+// 2. 下列六類選擇性警告一律常開（現況皆為 0，做為迴歸門檻）：
+//    missing_doc、unqualified_record、prefer_readonly_array、
+//    missing_invariant、missing_reasoning、unnecessary_annotation。
+//    其中後兩條互相牽制之寫法已定案：結構字面值一律以 T::{…} 顯式前綴表達型別，
+//    而不再重複 let 之型別標註（`let vs = VSpace::{…}`），故兩條同時成立。
 
-warnings = "-implicit_impl_as_method"
-
-description = "公理化向量空間與有限維內積空間：18 種具體空間建構 + 7 類空間構造子 + 168 條衍生演算法 + 168 條自證義務（含 28 條純 CRT 加速層，附正向性自證）"
+warnings = "+missing_doc+unqualified_record+prefer_readonly_array+missing_invariant+missing_reasoning+unnecessary_annotation"

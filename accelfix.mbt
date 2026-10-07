@@ -370,6 +370,7 @@ pub struct QMinors {
 }
 
 ///|
+/// ℚ LDLᵀ：以主餘子式 Δⱼ 重建（L-05 反例之改寫路徑；先驗 Hadamard 界定模數）。
 pub fn qldlt_minors_crt(
   g : Mat[Q],
   primes : Array[Int64],

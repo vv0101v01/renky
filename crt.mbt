@@ -45,6 +45,7 @@ pub fn big_words(a : BigInt) -> Int64 {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 多模 𝔽p 篩選器：質數池、累積乘積與有理重建之閾值狀態。
 pub struct Crt {
   mut cmod : BigInt
   mut cval : BigInt
@@ -52,6 +53,7 @@ pub struct Crt {
 }
 
 ///|
+/// 以預設質數池初始化篩選器。
 pub fn Crt::new() -> Crt {
   { cmod: 1N, cval: 0N, steps: 0, }
 }
@@ -266,6 +268,7 @@ pub fn qvec_eq(a : Array[Q], b : Array[Q]) -> Bool {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 最小公倍數 lcm(a, b) = |ab| / gcd(a, b)。
 pub fn big_lcm(a : BigInt, b : BigInt) -> BigInt {
   if a == 0N || b == 0N {
     return 0N

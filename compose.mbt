@@ -369,6 +369,7 @@ pub fn compose_scan_derived(
 }
 
 ///|
+/// 複合律掃描（選定樣本子集）：吃 (內圈, 外圈) 規則對，吐複合律與其檢定結果。
 pub fn compose_scan_sel(
   tbl : Array[LawCand],
   samples : Array[(Int, Int, (Rng, Int) -> Mat[Q])],

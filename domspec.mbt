@@ -256,7 +256,7 @@ pub fn spec_report(rng : Rng) -> SpecReport {
     }
     for k in [1, 3] {
       let n = e.sdim()
-      let rhs = Mat::build(n, k, (_i, _j) => Q::s_rand(rng))
+      let rhs = Mat::build(n, k, (_i, _j) => Scalar::s_rand(rng))
       let (okk, d, sv) = spec_compare(e, rhs)
       trials = trials + 1
       if okk {
@@ -350,7 +350,7 @@ pub fn spec_norm_effect(rng : Rng) -> (Int, Int, Int64, Int64, Int) {
   let mut same = 0
   for e in xs {
     let n = e.sdim()
-    let rhs = Mat::build(n, 1, (_i, _j) => Q::s_rand(rng))
+    let rhs = Mat::build(n, 1, (_i, _j) => Scalar::s_rand(rng))
     let ca = Cost::new()
     let ra = spec_solve_mat(e, rhs, ca)
     let ne = normalize(e)

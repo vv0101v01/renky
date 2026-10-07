@@ -200,36 +200,43 @@ pub fn Q::frac(p : Int, q : Int) -> Q {
 }
 
 ///|
+/// 加法單位 0（0/1）。
 pub fn Q::zero() -> Q {
   { num: 0N, den: 1N, }
 }
 
 ///|
+/// 乘法單位 1（1/1）。
 pub fn Q::one() -> Q {
   { num: 1N, den: 1N, }
 }
 
 ///|
+/// 有理數加法 a + b（通分後相加並約分）。
 pub fn Q::add(self : Q, o : Q) -> Q {
   Q::make(self.num * o.den + o.num * self.den, self.den * o.den)
 }
 
 ///|
+/// 有理數乘法 a · b（乘後約分）。
 pub fn Q::mul(self : Q, o : Q) -> Q {
   Q::make(self.num * o.num, self.den * o.den)
 }
 
 ///|
+/// 加法逆元 −a。
 pub fn Q::neg(self : Q) -> Q {
   { num: -self.num, den: self.den, }
 }
 
 ///|
+/// 有理數減法 a − b。
 pub fn Q::sub(self : Q, o : Q) -> Q {
   self.add(o.neg())
 }
 
 ///|
+/// 乘法逆元 a⁻¹（a = 0 時回 None）。
 pub fn Q::inv(self : Q) -> Q? {
   if self.num == 0N {
     None
@@ -239,6 +246,7 @@ pub fn Q::inv(self : Q) -> Q? {
 }
 
 ///|
+/// 有理數除法 a / b（b = 0 時回 None）。
 pub fn Q::div(self : Q, o : Q) -> Q? {
   match o.inv() {
     Some(x) => Some(self.mul(x))
@@ -267,16 +275,19 @@ pub fn Q::cmp(self : Q, o : Q) -> Int {
 }
 
 ///|
+/// 零判定（分子為 0）。
 pub fn Q::is_zero(self : Q) -> Bool {
   self.num == 0N
 }
 
 ///|
+/// 絕對值 |a|。
 pub fn Q::abs(self : Q) -> Q {
   { num: big_abs(self.num), den: self.den, }
 }
 
 ///|
+/// 雙精度近似（樞軸選取與報表用；非精確）。
 pub fn Q::to_double(self : Q) -> Double {
   // 以長除法避免 BigInt → Double 溢位：取 18 位有效十進位
   let s = big_sign(self.num).to_double()
@@ -306,6 +317,7 @@ pub fn Q::to_double(self : Q) -> Double {
 }
 
 ///|
+/// 文字輸出：分母為 1 時只印分子，否則印 p/q（亦為對外 Show 之實作）。
 pub fn Q::text(self : Q) -> String {
   if self.den == 1N {
     self.num.to_string()
@@ -333,6 +345,34 @@ pub impl Show for Q with fn output(self, logger) {
 
 ///|
 pub extend Q with Show::{to_string, output}
+
+///|
+/// 本庫一律以 `Scalar::s_x` 明確呼叫，不經型別固有方法；此推廣僅為下游相容而保留。
+#deprecated("本庫一律以 Scalar::s_x 明確呼叫；請改用 Scalar::s_x。", skip_current_package=true)
+#doc(hidden)
+pub extend Q with Scalar::{
+  s_is_zero,
+  s_from_frac,
+  s_neg,
+  s_inv,
+  s_one,
+  s_rand,
+  s_cmp_re,
+  s_mul,
+  s_mag,
+  s_from_int,
+  s_im_part,
+  s_add,
+  s_sqrt,
+  s_is_exact,
+  s_re_part,
+  s_text,
+  s_name,
+  s_zero,
+  s_eq,
+  s_conj,
+  s_to_double,
+}
 
 ///|
 pub impl Scalar for Q with fn s_zero() {

@@ -31,7 +31,7 @@ pub fn[F : Scalar] matrix_space(m : Int, n : Int) -> IPSpace[Mat[F], F] {
       }
     })
   })
-  let vs : VSpace[Mat[F], F] = {
+  let vs = VSpace::{
     vname: "M_{" +
     m.to_string() +
     "×" +
@@ -92,7 +92,7 @@ pub fn[F : Scalar] sym_matrix_space(n : Int) -> IPSpace[Mat[F], F] {
       }
     })
   })
-  let vs : VSpace[Mat[F], F] = {
+  let vs = VSpace::{
     vname: "Sym_" + n.to_string() + "(" + F::s_name() + ")",
     dim: d,
     zero: Mat::zeros(n, n),
@@ -164,7 +164,7 @@ pub fn[F : Scalar] skew_matrix_space(n : Int) -> IPSpace[Mat[F], F] {
       }
     })
   })
-  let vs : VSpace[Mat[F], F] = {
+  let vs = VSpace::{
     vname: "Skew_" + n.to_string() + " = so(" + n.to_string() + ")",
     dim: d,
     zero: Mat::zeros(n, n),
@@ -225,7 +225,7 @@ pub fn[F : Scalar] diag_matrix_space(n : Int) -> IPSpace[Mat[F], F] {
       }
     })
   })
-  let vs : VSpace[Mat[F], F] = {
+  let vs = VSpace::{
     vname: "Diag_" + n.to_string() + "(" + F::s_name() + ")",
     dim: n,
     zero: Mat::zeros(n, n),
@@ -289,7 +289,7 @@ pub fn[F : Scalar] traceless_space(n : Int) -> IPSpace[Mat[F], F] {
   }
   let d = basis.length()
   let off = idx.length()
-  let vs : VSpace[Mat[F], F] = {
+  let vs = VSpace::{
     vname: "sl_" + n.to_string() + "(" + F::s_name() + ")（跡零）",
     dim: d,
     zero: Mat::zeros(n, n),
@@ -425,7 +425,7 @@ pub fn[F : Scalar] herm_matrix_space(n : Int) -> IPSpace[Mat[Cpx[F]], F] {
     }
     m
   }
-  let vs : VSpace[Mat[Cpx[F]], F] = {
+  let vs = VSpace::{
     vname: "Herm_" +
     n.to_string() +
     "(ℂ) 作為 " +

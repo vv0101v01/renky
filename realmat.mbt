@@ -23,6 +23,7 @@ pub type CMat = Mat[Cpx[Double]]
 // ---------------------------------------------------------------------------
 
 ///|
+/// Cholesky 分解 A = L Lᵀ（非正定或非對稱時回 None）。
 pub fn cholesky(a : RMat) -> RMat? {
   let n = a.mrows
   let l : RMat = Mat::zeros(n, n)
@@ -107,6 +108,7 @@ pub fn inertia(d : Array[Double]) -> (Int, Int, Int) {
 // ---------------------------------------------------------------------------
 
 ///|
+/// QR 分解：Householder 反射（回 Q、R）。
 pub fn qr_householder(a0 : RMat) -> (RMat, RMat) {
   let m = a0.mrows
   let n = a0.mcols
@@ -170,6 +172,7 @@ pub fn qr_householder(a0 : RMat) -> (RMat, RMat) {
 // ---------------------------------------------------------------------------
 
 ///|
+/// QR 分解：Givens 旋轉（逐元素消去，回 Q、R）。
 pub fn qr_givens(a0 : RMat) -> (RMat, RMat) {
   let m = a0.mrows
   let n = a0.mcols
@@ -197,6 +200,13 @@ pub fn qr_givens(a0 : RMat) -> (RMat, RMat) {
         q.put(k, i - 1, c * x - s * y)
         q.put(k, i, s * x + c * y)
       }
+    } where {
+      proof_invariant: i > j,
+      proof_invariant: i < m,
+      proof_reasoning: (
+        #| i 每輪減 1 且下界為 j + 1，故至多 m − 1 − j 輪後終止；
+        #| 期間 r.at(i − 1, j)、r.at(i, j) 及 q 之列索引皆在界內。
+      ),
     }
   }
   (q, r)
@@ -209,6 +219,7 @@ pub fn qr_givens(a0 : RMat) -> (RMat, RMat) {
 // ---------------------------------------------------------------------------
 
 ///|
+/// Hessenberg 相似化：回 (Q, H)，H = Qᵀ A Q。
 pub fn hessenberg(a0 : RMat) -> (RMat, RMat) {
   let n = a0.mrows
   let h = a0.clone()
@@ -339,6 +350,7 @@ pub fn jacobi_eigen(a0 : RMat, sweeps : Int) -> (Array[Double], RMat) {
 // ---------------------------------------------------------------------------
 
 ///|
+/// QR 迭代（未位移）求特徵值之近似對角化。
 pub fn qr_iteration(a0 : RMat, iters : Int) -> RMat {
   let mut a = a0.clone()
   for _k in 0..<iters {
@@ -451,6 +463,7 @@ pub fn svd_jacobi(a0 : RMat, sweeps : Int) -> (RMat, Array[Double], RMat) {
 // ---------------------------------------------------------------------------
 
 ///|
+/// Moore–Penrose 偽逆 A⁺（奇異值截斷，tol 為門檻）。
 pub fn pinv(a : RMat, tol : Double) -> RMat {
   let (u, s, v) = svd_jacobi(a, 60)
   let n = a.mcols
@@ -488,6 +501,7 @@ pub fn pinv(a : RMat, tol : Double) -> RMat {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 極分解 A = U P（U 正交／么正，P 半正定）。
 pub fn polar_decomposition(a : RMat) -> (RMat, RMat) {
   let (u, s, v) = svd_jacobi(a, 60)
   let n = a.mcols
@@ -511,6 +525,7 @@ pub fn polar_decomposition(a : RMat) -> (RMat, RMat) {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 矩陣指數 exp(A)：縮放–平方 + Taylor/Padé。
 pub fn expm(a : RMat) -> RMat {
   let n = a.mrows
   let mut nrm = 0.0
@@ -547,6 +562,7 @@ pub fn expm(a : RMat) -> RMat {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 對稱正定矩陣之平方根 X（X² = A）。
 pub fn sqrtm_spd(a : RMat) -> RMat {
   let n = a.mrows
   let (lam, q) = jacobi_eigen(a, 200)
@@ -566,6 +582,7 @@ pub fn sqrtm_spd(a : RMat) -> RMat {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 冪迭代：求主特徵值與特徵向量（回 (λ, v)）。
 pub fn power_iteration(a : RMat, iters : Int) -> (Double, Array[Double]) {
   let n = a.mrows
   let mut x = Array::makei(n, i => 1.0 / (i + 1).to_double())
@@ -609,6 +626,7 @@ pub fn rayleigh_quotient(a : RMat, x : Array[Double]) -> Double {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 共軛梯度法解 Ax = b（A 對稱正定；回解向量）。
 pub fn conjugate_gradient(
   a : RMat,
   b : Array[Double],
@@ -777,6 +795,7 @@ pub fn arnoldi(a : RMat, k : Int) -> (RMat, RMat) {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 譜條件數 ‖A‖₂ · ‖A⁻¹‖₂。
 pub fn cond2(a : RMat) -> Double {
   let (_u, s, _v) = svd_jacobi(a, 60)
   let mut mx = 0.0
@@ -810,6 +829,7 @@ pub fn spectral_radius_sym(a : RMat) -> Double {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 離散傅立葉變換矩陣 W_{jk} = ω^{jk}。
 pub fn dft_matrix(n : Int) -> CMat {
   let inv_sqrt = 1.0 / sqrt_newton(n.to_double())
   Mat::build(n, n, (j, k) => {
@@ -837,6 +857,7 @@ pub fn to_complex(a : RMat) -> CMat {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 快速傅立葉變換（Cooley–Tukey，長度非 2 之冪時退為直接 DFT）。
 pub fn fft(x : Array[Cpx[Double]]) -> Array[Cpx[Double]] {
   let n = x.length()
   if n == 1 {
@@ -865,6 +886,7 @@ pub fn fft(x : Array[Cpx[Double]]) -> Array[Cpx[Double]] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 2ᵏ 階 Hadamard 矩陣（Sylvester 遞迴構造，H Hᵀ = 2ᵏ I）。
 pub fn hadamard_matrix(k : Int) -> RMat {
   let mut h : RMat = Mat::ident(1)
   for _i in 0..<k {
@@ -958,6 +980,7 @@ pub fn normalize_rows(a : RMat) -> RMat {
 // ---------------------------------------------------------------------------
 
 ///|
+/// Gauss–Seidel 迭代解 Ax = b（回近似解；iters 為迭代次數）。
 pub fn gauss_seidel(a : RMat, b : Array[Double], iters : Int) -> Array[Double] {
   let n = b.length()
   let x = Array::make(n, 0.0)

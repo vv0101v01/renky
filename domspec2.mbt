@@ -219,7 +219,7 @@ pub fn sub_scan(rng : Rng) -> (Int, Int, Int64, Int64, Int, Int) {
   let mut lose = 0
   for e in corpus {
     let n = e.sdim()
-    let rhs = Mat::build(n, 2, (_i, _j) => Q::s_rand(rng))
+    let rhs = Mat::build(n, 2, (_i, _j) => Scalar::s_rand(rng))
     let c1 = Cost::new()
     let d = dense_solve_mat(e, rhs, c1)
     let c2 = Cost::new()
@@ -254,7 +254,7 @@ pub fn sub_control(rng : Rng) -> (Int, Int) {
   let mut eq = 0
   for e in xs {
     let n = e.sdim()
-    let rhs = Mat::build(n, 2, (_i, _j) => Q::s_rand(rng))
+    let rhs = Mat::build(n, 2, (_i, _j) => Scalar::s_rand(rng))
     let c1 = Cost::new()
     let _ = dense_solve_mat(e, rhs, c1)
     let c2 = Cost::new()
@@ -273,7 +273,7 @@ pub fn gram_apply_check(rng : Rng) -> (Int, Int) {
   let mut ok = 0
   for e in corpus {
     let n = e.sdim()
-    let x = Mat::build(n, 2, (_i, _j) => Q::s_rand(rng))
+    let x = Mat::build(n, 2, (_i, _j) => Scalar::s_rand(rng))
     let truth = e.sgram().times(x)
     match spec_gram_apply(e, x, Cost::new()) {
       Some(y) => if y.equals(truth) { ok = ok + 1 }

@@ -212,7 +212,9 @@ pub fn ob_n54() -> Check {
   if nopath != 2 {
     ok = false
   }
-  let names = ["張量", "直和", "對偶", "扭曲", "外冪", "Kron 和"]
+  let names : ReadOnlyArray[String] = [
+    "張量", "直和", "對偶", "扭曲", "外冪", "Kron 和",
+  ]
   for t in 0..<6 {
     if r.shapes[t].0 != names[t] {
       ok = false
@@ -244,7 +246,7 @@ pub fn ob_n54() -> Check {
   let mut rok = 0
   let mut rtot = 0
   for e in spec_corpus(rng) {
-    let phi : Array[Q] = Array::makei(e.sdim(), _ => Q::s_rand(rng))
+    let phi : Array[Q] = Array::makei(e.sdim(), _ => Scalar::s_rand(rng))
     rtot = rtot + 1
     if spec_riesz_agrees(e, phi) {
       rok = rok + 1

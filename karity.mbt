@@ -315,6 +315,7 @@ pub fn krule_registry() -> Array[
 }
 
 ///|
+/// 依名取 K 群（加速層）之律函式。
 pub fn krule_by_name(
   name : String,
 ) -> ((Mat[Q], Mat[Q], Int, Int, Q, Q, Cost) -> Mat[Q]?)? {
@@ -394,6 +395,7 @@ pub struct KVerdict {
 }
 
 ///|
+/// 律之實測增益 = 基礎成本 ÷ 加速成本。
 pub fn KVerdict::kgain(self : KVerdict) -> Double {
   if self.kfast <= 0L {
     0.0

@@ -108,7 +108,7 @@ pub fn quotient_metric_check(rng : Rng) -> (Int, Int) {
     match quotient_gram(g) {
       None => ()
       Some(sc) => {
-        let y = Array::makei(m, _ => Q::s_rand(rng))
+        let y : Array[Q] = Array::makei(m, _ => Scalar::s_rand(rng))
         // 二次型 yᵀ·Schur·y
         let mut qf = Q::zero()
         for i in 0..<m {

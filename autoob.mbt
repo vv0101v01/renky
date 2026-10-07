@@ -1128,6 +1128,7 @@ pub fn str_count(hay : String, needle : String) -> Int {
 }
 
 ///|
+/// 子字串出現判定（義務產生器自建；不引入 @string）。
 pub fn str_has(hay : String, needle : String) -> Bool {
   str_count(hay, needle) > 0
 }

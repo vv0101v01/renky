@@ -255,6 +255,7 @@ pub enum Track {
 }
 
 ///|
+/// 軌跡標籤（ℚ 軌／ℝ 軌等）。
 pub fn Track::tlabel(self : Track) -> String {
   match self {
     TQ => "精確 ℚ"
@@ -263,6 +264,7 @@ pub fn Track::tlabel(self : Track) -> String {
 }
 
 ///|
+/// 軌跡之成本單位名。
 pub fn Track::tunit(self : Track) -> String {
   match self {
     TQ => "字乘法"
@@ -271,6 +273,7 @@ pub fn Track::tunit(self : Track) -> String {
 }
 
 ///|
+/// 軌跡相等判定。
 pub fn Track::teq(self : Track, other : Track) -> Bool {
   match (self, other) {
     (TQ, TQ) => true
@@ -302,6 +305,7 @@ pub fn gain_by_track(base : Cost, fast : Cost, t : Track) -> Double {
 }
 
 ///|
+/// 結構律之檢定結果（含實測成本欄位與判準）。
 pub struct LawVerdict {
   /// 律之名稱
   lname : String

@@ -28,6 +28,7 @@ pub struct GSOut[V, F] {
 }
 
 ///|
+/// 古典 Gram–Schmidt 正交化（精確軌道下無捨入，數值軌道見 modified 版）。
 pub fn[V, F : Scalar] gram_schmidt(
   s : IPSpace[V, F],
   xs : Array[V],
@@ -71,6 +72,7 @@ pub fn[V, F : Scalar] gram_schmidt(
 // ---------------------------------------------------------------------------
 
 ///|
+/// 修改版 Gram–Schmidt：每步即投影，數值穩定性優於古典版。
 pub fn[V, F : Scalar] modified_gram_schmidt(
   s : IPSpace[V, F],
   xs : Array[V],
@@ -111,6 +113,7 @@ pub fn[V, F : Scalar] modified_gram_schmidt(
 // ---------------------------------------------------------------------------
 
 ///|
+/// 正交歸一化：回一組標準正交基底（含退化秩處理）。
 pub fn[V, F : Scalar] orthonormalize(
   s : IPSpace[V, F],
   xs : Array[V],
@@ -255,6 +258,7 @@ pub fn[V, F : Scalar] riesz_vector(s : IPSpace[V, F], c : Array[F]) -> V {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 伴隨算子之矩陣 A*：滿足 ⟨Ax, y⟩ = ⟨x, A*y⟩。
 pub fn[A, B, F : Scalar] adjoint_matrix(
   p : IPSpace[A, F],
   q : IPSpace[B, F],
@@ -275,6 +279,7 @@ pub fn[A, B, F : Scalar] adjoint_matrix(
 // ---------------------------------------------------------------------------
 
 ///|
+/// 傅立葉係數：對正交基底取內積 ⟨f, eᵢ⟩。
 pub fn[V, F] fourier_coeffs(
   s : IPSpace[V, F],
   onb : Array[V],
@@ -326,6 +331,7 @@ pub fn[V, F : Scalar] bessel_pair(
 // ---------------------------------------------------------------------------
 
 ///|
+/// Cauchy–Schwarz 餘裕 ‖x‖²‖y‖² − |⟨x,y⟩|²（≥ 0，義務 D-08 量此值）。
 pub fn[V, F : Scalar] cauchy_schwarz_slack(
   s : IPSpace[V, F],
   x : V,
@@ -347,6 +353,7 @@ pub fn[V, F : Scalar] cauchy_schwarz_slack(
 // ---------------------------------------------------------------------------
 
 ///|
+/// 三角不等式檢定 ‖x + y‖ ≤ ‖x‖ + ‖y‖。
 pub fn[V, F : Scalar] triangle_holds(s : IPSpace[V, F], x : V, y : V) -> Bool {
   let a = (s.inner)(x, x)
   let b = (s.inner)(y, y)
@@ -462,6 +469,7 @@ pub fn[V, F : Scalar] is_isometry(s : IPSpace[V, F], tmat : Mat[F]) -> Bool {
 // ---------------------------------------------------------------------------
 
 ///|
+/// Gram 矩陣之換基律 G' = Sᵀ G S（命題 D-15）。
 pub fn[F : Scalar] gram_change_of_basis(g : Mat[F], s : Mat[F]) -> Mat[F] {
   s.adjointm().times(g).times(s)
 }
@@ -472,6 +480,7 @@ pub fn[F : Scalar] gram_change_of_basis(g : Mat[F], s : Mat[F]) -> Mat[F] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 餘弦相似度 ⟨x,y⟩ / (‖x‖‖y‖)。
 pub fn[V, F : Scalar] cosine_similarity(
   s : IPSpace[V, F],
   x : V,
@@ -499,6 +508,7 @@ pub fn[V, F : Scalar] angle_between(s : IPSpace[V, F], x : V, y : V) -> Double {
 // ---------------------------------------------------------------------------
 
 ///|
+/// Householder 反射 H = I − 2vv*/⟨v,v⟩（將 x 映至基向量方向）。
 pub fn[V, F : Scalar] householder(s : IPSpace[V, F], v : V, x : V) -> V {
   let den = (s.inner)(v, v)
   match F::s_inv(den) {
@@ -534,6 +544,7 @@ pub fn[V, F : Scalar] least_squares(
 // ---------------------------------------------------------------------------
 
 ///|
+/// 正定判定：Sylvester 判準（所有順序主餘子式為正）。
 pub fn[F : Scalar] is_positive_definite(a : Mat[F]) -> Bool {
   let n = a.mrows
   if !is_hermitian(a) {

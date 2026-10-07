@@ -44,6 +44,7 @@ pub struct UniRule {
 }
 
 ///|
+/// 規則之單行文字描述（算子、Φ、對偶、指數）。
 pub fn UniRule::describe(self : UniRule) -> String {
   if !self.uholds {
     "—"
@@ -227,7 +228,7 @@ pub fn synth_rule_uni(
   kfix : Int,
   rng : Rng,
 ) -> UniRule {
-  let none : UniRule = {
+  let none = UniRule::{
     uctor: ctor,
     uphi: phiname,
     uholds: false,
@@ -458,7 +459,7 @@ pub fn uni_control(rng : Rng) -> (Int, Int) {
       continue
     }
     tot = tot + 1
-    let bad = {
+    let bad = UniRule::{
       uctor: r.uctor,
       uphi: r.uphi,
       uholds: true,

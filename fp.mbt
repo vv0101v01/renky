@@ -36,6 +36,7 @@ pub struct FpCtx {
 }
 
 ///|
+/// 造 𝔽p 運算上下文（p 為質數；內部存 Long 以避溢位）。
 pub fn FpCtx::make(p : Int64) -> FpCtx {
   { pmod: p, ops: 0L, adds: 0L, }
 }
@@ -48,6 +49,7 @@ pub fn FpCtx::mul(self : FpCtx, a : Int64, b : Int64) -> Int64 {
 }
 
 ///|
+/// 𝔽p 加法：結果正規化至 [0, p)。
 pub fn FpCtx::add(self : FpCtx, a : Int64, b : Int64) -> Int64 {
   self.adds = self.adds + 1L
   let s = a + b
@@ -59,6 +61,7 @@ pub fn FpCtx::add(self : FpCtx, a : Int64, b : Int64) -> Int64 {
 }
 
 ///|
+/// 𝔽p 減法：結果正規化至 [0, p)。
 pub fn FpCtx::sub(self : FpCtx, a : Int64, b : Int64) -> Int64 {
   self.adds = self.adds + 1L
   let s = a - b
@@ -70,6 +73,7 @@ pub fn FpCtx::sub(self : FpCtx, a : Int64, b : Int64) -> Int64 {
 }
 
 ///|
+/// 𝔽p 負元：−a mod p。
 pub fn FpCtx::neg(self : FpCtx, a : Int64) -> Int64 {
   if a == 0L {
     0L
@@ -208,6 +212,7 @@ pub fn prime_pool(k : Int) -> Array[Int64] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 𝔽p 上之密集矩陣（Int64 列主序，含維數）。
 pub struct FpMat {
   fr : Int
   fc : Int
@@ -215,21 +220,25 @@ pub struct FpMat {
 }
 
 ///|
+/// 造 r × c 之 𝔽p 零矩陣。
 pub fn FpMat::make(r : Int, c : Int) -> FpMat {
   { fr: r, fc: c, fd: Array::make(r * c, 0L), }
 }
 
 ///|
+/// 取 (i, j) 元。
 pub fn FpMat::get(self : FpMat, i : Int, j : Int) -> Int64 {
   self.fd[i * self.fc + j]
 }
 
 ///|
+/// 置 (i, j) 元（呼叫者負責正規化）。
 pub fn FpMat::set(self : FpMat, i : Int, j : Int, v : Int64) -> Unit {
   self.fd[i * self.fc + j] = v
 }
 
 ///|
+/// 複製矩陣（深拷貝）。
 pub fn FpMat::copy(self : FpMat) -> FpMat {
   {
     fr: self.fr,
@@ -239,6 +248,7 @@ pub fn FpMat::copy(self : FpMat) -> FpMat {
 }
 
 ///|
+/// 𝔽p 上 n × n 單位矩陣。
 pub fn fp_ident(n : Int) -> FpMat {
   let m = FpMat::make(n, n)
   for i in 0..<n {
@@ -491,6 +501,13 @@ pub fn fp_batch_inv(v : Array[Int64], ctx : FpCtx) -> Array[Int64]? {
   for i = n - 1; i >= 0; i = i - 1 {
     out[i] = ctx.mul(ainv, pre[i])
     ainv = ctx.mul(ainv, v[i])
+  } where {
+    proof_invariant: i >= 0,
+    proof_invariant: i < n,
+    proof_reasoning: (
+      #| i 每輪減 1，下界為 −1，故至多 n 輪後終止；
+      #| 期間 0 ≤ i ≤ n − 1，故 out[i]、pre[i]、v[i] 之索引皆在界內。
+    ),
   }
   Some(out)
 }
@@ -574,6 +591,7 @@ pub fn fp_solve(a : FpMat, b : Array[Int64], ctx : FpCtx) -> Array[Int64]? {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 𝔽p 上 Hessenberg 相似化（特徵多項式之預處理，見 K 管）。
 pub fn fp_hessenberg(a0 : FpMat, ctx : FpCtx) -> FpMat {
   let h = a0.copy()
   let n = h.fr
@@ -670,11 +688,13 @@ pub fn fpp_norm(a : Array[Int64]) -> Array[Int64] {
 }
 
 ///|
+/// 𝔽p[x] 次數：去除尾端零係數後之最高次。
 pub fn fpp_deg(a : Array[Int64]) -> Int {
   fpp_norm(a).length() - 1
 }
 
 ///|
+/// 𝔽p[x] 加法（係數逐項模 p）。
 pub fn fpp_add(a : Array[Int64], b : Array[Int64], ctx : FpCtx) -> Array[Int64] {
   let n = if a.length() > b.length() { a.length() } else { b.length() }
   let out = Array::make(n, 0L)
@@ -687,6 +707,7 @@ pub fn fpp_add(a : Array[Int64], b : Array[Int64], ctx : FpCtx) -> Array[Int64] 
 }
 
 ///|
+/// 𝔽p[x] 減法（係數逐項模 p）。
 pub fn fpp_sub(a : Array[Int64], b : Array[Int64], ctx : FpCtx) -> Array[Int64] {
   let n = if a.length() > b.length() { a.length() } else { b.length() }
   let out = Array::make(n, 0L)
@@ -716,6 +737,7 @@ pub fn fpp_mul(a : Array[Int64], b : Array[Int64], ctx : FpCtx) -> Array[Int64] 
 }
 
 ///|
+/// 𝔽p[x] 純量乘法（每項乘 c mod p）。
 pub fn fpp_scale(a : Array[Int64], c : Int64, ctx : FpCtx) -> Array[Int64] {
   fpp_norm(Array::makei(a.length(), i => ctx.mul(a[i], c)))
 }
@@ -726,6 +748,12 @@ pub fn fpp_eval(a : Array[Int64], t : Int64, ctx : FpCtx) -> Int64 {
   let mut acc = 0L
   for k = a.length() - 1; k >= 0; k = k - 1 {
     acc = ctx.add(ctx.mul(acc, t), a[k])
+  } where {
+    proof_invariant: k >= 0,
+    proof_invariant: k < a.length(),
+    proof_reasoning: (
+      #| k 每輪減 1，下界為 −1，故至多 a.length() 輪後終止（Horner 求值）。
+    ),
   }
   acc
 }
@@ -761,6 +789,13 @@ pub fn fpp_divmod(
         r[k - db + j] = ctx.sub(r[k - db + j], ctx.mul(c, bb[j]))
       }
     }
+  } where {
+    proof_invariant: k - db >= 0,
+    proof_invariant: k < r.length(),
+    proof_reasoning: (
+      #| k 每輪減 1 且下界為 db，故至多 dq + 1 輪後終止；
+      #| 期間索引 k − db + j 落在 [0, r.length()) 內。
+    ),
   }
   Some((fpp_norm(q), fpp_norm(r)))
 }
@@ -822,6 +857,13 @@ pub fn fpp_interp(
     }
     for i = n - 1; i >= j; i = i - 1 {
       c[i] = ctx.mul(ctx.sub(c[i], c[i - 1]), invs[i - j])
+    } where {
+      proof_invariant: i >= j,
+      proof_invariant: i < n,
+      proof_reasoning: (
+        #| i 由 n − 1 每輪減 1 直至 j，故至多 n − j 輪後終止；
+        #| 期間 c[i]、c[i − 1] 之索引皆在界內。
+      ),
     }
   }
   // Horner 展開回單項式基
@@ -830,6 +872,13 @@ pub fn fpp_interp(
     // out ← out·(x − x_k) + c_k
     for i = n - 1; i >= 1; i = i - 1 {
       out[i] = out[i - 1]
+    } where {
+      proof_invariant: i >= 1,
+      proof_invariant: i < n,
+      proof_reasoning: (
+        #| i 由 n − 1 每輪減 1 直至 0，故至多 n − 1 輪後終止；
+        #| 期間 out[i]、out[i − 1] 之索引皆在界內。
+      ),
     }
     out[0] = 0L
     let xk = normmod(xs[k], ctx.pmod)
@@ -837,6 +886,13 @@ pub fn fpp_interp(
       out[i] = ctx.sub(out[i], ctx.mul(xk, out[i + 1]))
     }
     out[0] = ctx.add(out[0], c[k])
+  } where {
+    proof_invariant: k >= 0,
+    proof_invariant: k < n,
+    proof_reasoning: (
+      #| k 由 n − 1 每輪減 1 直至 −1，故至多 n 輪後終止；
+      #| 期間 xs[k]、c[k] 之索引皆在界內。
+    ),
   }
   Some(fpp_norm(out))
 }

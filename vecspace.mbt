@@ -178,7 +178,7 @@ pub fn[F : Scalar] function_space(
   weights : Array[F],
 ) -> IPSpace[Array[F], F] {
   let n = labels.length()
-  let vs : VSpace[Array[F], F] = {
+  let vs = VSpace::{
     vname: "𝔽^S，S = {" + labels.join(", ") + "}",
     dim: n,
     zero: arr_zeros(n),
@@ -258,7 +258,7 @@ pub fn[V, F : Scalar] subspace_of(
   let bmat : Mat[F] = Mat::build(ambdim, k, (i, j) => {
     vcoord(amb.vs, basis[j])[i]
   })
-  let vs : VSpace[V, F] = {
+  let vs = VSpace::{
     vname: name,
     dim: k,
     zero: amb.vs.zero,
@@ -308,7 +308,7 @@ pub fn[F : Scalar] kernel_space(a : Mat[F]) -> IPSpace[Array[F], F] {
   let ns = mnullspace(a)
   if ns.length() == 0 {
     // 零子空間：維數 0
-    let vs : VSpace[Array[F], F] = {
+    let vs = VSpace::{
       vname: "ker(A) = {0}",
       dim: 0,
       zero: arr_zeros(a.mcols),

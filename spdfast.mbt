@@ -65,10 +65,7 @@
 /// 其中 m 為「在遇到零樞軸前能算到的階數」。
 ///
 /// 若回傳長度 < n，表示 Δ_{m+1} = 0（矩陣奇異於該階）。
-pub fn zminors_bareiss(
-  a0 : Array[Array[BigInt]],
-  c : Cost,
-) -> Array[BigInt] {
+pub fn zminors_bareiss(a0 : Array[Array[BigInt]], c : Cost) -> Array[BigInt] {
   let n = a0.length()
   let out : Array[BigInt] = []
   if n == 0 {
@@ -202,5 +199,11 @@ pub fn spd_compare(g : Mat[Q]) -> SpdCmp {
   let c2 = Cost::new()
   let a = spd_naive_cost(g, c1)
   let b = spd_bareiss_cost(g, c2)
-  { scn: g.mrows, snaive: a, sbare: b, scost_naive: c1.wmul, scost_bare: c2.wmul }
+  {
+    scn: g.mrows,
+    snaive: a,
+    sbare: b,
+    scost_naive: c1.wmul,
+    scost_bare: c2.wmul,
+  }
 }

@@ -268,7 +268,7 @@ pub fn rmid_solve_scan(
   let mut fd : Int64 = 0
   for e in xs {
     let n = e.sdim()
-    let bq : Array[Q] = Array::makei(n, _ => Q::s_rand(rng))
+    let bq : Array[Q] = Array::makei(n, _ => Scalar::s_rand(rng))
     let g = e.sgram()
     match qsolve_gauss(g, bq, Cost::new()) {
       None => ()

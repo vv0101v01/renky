@@ -141,6 +141,7 @@ pub fn subset_label(s : Array[Int]) -> String {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 楔積 Λᵖ × Λᵠ → Λᵖ⁺ᵠ；交錯性 α∧β = (−1)^{pq} β∧α（命題 E1）。
 pub fn[F : Scalar] wedge(
   n : Int,
   p : Int,
@@ -183,6 +184,7 @@ pub fn[F : Scalar] wedge(
 // ---------------------------------------------------------------------------
 
 ///|
+/// Hodge 星算子 ⋆: Λᵏ → Λ^{n−k}（以基序與補集符號定之）。
 pub fn[F : Scalar] hodge_star(n : Int, k : Int, a : Array[F]) -> Array[F] {
   let si = subsets_k(n, k)
   let sc = subsets_k(n, n - k)
@@ -205,6 +207,7 @@ pub fn[F : Scalar] hodge_star(n : Int, k : Int, a : Array[F]) -> Array[F] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 向量楔積 v₁ ∧ … ∧ v_k ∈ Λᵏ（k 個向量之外積）。
 pub fn[F : Scalar] wedge_vectors(n : Int, vs : Array[Array[F]]) -> Array[F] {
   let k = vs.length()
   let ss = subsets_k(n, k)
@@ -227,7 +230,7 @@ pub fn[F : Scalar] exterior_power_space(
 ) -> IPSpace[Array[F], F] {
   let ss = subsets_k(n, k)
   let d = ss.length()
-  let vs : VSpace[Array[F], F] = {
+  let vs = VSpace::{
     vname: "Λ^" + k.to_string() + "(" + F::s_name() + "^" + n.to_string() + ")",
     dim: d,
     zero: arr_zeros(d),
@@ -279,7 +282,7 @@ pub fn[F : Scalar] exterior_algebra_space(n : Int) -> IPSpace[Array[F], F] {
     }
     subset_label(s)
   })
-  let vs : VSpace[Array[F], F] = {
+  let vs = VSpace::{
     vname: "Λ(" +
     F::s_name() +
     "^" +
@@ -362,6 +365,7 @@ pub fn[F : Scalar] wedge_full(n : Int, a : Array[F], b : Array[F]) -> Array[F] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// ℝ³ 叉積：即楔積之 Riesz 對偶（⋆(a∧b)）。
 pub fn[F : Scalar] cross3(a : Array[F], b : Array[F]) -> Array[F] {
   let w = wedge(3, 1, 1, a, b)
   hodge_star(3, 2, w)
@@ -373,6 +377,7 @@ pub fn[F : Scalar] cross3(a : Array[F], b : Array[F]) -> Array[F] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 廣義叉積：n 個向量楔積後取 Hodge 對偶，得 ℝⁿ 之一向量。
 pub fn[F : Scalar] generalized_cross(n : Int, vs : Array[Array[F]]) -> Array[F] {
   let w = wedge_vectors(n, vs)
   hodge_star(n, n - 1, w)

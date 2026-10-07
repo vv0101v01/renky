@@ -23,6 +23,7 @@ pub struct Cpx[F] {
 }
 
 ///|
+/// 造 a + bi（係數取自任意 Scalar 體）。
 pub fn[F] Cpx::mk(re : F, im : F) -> Cpx[F] {
   { cre: re, cim: im, }
 }
@@ -188,3 +189,31 @@ pub impl[F : Scalar] Show for Cpx[F] with fn output(self, logger) {
 
 ///|
 pub extend Cpx with Show::{to_string, output}
+
+///|
+/// 本庫一律以 `Scalar::s_x` 明確呼叫，不經型別固有方法；此推廣僅為下游相容而保留。
+#deprecated("本庫一律以 Scalar::s_x 明確呼叫；請改用 Scalar::s_x。", skip_current_package=true)
+#doc(hidden)
+pub extend Cpx with Scalar::{
+  s_is_zero,
+  s_from_frac,
+  s_neg,
+  s_inv,
+  s_one,
+  s_rand,
+  s_cmp_re,
+  s_mul,
+  s_mag,
+  s_from_int,
+  s_im_part,
+  s_add,
+  s_sqrt,
+  s_is_exact,
+  s_re_part,
+  s_text,
+  s_name,
+  s_zero,
+  s_eq,
+  s_conj,
+  s_to_double,
+}

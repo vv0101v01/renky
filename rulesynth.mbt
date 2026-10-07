@@ -75,6 +75,7 @@ fn affine_str(a : Int, b : Int, c : Int) -> String {
 }
 
 ///|
+/// 規則之單行文字描述（Φ 名、指數 p(n,m)、q(n,m)）。
 pub fn SynthRule::describe(self : SynthRule) -> String {
   "(det A)^{" +
   affine_str(self.sp0, self.sp1, self.sp2) +
@@ -242,7 +243,7 @@ pub fn synth_rule_kron(
   }
   let (p0, p1, p2) = cp
   let (q0, q1, q2) = cq
-  let r = { sp0: p0, sp1: p1, sp2: p2, sq0: q0, sq1: q1, sq2: q2, }
+  let r = SynthRule::{ sp0: p0, sp1: p1, sp2: p2, sq0: q0, sq1: q1, sq2: q2, }
   // 保留樣本驗證：擬合出的公式必須預測得準
   for sz in hold_sizes {
     let (n, m) = sz

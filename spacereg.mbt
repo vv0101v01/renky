@@ -52,21 +52,26 @@ pub fn SpaceRec::leaf(self : SpaceRec) -> SpaceExpr {
 ///|
 /// 子空間／列空間用的固定秩 2 矩陣 A（4×3，c₃ = c₁ + c₂）。
 pub fn sreg_mat_a() -> Mat[Q] {
-  let d = [[1, 0, 1], [0, 1, 1], [1, 1, 2], [2, 1, 3]]
+  let d : ReadOnlyArray[ReadOnlyArray[Int]] = [
+    [1, 0, 1],
+    [0, 1, 1],
+    [1, 1, 2],
+    [2, 1, 3],
+  ]
   Mat::build(4, 3, (i, j) => Q::of_int(d[i][j]))
 }
 
 ///|
 /// 零空間用的固定 2×5 秩 2 矩陣 B（ker 維數 3）。
 pub fn sreg_mat_b() -> Mat[Q] {
-  let d = [[1, 0, 1, 2, 0], [0, 1, 1, 0, 2]]
+  let d : ReadOnlyArray[ReadOnlyArray[Int]] = [[1, 0, 1, 2, 0], [0, 1, 1, 0, 2]]
   Mat::build(2, 5, (i, j) => Q::of_int(d[i][j]))
 }
 
 ///|
 /// 扭曲用的生成矩陣 M（么單三角，det = 1，必可逆）。
 pub fn sreg_twist_gen() -> Mat[Q] {
-  let d = [[1, 1, 0], [0, 1, 1], [0, 0, 1]]
+  let d : ReadOnlyArray[ReadOnlyArray[Int]] = [[1, 1, 0], [0, 1, 1], [0, 0, 1]]
   Mat::build(3, 3, (i, j) => Q::of_int(d[i][j]))
 }
 

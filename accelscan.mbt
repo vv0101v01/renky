@@ -28,6 +28,7 @@ pub struct AccCell {
 }
 
 ///|
+/// 加速格之實測增益 = 基礎成本 ÷ 加速成本。
 pub fn AccCell::gain(self : AccCell) -> Double {
   if self.acfast <= 0L {
     0.0

@@ -28,7 +28,7 @@ pub fn ob_n56() -> Check {
   if cells.length() != 8 {
     ok = false
   }
-  let nus = [18, 12, 50, 30, 18, 12, 50, 30]
+  let nus : ReadOnlyArray[Int] = [18, 12, 50, 30, 18, 12, 50, 30]
   for i in 0..<8 {
     if cells[i].acnu != nus[i] {
       ok = false
@@ -140,7 +140,12 @@ pub fn ob_n57() -> Check {
     ok = false
   }
   // 增益隨 n 單調上升 —— 這是「ν 砍掉一個 n 因子」的指紋
-  let gs = [cells[0].gain(), cells[1].gain(), cells[2].gain(), cells[3].gain()]
+  let gs : ReadOnlyArray[Double] = [
+    cells[0].gain(),
+    cells[1].gain(),
+    cells[2].gain(),
+    cells[3].gain(),
+  ]
   if !(gs[0] < gs[1] && gs[1] < gs[2] && gs[2] < gs[3]) {
     ok = false
   }

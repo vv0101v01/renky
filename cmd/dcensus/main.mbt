@@ -81,10 +81,12 @@ fn main {
     "| 構造子 | 記號 | 元數 | Gram 作用 | dim | 移動數 /35 | 正定 /35 | 維數式 /35 |",
   )
   println("| --- | --- | --- | --- | --- | --- | --- | --- |")
-  let acts = [
+  let acts : ReadOnlyArray[String] = [
     "G ⊗ G_W", "G ⊕ G_W", "(G⁻¹)ᵀ", "C₂(G)", "MᵀGM", "SᵀGS", "G⊗I + I⊗G_W",
   ]
-  let dims = ["n·2", "n+2", "n", "C(n,2)", "n", "2", "n·2"]
+  let dims : ReadOnlyArray[String] = [
+    "n·2", "n+2", "n", "C(n,2)", "n", "2", "n·2",
+  ]
   let moved = @hilbert.comb7_moved()
   let mut k = 0
   for c in @hilbert.comb7_registry() {

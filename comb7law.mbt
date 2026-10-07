@@ -113,11 +113,15 @@ pub fn hs_gram_ref(gw : Mat[Q], g : Mat[Q], c : Cost) -> Mat[Q] {
     None => Mat::ident(w)
   }
   // 基映射 E_{ij} : W → V，矩陣為 n×w，第 (j,i) 元為 1
-  let emat = (i : Int, j : Int) => Mat::build(n, w, (r, s) => if r == j && s == i {
-    Q::one()
-  } else {
-    Q::zero()
-  })
+  let emat = (i : Int, j : Int) => {
+    Mat::build(n, w, (r, s) => {
+      if r == j && s == i {
+        Q::one()
+      } else {
+        Q::zero()
+      }
+    })
+  }
   Mat::build(w * n, w * n, (u, v) => {
     let i = u / n
     let j = u % n
@@ -188,10 +192,12 @@ pub fn cf_bidual(g : Mat[Q]) -> Mat[Q] {
 /// 【N78-5】倍化之封閉式：I₂ ⊗ G（分塊對角）。
 pub fn cf_double(g : Mat[Q]) -> Mat[Q] {
   let n = g.mrows
-  Mat::build(2 * n, 2 * n, (i, j) => if i / n == j / n {
-    g.at(i % n, j % n)
-  } else {
-    Q::zero()
+  Mat::build(2 * n, 2 * n, (i, j) => {
+    if i / n == j / n {
+      g.at(i % n, j % n)
+    } else {
+      Q::zero()
+    }
   })
 }
 

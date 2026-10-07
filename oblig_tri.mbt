@@ -18,11 +18,11 @@ pub fn ob_n59() -> Check {
   if neu.length() != 10 {
     ok = false
   }
-  let names = [
+  let names : ReadOnlyArray[String] = [
     "Sym₄", "Skew₅", "𝔰𝔩₃", "Herm₃", "P≤4 L²", "P≤4 Hilb", "ℚ[x,y,z]≤1",
     "ℍ³", "Λ²ℚ⁵", "ℝ(ℂ³)",
   ]
-  let dims = [10, 10, 8, 9, 4, 4, 4, 12, 10, 6]
+  let dims : ReadOnlyArray[Int] = [10, 10, 8, 9, 4, 4, 4, 12, 10, 6]
   for i in 0..<10 {
     if neu[i].sname != names[i] {
       ok = false
@@ -87,7 +87,7 @@ pub fn ob_n60() -> Check {
   if cbs.length() != 14 {
     ok = false
   }
-  let syms = [
+  let syms : ReadOnlyArray[String] = [
     "⊗", "⊕", "*", "Λ²", "T", "U", "⊞", "H", "Λⁿ⁻¹", "S²", "**", "D",
     "U½", "Tᵀ",
   ]
@@ -158,7 +158,7 @@ pub fn ob_n61() -> Check {
   if ts.length() != 7 {
     ok = false
   }
-  let sizes = [6, 45, 35, 14, 7, 23, 9]
+  let sizes : ReadOnlyArray[Int] = [6, 45, 35, 14, 7, 23, 9]
   for i in 0..<7 {
     if ts[i].ttitems.length() != sizes[i] {
       ok = false

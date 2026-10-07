@@ -50,11 +50,13 @@ pub struct Cost {
 }
 
 ///|
+/// 成本模型歸零：所有計數器（BigInt 位元運算數／Q 運算數等）回到起點。
 pub fn Cost::new() -> Cost {
   { wmul: 0L, wadd: 0L, bigops: 0L, maxbits: 0, flops: 0L, qmul: 0L, }
 }
 
 ///|
+/// 記一筆位元運算之成本：bits 為運算元位元長度，累計入 self。
 pub fn Cost::note(self : Cost, bits : Int) -> Unit {
   if bits > self.maxbits {
     self.maxbits = bits
@@ -77,6 +79,7 @@ pub fn Cost::absorb_fp(self : Cost, ctx : FpCtx) -> Unit {
 }
 
 ///|
+/// 加速比 base/fast（>1 表示加速；以位元運算計，可量測之成本模型）。
 pub fn Cost::ratio(base : Cost, fast : Cost) -> Double {
   let b = base.wmul.to_double()
   let f = fast.wmul.to_double()
@@ -92,6 +95,7 @@ pub fn Cost::ratio(base : Cost, fast : Cost) -> Double {
 // ---------------------------------------------------------------------------
 
 ///|
+/// ℤ 乘法（帶成本記帳）。
 pub fn cz_mul(c : Cost, a : BigInt, b : BigInt) -> BigInt {
   c.wmul = c.wmul + big_words(a) * big_words(b)
   c.bigops = c.bigops + 1L
@@ -101,6 +105,7 @@ pub fn cz_mul(c : Cost, a : BigInt, b : BigInt) -> BigInt {
 }
 
 ///|
+/// ℤ 除法（帶成本記帳；捨去餘數，b = 0 時回 0）。
 pub fn cz_div(c : Cost, a : BigInt, b : BigInt) -> BigInt {
   c.wmul = c.wmul + big_words(a) * big_words(b)
   c.bigops = c.bigops + 1L
@@ -110,6 +115,7 @@ pub fn cz_div(c : Cost, a : BigInt, b : BigInt) -> BigInt {
 }
 
 ///|
+/// ℤ 取模（帶成本記帳）。
 pub fn cz_mod(c : Cost, a : BigInt, b : BigInt) -> BigInt {
   c.wmul = c.wmul + big_words(a) * big_words(b)
   c.bigops = c.bigops + 1L
@@ -117,6 +123,7 @@ pub fn cz_mod(c : Cost, a : BigInt, b : BigInt) -> BigInt {
 }
 
 ///|
+/// ℤ 加法（帶成本記帳）。
 pub fn cz_add(c : Cost, a : BigInt, b : BigInt) -> BigInt {
   let wa = big_words(a)
   let wb = big_words(b)
@@ -128,6 +135,7 @@ pub fn cz_add(c : Cost, a : BigInt, b : BigInt) -> BigInt {
 }
 
 ///|
+/// ℤ 減法（帶成本記帳）。
 pub fn cz_sub(c : Cost, a : BigInt, b : BigInt) -> BigInt {
   let wa = big_words(a)
   let wb = big_words(b)
@@ -171,6 +179,7 @@ pub fn cq_make(c : Cost, n0 : BigInt, d0 : BigInt) -> Q {
 }
 
 ///|
+/// ℚ 加法（帶成本記帳；先取共同分母再相加）。
 pub fn cq_add(c : Cost, x : Q, y : Q) -> Q {
   let n = cz_add(c, cz_mul(c, x.num, y.den), cz_mul(c, y.num, x.den))
   let d = cz_mul(c, x.den, y.den)
@@ -178,6 +187,7 @@ pub fn cq_add(c : Cost, x : Q, y : Q) -> Q {
 }
 
 ///|
+/// ℚ 減法（帶成本記帳）。
 pub fn cq_sub(c : Cost, x : Q, y : Q) -> Q {
   let n = cz_sub(c, cz_mul(c, x.num, y.den), cz_mul(c, y.num, x.den))
   let d = cz_mul(c, x.den, y.den)
@@ -185,12 +195,14 @@ pub fn cq_sub(c : Cost, x : Q, y : Q) -> Q {
 }
 
 ///|
+/// ℚ 乘法（帶成本記帳；乘後即約分）。
 pub fn cq_mul(c : Cost, x : Q, y : Q) -> Q {
   c.qmul = c.qmul + 1L
   cq_make(c, cz_mul(c, x.num, y.num), cz_mul(c, x.den, y.den))
 }
 
 ///|
+/// ℚ 除法（帶成本記帳；除以 0 回 None）。
 pub fn cq_div(c : Cost, x : Q, y : Q) -> Q? {
   if y.num == 0N {
     None
@@ -243,6 +255,7 @@ pub struct AccelStat {
 }
 
 ///|
+/// 實測增益 = 基礎成本 ÷ 加速成本。
 pub fn AccelStat::gain(self : AccelStat) -> Double {
   if self.fast_wmul <= 0L {
     0.0
@@ -252,6 +265,7 @@ pub fn AccelStat::gain(self : AccelStat) -> Double {
 }
 
 ///|
+/// 報表列：名稱、成本對、增益、是否分派加速路徑。
 pub fn AccelStat::line(self : AccelStat) -> String {
   self.aname +
   "：基準 " +
@@ -285,6 +299,7 @@ pub fn AccelStat::line(self : AccelStat) -> String {
 // ---------------------------------------------------------------------------
 
 ///|
+/// ℤ 行列式：Bareiss 無分數消去 —— Θ(n³) 整數運算且中間值受控，免 gcd 爆炸。
 pub fn zdet_bareiss(a0 : Array[Array[BigInt]], c : Cost) -> BigInt {
   let n = a0.length()
   if n == 0 {
@@ -341,6 +356,7 @@ pub fn zdet_bareiss(a0 : Array[Array[BigInt]], c : Cost) -> BigInt {
 // ---------------------------------------------------------------------------
 
 ///|
+/// ℤ 行列式：多模 𝔽p 求值 + CRT 提升，並以 Hadamard 界推導所需模數個數。
 pub fn zdet_crt(
   a : Array[Array[BigInt]],
   primes : Array[Int64],
@@ -979,6 +995,7 @@ pub struct QRrefLift {
 }
 
 ///|
+/// ℚ 列簡化 RREF：𝔽p 多模篩選 + 有理重建 + 事後憑證（精確軌道之加速路徑）。
 pub fn qrref_crt(a : Mat[Q], primes : Array[Int64], c : Cost) -> QRrefLift? {
   let rows = a.mrows
   let cols = a.mcols
@@ -1278,6 +1295,7 @@ pub struct QLdlt {
 }
 
 ///|
+/// ℚ 對稱 LDLᵀ 之 CRT 篩選路徑（𝔽p 分解 → 重建 → 憑證）。
 pub fn qldlt_crt(g : Mat[Q], primes : Array[Int64], c : Cost) -> QLdlt? {
   let n = g.mrows
   let (dd, gz) = qmat_clear_denom(g)

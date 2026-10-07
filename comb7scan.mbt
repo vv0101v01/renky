@@ -462,7 +462,7 @@ pub fn c7_braid_witness(
   g2 : Mat[Q],
 ) -> Bool {
   let hd = (i1 == 0 && i2 == 4) || (i1 == 4 && i2 == 0)
-  if !(hd) {
+  if !hd {
     return false
   }
   let p = c7_shuffle(2, 2, n)

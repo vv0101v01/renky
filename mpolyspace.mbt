@@ -118,6 +118,7 @@ pub fn[F : Scalar] MPoly::mpneg(self : MPoly[F]) -> MPoly[F] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 多變量多項式乘法（逐項相乘後合併同類項）。
 pub fn[F : Scalar] MPoly::mpmul(self : MPoly[F], o : MPoly[F]) -> MPoly[F] {
   let all : Array[Term[F]] = []
   for a in self.terms {
@@ -134,6 +135,7 @@ pub fn[F : Scalar] MPoly::mpmul(self : MPoly[F], o : MPoly[F]) -> MPoly[F] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 多變量求值：x 依變數序給值。
 pub fn[F : Scalar] MPoly::mpeval(self : MPoly[F], x : Array[F]) -> F {
   let mut acc = F::s_zero()
   for t in self.terms {
@@ -163,6 +165,7 @@ pub fn[F] MPoly::mpdeg(self : MPoly[F]) -> Int {
 }
 
 ///|
+/// 結構相等判定（含係數相等與項序正規化）。
 pub fn[F : Scalar] MPoly::mpeq(self : MPoly[F], o : MPoly[F]) -> Bool {
   let a = mp_normalize(self.nvars, self.terms)
   let b = mp_normalize(o.nvars, o.terms)
@@ -181,6 +184,7 @@ pub fn[F : Scalar] MPoly::mpeq(self : MPoly[F], o : MPoly[F]) -> Bool {
 }
 
 ///|
+/// 文字輸出（單項式列表形式）。
 pub fn[F : Scalar] MPoly::text(self : MPoly[F]) -> String {
   if self.terms.length() == 0 {
     return "0"
@@ -210,6 +214,7 @@ pub fn[F : Scalar] MPoly::text(self : MPoly[F]) -> String {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 次數 ≤ d 之 m 變數單項式指數表（遞迴枚舉，共 C(m+d, d) 個）。
 pub fn monomials_upto(m : Int, d : Int) -> Array[Array[Int]] {
   let out : Array[Array[Int]] = []
   let cur = Array::make(m, 0)
@@ -318,7 +323,7 @@ pub fn[F : Scalar] mpoly_space(
     }
     c
   }
-  let vs : VSpace[MPoly[F], F] = {
+  let vs = VSpace::{
     vname: F::s_name() +
     "[x₁..x" +
     m.to_string() +
@@ -393,7 +398,7 @@ pub fn[F : Scalar] mpoly_subst(f : MPoly[F], a : Mat[F]) -> MPoly[F] {
   let one : MPoly[F] = mp_normalize(m, [
     { expo: Array::make(m, 0), tc: F::s_one(), },
   ])
-  let mut acc : MPoly[F] = { nvars: m, terms: [], }
+  let mut acc = MPoly::{ nvars: m, terms: [], }
   for t in f.terms {
     let mut p = one
     for i in 0..<m {

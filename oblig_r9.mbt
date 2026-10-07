@@ -363,9 +363,9 @@ pub fn ob_n73() -> Check {
   if rows.length() != 4 {
     ok = false
   }
-  let arity = [2, 3, 4, 5]
-  let cells = [138, 419, 424, 615]
-  let pass = [123, 419, 380, 570]
+  let arity : ReadOnlyArray[Int] = [2, 3, 4, 5]
+  let cells : ReadOnlyArray[Int] = [138, 419, 424, 615]
+  let pass : ReadOnlyArray[Int] = [123, 419, 380, 570]
   for i in 0..<4 {
     if rows[i].0 != arity[i] || rows[i].1 != cells[i] || rows[i].2 != pass[i] {
       ok = false

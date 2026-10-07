@@ -147,11 +147,7 @@ pub fn is_sym_sel(sm : Mat[Q], n : Int) -> Bool {
 /// 【定理 N-75-1】對稱平方 Gram 之封閉式：Θ(d²)，d = n(n+1)/2。
 ///
 /// 計算 Sᵀ(G_A ⊗ G_B)S，但不建構 G_A ⊗ G_B，也不做任何稠密乘法。
-pub fn spec_sym_sq_gram_cost(
-  ga : Mat[Q],
-  gb : Mat[Q],
-  c : Cost,
-) -> Mat[Q] {
+pub fn spec_sym_sq_gram_cost(ga : Mat[Q], gb : Mat[Q], c : Cost) -> Mat[Q] {
   let n = ga.mrows
   let d = n * (n + 1) / 2
   // 行號 → 其支集所用之 (i, j)；對角行為 (i, i)

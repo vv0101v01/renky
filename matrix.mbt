@@ -379,6 +379,7 @@ pub fn[F : Scalar] mrref(m : Mat[F]) -> Rref[F] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 矩陣秩：消去法之非零列數（精確軌道上為真秩）。
 pub fn[F : Scalar] mrank(m : Mat[F]) -> Int {
   mrref(m).rank
 }
@@ -416,6 +417,7 @@ pub fn[F : Scalar] mdet(m : Mat[F]) -> F {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 行列式：Laplace 展開（小尺寸對照用）。
 pub fn[F : Scalar] mdet_laplace(m : Mat[F]) -> F {
   let n = m.mrows
   if n == 0 {
@@ -448,6 +450,7 @@ pub fn[F : Scalar] mdet_laplace(m : Mat[F]) -> F {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 反矩陣：高斯–若爾當；奇異時回 None（體公理 F2 之部分函數化）。
 pub fn[F : Scalar] minv(m : Mat[F]) -> Mat[F]? {
   if m.mrows != m.mcols {
     return None
@@ -508,6 +511,7 @@ pub fn[F : Scalar] msolve(a : Mat[F], b : Array[F]) -> SolSet[F] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 核空間基底：解 Ax = 0 之自由變數向量集。
 pub fn[F : Scalar] mnullspace(a : Mat[F]) -> Array[Array[F]] {
   let n = a.mcols
   let rr = mrref(a)
@@ -580,6 +584,7 @@ pub struct LU[F] {
 }
 
 ///|
+/// LU 分解（部分主元）：回 L、U 與置換。
 pub fn[F : Scalar] mlu(a0 : Mat[F]) -> LU[F] {
   let n = a0.mrows
   let u = a0.clone()
@@ -655,6 +660,7 @@ pub fn[F : Scalar] perm_matrix(perm : Array[Int]) -> Mat[F] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// Kronecker 積 A ⊗ B（(i,k),(j,l) 按列優先展開）。
 pub fn[F : Scalar] mkron(a : Mat[F], b : Mat[F]) -> Mat[F] {
   let rb = b.mrows
   let cb = b.mcols
@@ -692,6 +698,7 @@ pub fn[F] munvec(v : Array[F], r : Int, c : Int) -> Mat[F] {
 // ---------------------------------------------------------------------------
 
 ///|
+/// Schur 補 S = D − C A⁻¹ B（A 為左上 k × k 塊；A 奇異回 None）。
 pub fn[F : Scalar] schur_complement(
   m : Mat[F],
   k : Int, // 左上塊尺寸
@@ -743,6 +750,12 @@ pub fn[F : Scalar] mat_poly_eval(coeffs : Array[F], a : Mat[F]) -> Mat[F] {
   let mut acc : Mat[F] = Mat::zeros(n, n)
   for k = coeffs.length() - 1; k >= 0; k = k - 1 {
     acc = acc.times(a).plus(Mat::ident(n).scale(coeffs[k]))
+  } where {
+    proof_invariant: k >= 0,
+    proof_invariant: k < coeffs.length(),
+    proof_reasoning: (
+      #| k 每輪減 1，下界為 −1，故至多 coeffs.length() 輪後終止（Horner 代入）。
+    ),
   }
   acc
 }
@@ -797,6 +810,7 @@ pub fn[F : Scalar] cramer(a : Mat[F], b : Array[F]) -> Array[F]? {
 // ---------------------------------------------------------------------------
 
 ///|
+/// 矩陣冪 Aᵏ（平方乘法，Θ(log k) 次乘法）。
 pub fn[F : Scalar] mpow(a : Mat[F], k : Int) -> Mat[F] {
   let n = a.mrows
   let mut acc : Mat[F] = Mat::ident(n)
@@ -867,6 +881,7 @@ pub fn[F : Scalar] is_upper(a : Mat[F]) -> Bool {
 // ---------------------------------------------------------------------------
 
 ///|
+/// Cayley 變換 (I − S)(I + S)⁻¹（I + S 不可逆時回 None）。
 pub fn[F : Scalar] cayley_transform(s : Mat[F]) -> Mat[F]? {
   let n = s.mrows
   let i = Mat::ident(n)

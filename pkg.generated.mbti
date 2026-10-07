@@ -230,6 +230,8 @@ pub fn[V, F : Scalar] check_vector_space_axioms(VSpace[V, F], Rng, Int) -> Array
 
 pub fn cholesky(Mat[Double]) -> Mat[Double]?
 
+pub fn[F] circ_mat(Array[F]) -> Mat[F]
+
 pub fn circulant(Array[Double]) -> Mat[Double]
 
 pub fn cjacobi_eigen(Mat[Double], Double, Int, Cost) -> (Array[Double], Mat[Double], Int)
@@ -388,6 +390,12 @@ pub fn cost_by_track(Cost, Track) -> Int64
 
 pub fn cpinv(Mat[Double], Double, Cost) -> Mat[Double]
 
+pub fn cpx_dft(Int) -> Mat[Cpx[Q]]?
+
+pub fn cpx_phi(Mat[Cpx[Q]], Mat[Cpx[Q]]) -> Mat[Cpx[Q]]
+
+pub fn cpx_root(Int) -> Cpx[Q]?
+
 pub fn cq_add(Cost, Q, Q) -> Q
 
 pub fn cq_div(Cost, Q, Q) -> Q?
@@ -407,6 +415,10 @@ pub fn crt_breakeven_dim() -> Int
 pub fn csqrtm_spd(Mat[Double], Cost) -> Mat[Double]
 
 pub fn csvd_jacobi(Mat[Double], Int, Cost) -> (Mat[Double], Array[Double], Mat[Double])
+
+pub fn[F : Scalar] cyc_conv(Array[F], Array[F]) -> Array[F]
+
+pub fn[F : Scalar] cyc_shift(Int) -> Mat[F]
 
 pub fn cz_add(Cost, @bigint.BigInt, @bigint.BigInt) -> @bigint.BigInt
 
@@ -584,13 +596,21 @@ pub fn fp_batch_inv(Array[Int64], FpCtx) -> Array[Int64]?
 
 pub fn fp_charpoly(FpMat, FpCtx) -> Array[Int64]
 
+pub fn fp_circ(Array[Int64], FpCtx) -> FpMat
+
+pub fn fp_ctx_for(Int) -> FpCtx?
+
 pub fn fp_det(FpMat, FpCtx) -> Int64
 
 pub fn fp_det_fast(FpMat, FpCtx) -> Int64
 
+pub fn fp_dft(Int, Int64, FpCtx) -> FpMat
+
 pub fn fp_hessenberg(FpMat, FpCtx) -> FpMat
 
 pub fn fp_ident(Int) -> FpMat
+
+pub fn fp_idft(Int, Int64, FpCtx) -> FpMat
 
 pub fn fp_inv(FpMat, FpCtx) -> FpMat?
 
@@ -609,6 +629,8 @@ pub fn fp_of_q(Mat[Q], FpCtx) -> FpMat?
 pub fn fp_of_qvec(Array[Q], FpCtx) -> Array[Int64]?
 
 pub fn fp_rank(FpMat, FpCtx) -> Int
+
+pub fn fp_root_of_unity(Int, FpCtx) -> Int64?
 
 pub fn fp_rref(FpMat, FpCtx) -> FpRref
 
@@ -641,6 +663,8 @@ pub fn fpp_norm(Array[Int64]) -> Array[Int64]
 pub fn fpp_scale(Array[Int64], Int64, FpCtx) -> Array[Int64]
 
 pub fn fpp_sub(Array[Int64], Array[Int64], FpCtx) -> Array[Int64]
+
+pub fn[F : Scalar] frob_inner(Mat[F], Mat[F]) -> F
 
 pub fn[F : Scalar] function_space(Array[String], Array[F]) -> IPSpace[Array[F], F]
 
@@ -723,6 +747,10 @@ pub fn ipow_big(@bigint.BigInt, Int) -> @bigint.BigInt
 pub fn ipow_d(Double, Int) -> Double
 
 pub fn ipow_i(Int64, Int) -> Int64
+
+pub fn[F : Scalar] is_circulant(Mat[F]) -> Bool
+
+pub fn[F : Scalar] is_diagonal(Mat[F]) -> Bool
 
 pub fn[F : Scalar] is_hermitian(Mat[F]) -> Bool
 
@@ -1454,6 +1482,8 @@ pub fn ob_n87() -> Check
 
 pub fn ob_n88() -> Check
 
+pub fn ob_n89() -> Check
+
 pub fn ob_rng() -> Rng
 
 pub fn obl_demo_spec() -> OblSpec
@@ -2133,6 +2163,10 @@ pub fn[F : Scalar] sym_matrix_space(Int) -> IPSpace[Mat[F], F]
 pub fn sym_pair_col(Int, Int, Int) -> Int
 
 pub fn sym_sq_bilinear_ref(Mat[Q], Mat[Q], Mat[Q], Array[Q], Array[Q]) -> Q
+
+pub fn[F : Scalar] symbol_adj(Array[F]) -> Array[F]
+
+pub fn[F : Scalar] symbol_adj_wrong(Array[F]) -> Array[F]
 
 pub fn synth_compare(SpaceExpr) -> (Bool, Int64, Int64, String, Int)
 

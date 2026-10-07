@@ -86,7 +86,7 @@ pub struct FPre {
 pub fn f_precompute() -> Array[FPre] {
   let out : Array[FPre] = []
   for s in space_registry_x() {
-    out.push({ pdet: mdet(s.sg), ptr: s.sg.trace(), pspd: spd_bareiss(s.sg), })
+    out.push({ pdet: mdet(s.sg), ptr: s.sg.trace(), pspd: spd_fast(s.sg), })
   }
   out
 }
@@ -241,7 +241,7 @@ pub fn f_sum_scan(rng : Rng, ipcap : Int) -> FReport {
       }
       // 正定由因子判定
       nspdrun = nspdrun + 1
-      if spd_bareiss(g) == (pre[ia].pspd && pre[ib].pspd) {
+      if spd_fast(g) == (pre[ia].pspd && pre[ib].pspd) {
         nspd = nspd + 1
       }
       // 交換律見證
@@ -419,7 +419,8 @@ pub fn f_tensor_scan(rng : Rng, qcap : Int) -> FReport {
       // ℚ 軌直接 Sylvester 之子集，用來證明證書沒有說謊
       if d <= qcap {
         nspdqrun = nspdqrun + 1
-        if spd_bareiss(mkron(a.sg, b.sg)) == (pre[ia].pspd && pre[ib].pspd) {
+        // 【第十八輪】接 L 層分派（Kronecker 階數至 144）
+        if spd_fast(mkron(a.sg, b.sg)) == (pre[ia].pspd && pre[ib].pspd) {
           nspdq = nspdq + 1
         }
       }

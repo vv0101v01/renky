@@ -587,6 +587,53 @@ pub fn[A, B, F : Scalar] tensor_space_lazy_s(
 /// 命題 K-6 說不必。
 ///
 /// 回傳 (因子側是否逐元成立, 乘積側索引分解是否逐元成立)。
+/// 重組 L·D·Lᵀ。
+///
+/// 【第十八輪】提成獨立函數，讓呼叫端可以**對 45 個因子各算一次**
+/// 而不是對 2,025 個配對各算兩次 —— 原寫法把它藏在 kron_ldlt_elem
+/// 內部，於是同一個因子的 LDLᵀ 重組被做了 45 遍。
+pub fn ldlt_product(l : Mat[Q], d : Array[Q]) -> Mat[Q] {
+  let n = l.mrows
+  Mat::build(n, n, (i, j) => {
+    let mut acc = Q::zero()
+    for t in 0..<n {
+      acc = acc.add(l.at(i, t).mul(d[t]).mul(l.at(j, t)))
+    }
+    acc
+  })
+}
+
+///|
+/// 逐元驗證，因子之 LDLᵀ 重組由呼叫端提供（見 `ldlt_product`）。
+pub fn kron_ldlt_elem_pre(
+  a : Mat[Q],
+  b : Mat[Q],
+  pa : Mat[Q],
+  pb : Mat[Q],
+) -> (Bool, Bool) {
+  let okfac = pa.equals(a) && pb.equals(b)
+  let nb = b.mrows
+  let d = a.mrows * nb
+  let mut okidx = true
+  for u in 0..<d {
+    let ua = u / nb
+    let ub = u % nb
+    for v in 0..<d {
+      if !pa
+        .at(ua, v / nb)
+        .mul(pb.at(ub, v % nb))
+        .eq(a.at(ua, v / nb).mul(b.at(ub, v % nb))) {
+        okidx = false
+      }
+    }
+  }
+  (okfac, okidx)
+}
+
+///|
+/// 逐元驗證（自行計算因子之 LDLᵀ 重組）。
+///
+/// 大批呼叫時請改用 `kron_ldlt_elem_pre` 並把重組提到迴圈外。
 pub fn kron_ldlt_elem(
   a : Mat[Q],
   b : Mat[Q],
@@ -598,18 +645,8 @@ pub fn kron_ldlt_elem(
   // (1) 因子側：L D Lᵀ 逐元等於原矩陣。這一側是**完整**的 ——
   //     由命題 K-6，乘積側逐元成立 ⟺ 兩個因子各自成立，
   //     故因子側驗完即等於把 n_An_B 階的等式驗完，不必物化。
-  let prod = (l : Mat[Q], d : Array[Q]) => {
-    let n = l.mrows
-    Mat::build(n, n, (i, j) => {
-      let mut acc = Q::zero()
-      for t in 0..<n {
-        acc = acc.add(l.at(i, t).mul(d[t]).mul(l.at(j, t)))
-      }
-      acc
-    })
-  }
-  let pa = prod(la, da)
-  let pb = prod(lb, db)
+  let pa = ldlt_product(la, da)
+  let pb = ldlt_product(lb, db)
   let okfac = pa.equals(a) && pb.equals(b)
   // (2) 索引分解側：驗證實作把 u 拆成 (u/n_B, u%n_B) 的方式與
   //     命題 K-6 的推導一致。因子積已算好，故每元 O(1)。

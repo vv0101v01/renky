@@ -85,7 +85,10 @@ pub fn trial_tier(code : String) -> Int {
     | "C-19"
     | "C-20"
     | "D-01"
-    | "D-03"
+    // D-03 於第十八輪由昂貴層降到中等層（1.0 → 0.40 ms／實例）：
+    // 加速層接進 N 群之後，projection_matrix 與 L² 內積的改動一併
+    // 讓它變快。層別表因此腐壞，而 cmd/audit 的 tier 欄當場印出
+    // TIERDRIFT —— 這正是第十六輪加那一欄的理由。
     | "D-05"
     | "D-06"
     | "D-07"

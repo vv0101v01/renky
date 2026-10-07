@@ -264,7 +264,7 @@ pub fn comb14_stats() -> (Int, Int, Int, Int, Int, Int, String) {
       if (c.cdim)(s.sdim) == d {
         dimok = dimok + 1
       }
-      if spd_bareiss(e.sgram()) {
+      if spd_fast(e.sgram()) {
         // 【N-76】Θ(n³) 整數 Sylvester；N-76 之義務逐格對帳兩路一致
         spd = spd + 1
       }

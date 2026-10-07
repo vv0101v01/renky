@@ -211,12 +211,26 @@ pub fn ob_n88() -> Check {
   let mut en = 0
   let mut efac = 0
   let mut eidx = 0
-  for a in sps {
-    for b in sps {
-      match (qldlt_gauss(a.sg, c), qldlt_gauss(b.sg, c)) {
-        (Some((la, da)), Some((lb, db))) => {
+  // 【第十八輪】45 個因子之 LDLᵀ 與其重組各算一次；
+  // 原寫法在 2,025 個配對內各重算兩次（同一因子重做 45 遍）。
+  let lds : Array[(Mat[Q], Array[Q])?] = []
+  let prods : Array[Mat[Q]?] = []
+  for s in sps {
+    let r = qldlt_gauss(s.sg, c)
+    lds.push(r)
+    prods.push(
+      match r {
+        Some((l, d)) => Some(ldlt_product(l, d))
+        None => None
+      },
+    )
+  }
+  for ia, a in sps {
+    for ib, b in sps {
+      match (prods[ia], prods[ib]) {
+        (Some(pa), Some(pb)) => {
           en = en + 1
-          let (okf, oki) = kron_ldlt_elem(a.sg, b.sg, la, lb, da, db)
+          let (okf, oki) = kron_ldlt_elem_pre(a.sg, b.sg, pa, pb)
           if okf {
             efac = efac + 1
           }

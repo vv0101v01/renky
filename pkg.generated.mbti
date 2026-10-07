@@ -6,6 +6,8 @@ import {
 }
 
 // Values
+pub const SPD_CRT_MIN : Int = 17
+
 pub fn absd(Double) -> Double
 
 pub fn acc_apriori_cell(Int, Int) -> (Int64, Int64, Bool)
@@ -672,6 +674,10 @@ pub fn[F : Scalar] function_space_unit(Array[String]) -> IPSpace[Array[F], F]
 
 pub fn fwht(Array[Double]) -> Array[Double]
 
+pub let g_oblmemo : OblMemo
+
+pub let g_unimemo : UniMemo
+
 pub fn gain_by_track(Cost, Cost, Track) -> Double
 
 pub fn gauss_seidel(Mat[Double], Array[Double], Int) -> Array[Double]
@@ -800,6 +806,8 @@ pub fn kron_ldlt_diag(Array[Q], Array[Q]) -> Array[Q]
 
 pub fn kron_ldlt_elem(Mat[Q], Mat[Q], Mat[Q], Mat[Q], Array[Q], Array[Q]) -> (Bool, Bool)
 
+pub fn kron_ldlt_elem_pre(Mat[Q], Mat[Q], Mat[Q], Mat[Q]) -> (Bool, Bool)
+
 pub fn kron_matvec(Cost, Array[Mat[Double]], Array[Double]) -> Array[Double]
 
 pub fn kron_matvec_q(Mat[Q], Mat[Q], Array[Q]) -> Array[Q]
@@ -895,6 +903,8 @@ pub fn law_table(Array[LawVerdict]) -> String
 pub fn law_vacuity_count(Array[LawCand], Array[(Int, Int, (Rng, Int) -> Mat[Q])]) -> Int
 
 pub fn ldlt(Mat[Double]) -> (Mat[Double], Array[Double])?
+
+pub fn ldlt_product(Mat[Q], Array[Q]) -> Mat[Q]
 
 pub fn[V, F : Scalar] least_squares(IPSpace[V, F], Array[V], V) -> (Array[F], Double)
 
@@ -1496,6 +1506,10 @@ pub fn obl_measure_full(OblSpec) -> (Bool, Double, Int, Int64, Int64)?
 
 pub fn obl_measure_r(OblSpec) -> (Bool, Double, Double, Int, Int)?
 
+pub fn obl_memo_run(String, () -> Check) -> Bool
+
+pub fn obl_memo_stats() -> (Int, Int, Int)
+
 pub fn obl_placeholder() -> String
 
 pub fn ok1(String, Bool, String) -> Check
@@ -2046,6 +2060,10 @@ pub fn spd_bareiss_cost(Mat[Q], Cost) -> Bool
 
 pub fn spd_compare(Mat[Q]) -> SpdCmp
 
+pub fn spd_dispatch_x(Mat[Q], Array[Int64], Cost) -> (Bool, Bool)
+
+pub fn spd_fast(Mat[Q]) -> Bool
+
 pub fn spd_naive_cost(Mat[Q], Cost) -> Bool
 
 pub fn spec_by_shape(Rng) -> Array[(String, Int, Int64, Int64)]
@@ -2278,13 +2296,21 @@ pub fn uni_apply(UniRule, (Mat[Q], Cost) -> Mat[Q]?, Mat[Q], Int, Cost) -> Mat[Q
 
 pub fn uni_control(Rng) -> (Int, Int)
 
+pub fn uni_control_with(Array[UniRule], Rng) -> (Int, Int)
+
 pub fn uni_digest(Rng) -> String
 
 pub fn uni_direct(String, (Mat[Q], Cost) -> Mat[Q]?, Mat[Q], Int, Cost) -> Mat[Q]?
 
+pub fn uni_memo_stats() -> (Int, Int, Bool)
+
 pub fn uni_rule_table(Rng) -> Array[UniRule]
 
+pub fn uni_rule_table_raw(Rng) -> Array[UniRule]
+
 pub fn uni_scan(Rng) -> (Int, Int, Int, Int, Int64, Int64, Int)
+
+pub fn uni_scan_with(Array[UniRule], Rng) -> (Int, Int, Int, Int, Int64, Int64, Int)
 
 pub fn[F : Scalar] unitary_space(Int) -> IPSpace[Array[Cpx[F]], Cpx[F]]
 
@@ -2820,6 +2846,13 @@ pub struct NonCtor {
   ncclaim : Bool
 }
 
+pub struct OblMemo {
+  okeys : Array[String]
+  ovals : Array[Bool]
+  mut ohits : Int
+  mut omiss : Int
+}
+
 pub struct OblSpec {
   ocode : String
   ofn : String
@@ -3140,6 +3173,15 @@ pub struct TriMemo {
 pub struct TriTable {
   ttname : String
   ttitems : Array[TriItem]
+}
+
+pub struct UniMemo {
+  mut ukey : UInt64
+  mut uout : Array[UniRule]
+  mut uend : UInt64
+  mut uhas : Bool
+  mut uhits : Int
+  mut umiss : Int
 }
 
 pub struct UniRule {

@@ -193,7 +193,9 @@ fn tri_build(
       }
       TiOblig(c2, f) => {
         code = c2
-        judge = (_sp, _rg) => f().ok
+        // 【第十八輪】判者不看空間也不看亂數，故對固定 code 是常數；
+        // 普查卻對每一格各算一次。改走記憶體化（見 obl_memo_run）。
+        judge = (_sp, _rg) => obl_memo_run(c2, f)
       }
       _ => ()
     }

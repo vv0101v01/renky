@@ -371,7 +371,8 @@ pub fn c21_scan(rng : Rng, rzcap : Int) -> C21Report {
         ndim = ndim + 1
       }
       // (4) 正定
-      if spd_bareiss(g) {
+      // 【第十八輪】接 L 層分派：階數 ≥ 17 走 CRT 主子式
+      if spd_fast(g) {
         nspd = nspd + 1
       }
       // (5) Cauchy–Schwarz

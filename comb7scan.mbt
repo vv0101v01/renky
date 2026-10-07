@@ -187,7 +187,8 @@ pub fn c7_scan(rng : Rng) -> C7Report {
       // (2) 維數公式
       let a_dim = (cb.cdim)(s.sdim) == d && e.sdim() == d
       // (3) 正定（Θ(d³) 整數 Sylvester）
-      let a_spd = spd_bareiss(gg)
+      // 【第十八輪】接 L 層分派
+      let a_spd = spd_fast(gg)
       // (4) 封閉式逐元一致
       let cf = c7_closed(ci, gw, g, c)
       let a_cf = cf.mrows == d && cf.equals(gg)

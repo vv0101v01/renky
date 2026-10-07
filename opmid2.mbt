@@ -304,7 +304,72 @@ pub fn synth_rule_uni(
 
 ///|
 /// 一元規則表：每個 Φ × 每個一元構造子（扭曲試兩種算子側對應）。
+/// 一元規則表之記憶體化狀態（見 `uni_rule_table`）。
+pub struct UniMemo {
+  mut ukey : UInt64
+  mut uout : Array[UniRule]
+  mut uend : UInt64
+  mut uhas : Bool
+  mut uhits : Int
+  mut umiss : Int
+}
+
+///|
+/// 全域單例。
+pub let g_unimemo : UniMemo = {
+  ukey: 0UL,
+  uout: [],
+  uend: 0UL,
+  uhas: false,
+  uhits: 0,
+  umiss: 0,
+}
+
+///|
+/// 記憶體化之命中／未命中／是否有值。
+pub fn uni_memo_stats() -> (Int, Int, Bool) {
+  (g_unimemo.uhits, g_unimemo.umiss, g_unimemo.uhas)
+}
+
+///|
+/// 一元規則表（記憶體化）。
+///
+/// ## 為何這裡可以記憶體化，而且不會讓任何主張變成恆真
+///
+/// N-72 以**同一個種子**呼叫 `uni_rule_table` 三次（義務直接一次、
+/// `uni_scan` 內一次、`uni_control` 內一次），三次產生逐欄相同的表 ——
+/// 實測 3,216 ms × 3 = 9.6 s，佔 N-72 之 15.5 s 的六成。
+///
+/// 關鍵在於這個函數**不只回傳表，還推進 rng**。單純共用回傳值會改變
+/// 後續的亂數流，使 N-72 釘死的成本常數（td = 2431049、ts = 1506607、
+/// win = 17）全部對不上 —— 第一版正是這樣壞掉的。
+///
+/// 故本記憶體化同時記下**入口狀態與出口狀態**：命中時回傳同一張表，
+/// 並把 rng 快轉到當初的出口狀態。如此對呼叫端而言與真的重算
+/// **觀察上不可區分**，釘死的常數因此仍然有效。
+///
+/// 繞過不變量（N-77）：`uni_rule_table_raw` 永遠繞過記憶體化，
+/// 而 N-90 之義務以它與字面常數（15 條規則、對偶 5/5、外冪 4/5、
+/// 扭曲 3/5）對帳，故「規則表怎麼來的」仍被獨立驗證。
 pub fn uni_rule_table(rng : Rng) -> Array[UniRule] {
+  let k = rng.state
+  if g_unimemo.uhas && g_unimemo.ukey == k {
+    g_unimemo.uhits = g_unimemo.uhits + 1
+    rng.state = g_unimemo.uend
+    return g_unimemo.uout
+  }
+  g_unimemo.umiss = g_unimemo.umiss + 1
+  let out = uni_rule_table_raw(rng)
+  g_unimemo.ukey = k
+  g_unimemo.uout = out
+  g_unimemo.uend = rng.state
+  g_unimemo.uhas = true
+  out
+}
+
+///|
+/// 一元規則表（**不經記憶體化**，繞過不變量之出口）。
+pub fn uni_rule_table_raw(rng : Rng) -> Array[UniRule] {
   let out : Array[UniRule] = []
   for pr in phi_mat_registry() {
     let (nm, phi) = pr
@@ -401,7 +466,24 @@ pub fn uni_direct(
 /// 回傳 (檢查的 (Φ,構造子) 對數, 有規則數, 檢查實例數, 逐元相同數,
 ///        直接總成本, 走規則總成本, 走規則較便宜數)。
 pub fn uni_scan(rng : Rng) -> (Int, Int, Int, Int, Int64, Int64, Int) {
-  let tbl = uni_rule_table(rng)
+  uni_scan_with(uni_rule_table(rng), rng)
+}
+
+///|
+/// 掃描，規則表由呼叫端提供。
+///
+/// 【第十八輪】`uni_rule_table` 是純函數，而 N-72 以**同一個種子**
+/// 呼叫它三次（直接一次、uni_scan 內一次、uni_control 內一次），
+/// 三次產生逐欄相同的表。那不是三次驗證，是同一件事做三遍 ——
+/// 實測 3,216 ms × 3 = 9.6 s，佔 N-72 之 15.5 s 的六成。
+///
+/// 按 N-77 之**繞過不變量**：N-72 仍保留一處直接呼叫 uni_rule_table
+/// 並與字面常數（15 條規則、對偶 5/5、外冪 4/5、扭曲 3/5）對帳，
+/// 故「規則表怎麼來的」仍被獨立驗證；共用的只是其餘兩處的重算。
+pub fn uni_scan_with(
+  tbl : Array[UniRule],
+  rng : Rng,
+) -> (Int, Int, Int, Int, Int64, Int64, Int) {
   let phis = phi_mat_registry()
   let sizes : Array[(Int, Int)] = [(4, 2), (5, 2), (5, 3), (6, 2)]
   let mut holds = 0
@@ -450,7 +532,12 @@ pub fn uni_scan(rng : Rng) -> (Int, Int, Int, Int, Int64, Int64, Int) {
 /// 兩側對照：把修正指數動一格，恆等式必須垮掉。
 /// 回傳 (有規則數, 被推翻數)。
 pub fn uni_control(rng : Rng) -> (Int, Int) {
-  let tbl = uni_rule_table(rng)
+  uni_control_with(uni_rule_table(rng), rng)
+}
+
+///|
+/// 兩側對照，規則表由呼叫端提供（見 `uni_scan_with` 之說明）。
+pub fn uni_control_with(tbl : Array[UniRule], rng : Rng) -> (Int, Int) {
   let phis = phi_mat_registry()
   let mut tot = 0
   let mut broken = 0

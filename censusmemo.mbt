@@ -173,3 +173,65 @@ pub fn tri_memo_poison(
   g_trimemo.mkeys.push(k)
   g_trimemo.mvals.push(bogus)
 }
+
+// ---------------------------------------------------------------------------
+//  【第十八輪】目錄義務結果之記憶體化
+// ---------------------------------------------------------------------------
+
+///|
+/// 以條目代號為鍵的義務結果快取。
+pub struct OblMemo {
+  okeys : Array[String]
+  ovals : Array[Bool]
+  mut ohits : Int
+  mut omiss : Int
+}
+
+///|
+/// 全域單例。
+pub let g_oblmemo : OblMemo = { okeys: [], ovals: [], ohits: 0, omiss: 0, }
+
+///|
+/// 命中／未命中／鍵數。
+pub fn obl_memo_stats() -> (Int, Int, Int) {
+  (g_oblmemo.ohits, g_oblmemo.omiss, g_oblmemo.okeys.length())
+}
+
+///|
+/// 執行（或取回）一條目錄義務之布林結果。
+///
+/// ## 為何這一處可以記憶體化
+///
+/// 普查引擎的「字母群」軸其表項是 `TiOblig(code, f)`，而它的判者是
+///
+/// ```moonbit nocheck
+///   judge = (_sp, _rg) => f().ok
+/// ```
+///
+/// —— **兩個參數都沒用到**。也就是說，對一個固定的 code，格值是一個
+/// 常數，與空間、與構造子、與亂數都無關；而普查會對 966 格各算一次。
+/// 實測 `tri_axis_sensitivity(空間⊥, 構造子₀, 字母群)` 要 2.76 秒，
+/// 全部花在把同樣的 9 條義務重跑幾百遍。
+///
+/// ## 為何這不會讓任何主張退化（N-77 之繞過不變量）
+///
+/// 字母群軸存在的理由是**反面對照**：它的表項不看空間，所以沿空間軸
+/// 掃過去格值必須恆定，敏感度必須量到 0/0/0。記憶體化回傳的是同一個
+/// 常數，那條對照的內容分毫未變 —— 它本來就在驗「這些格值是常數」。
+///
+/// 繞過：每一條被記憶的義務，`moon test` 與 `cmd/main` 都會獨立整條跑過
+/// （目錄迴歸測試逐條執行全部 246 條），故「義務本身對不對」從來不靠
+/// 這個快取。此處快取的只是普查內部的重複求值。
+pub fn obl_memo_run(code : String, f : () -> Check) -> Bool {
+  for i in 0..<g_oblmemo.okeys.length() {
+    if g_oblmemo.okeys[i] == code {
+      g_oblmemo.ohits = g_oblmemo.ohits + 1
+      return g_oblmemo.ovals[i]
+    }
+  }
+  g_oblmemo.omiss = g_oblmemo.omiss + 1
+  let v = f().ok
+  g_oblmemo.okeys.push(code)
+  g_oblmemo.ovals.push(v)
+  v
+}

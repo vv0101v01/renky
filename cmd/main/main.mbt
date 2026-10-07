@@ -1,12 +1,7 @@
 // ============================================================================
 //  cmd/main — 評審準則目錄之執行器
-//  用法：
-//    moon run cmd/main                    逐條執行全部義務（預設）
-//    moon run cmd/main -- --only K        僅執行編號以 K 起首之條目（前綴，可用逗號分隔）
-//    HILBERT_ONLY=K moon run cmd/main     同上（環境變數）
-//    moon run cmd/main -- --help          印用法
+//  用法：moon run cmd/main
 //  逐條執行目錄中之「義務自證」，列印結果表與總結。
-//  前綴過濾僅影響「執行哪些條目」，不改變任何條目之判準與實例數。
 // ============================================================================
 
 ///|
@@ -99,122 +94,16 @@ fn maxi0(a : Int, b : Int) -> Int {
 }
 
 ///|
-/// 解析選用之前綴過濾。命令列 `--only A,B` 優先，其次環境變數 `HILBERT_ONLY`。
-/// 回空陣列表「不過濾」。
-fn parse_only(argv : Array[String]) -> Array[String] {
-  let out : Array[String] = []
-  let mut spec : String? = None
-  let mut i = 1
-  while i < argv.length() {
-    if argv[i] == "--only" {
-      if i + 1 >= argv.length() {
-        abort(
-          "--only 需要一個前綴引數，例如：moon run cmd/main -- --only K",
-        )
-      }
-      spec = Some(argv[i + 1])
-      i = i + 2
-    } else {
-      i = i + 1
-    }
-  }
-  match spec {
-    Some(_) => ()
-    None =>
-      match @env.get_env_var("HILBERT_ONLY") {
-        Some(e) => spec = Some(e)
-        None => ()
-      }
-  }
-  match spec {
-    Some(s) =>
-      for p in s.split(",") {
-        let q = p.to_owned()
-        if q != "" {
-          out.push(q)
-        }
-      }
-    None => ()
-  }
-  out
-}
-
-///|
-/// 以逗號連接前綴（僅供訊息列印）
-fn join_prefs(xs : Array[String]) -> String {
-  let mut u = ""
-  for i in 0..<xs.length() {
-    if i > 0 {
-      u = u + ","
-    }
-    u = u + xs[i]
-  }
-  u
-}
-
-///|
-/// 條目編號是否符合任一前綴
-fn code_in(prefixes : Array[String], code : String) -> Bool {
-  let mut hit = false
-  for p in prefixes {
-    if code.has_prefix(p) {
-      hit = true
-    }
-  }
-  hit
-}
-
-///|
 fn main {
-  let argv = @env.args()
-  let mut k = 1
-  while k < argv.length() {
-    if argv[k] == "--help" || argv[k] == "-h" {
-      println("用法：moon run cmd/main [-- --only <前綴>[,...]]")
-      println(
-        "  --only K         僅執行編號以 K 起首之條目（如 K、N-7、N-8；逗號可分隔多個）",
-      )
-      println("  HILBERT_ONLY=K   等價於 --only K（環境變數）")
-      println("  不給引數即逐條執行全部條目。")
-      return
-    }
-    k = k + 1
-  }
-  let prefixes = parse_only(argv)
-  let all = @hilbert.catalogue()
-  let cat = if prefixes.length() == 0 {
-    all
-  } else {
-    all.filter(a => code_in(prefixes, a.code))
-  }
-  if prefixes.length() > 0 && cat.length() == 0 {
-    abort(
-      "前綴「" +
-      join_prefs(prefixes) +
-      "」不匹配任何條目（全目錄 " +
-      all.length().to_string() +
-      " 條）。",
-    )
-  }
+  let cat = @hilbert.catalogue()
   println("")
   println(line("═", 100))
   println(
     "  公理化向量空間與有限維內積空間 — 評審準則目錄與義務自證",
   )
   println(
-    "  axiom/hilbert v0.1.2 ·  MoonBit · 零第三方依賴（僅使用 core/builtin）",
+    "  axiom/hilbert v1.0.0 ·  MoonBit · 零第三方依賴（僅使用 core/builtin）",
   )
-  if prefixes.length() > 0 {
-    println(
-      "  模式：僅執行前綴「" +
-      join_prefs(prefixes) +
-      "」之條目（" +
-      cat.length().to_string() +
-      "／" +
-      all.length().to_string() +
-      " 條）",
-    )
-  }
   println(line("═", 100))
   println("")
 
@@ -238,18 +127,9 @@ fn main {
   println("")
   println(
     "  目錄條目總數：" +
-    all.length().to_string() +
+    cat.length().to_string() +
     " 條（要求 > 80 條）",
   )
-  if prefixes.length() > 0 {
-    println(
-      "  本次執行    ：" +
-      cat.length().to_string() +
-      " 條（前綴 " +
-      join_prefs(prefixes) +
-      "）",
-    )
-  }
   println("")
 
   // ---- 逐條執行 ----

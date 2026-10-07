@@ -63,7 +63,7 @@ pub fn ob_n83() -> Check {
 pub fn ob_n84() -> Check {
   let mut ok = true
   let rng = ob_rng()
-  let r = f_tensor_scan(rng, 36, 24)
+  let r = f_tensor_scan(rng, 24)
   if r.q7pairs != 2025 {
     ok = false
   }
@@ -71,14 +71,21 @@ pub fn ob_n84() -> Check {
   if r.q7dim != 2025 || r.q7tr != 2025 || r.q7comm != 2025 {
     ok = false
   }
-  // 受維數上限的判準：跑過的必須全對，且覆蓋率必須如實
-  if r.q7detrun != 1495 || r.q7det != r.q7detrun {
+  // 【第十四輪】三項受限判準全部升到 2025/2025（§24.5 第 1、2 筆）
+  if r.q7detrun != 2025 || r.q7det != r.q7detrun {
     ok = false
   }
-  if r.q7spdrun != 1495 || r.q7spd != r.q7spdrun {
+  if r.q7spdrun != 2025 || r.q7spd != r.q7spdrun {
     ok = false
   }
-  if r.q7iprun != 1762 || r.q7ip != r.q7iprun {
+  if r.q7iprun != 2025 || r.q7ip != r.q7iprun {
+    ok = false
+  }
+  // ℚ 軌直接比對之子集仍須跑，用來證明模 p 與 LDL⊗ 兩條新路徑沒有說謊
+  if r.q7detqrun != 1495 || r.q7detq != r.q7detqrun {
+    ok = false
+  }
+  if r.q7spdqrun != 1495 || r.q7spdq != r.q7spdqrun {
     ok = false
   }
   if r.q7dmax != 144 || r.q7dsum != 44521 {
@@ -106,23 +113,23 @@ pub fn ob_n84() -> Check {
     r.q7dsum.to_string() +
     "，最大 " +
     r.q7dmax.to_string() +
-    "（ℍ³ ⊗ ℍ³）。**全表判準**（2025／2025）：維數相乘、tr(A⊗B) = tr(A)·tr(B)、交換律 P⊗Q ≅ Q⊗P 由完美洗牌 σ(i·d_B+j) = j·d_A+i 具名見證 —— 見證以逐元指標映射檢查（PᵀG₁P = G₂ ⟺ G₁[u][v] = G₂[σu][σv]），省去物化置換陣與兩次 Θ(d³) 乘法，在 d = 144 時約差 72 倍。**受維數上限的判準**：det(A⊗B) = det(A)^{n_B}·det(B)^{n_A} 在 dim ≤ 24 的 " +
-    r.q7detrun.to_string() +
-    " 對（73.8%）直接計算比對、全中；正定之因子判定（譜為 {λᵢμⱼ}，故 A⊗B 正定 ⟺ A、B 皆正定）同樣在 " +
-    r.q7spdrun.to_string() +
-    " 對上與直接 Sylvester 計算核對、全中 —— 這條定理把 Θ((n_P·n_Q)³) 降為 Θ(n_P³ + n_Q³)，在 12 ⊗ 12 時約差 (144/24)³ ≈ 216 倍；**IPSpace 層抽查**（真的造 tensor_space 物件、每對抽 3 組基底對）在 dim ≤ 36 的 " +
-    r.q7iprun.to_string() +
-    " 對（87.0%）全中。超出上限者明確記為未驗，不計入通過。快路徑之前提另行驗證：tensor_space 內部對每個因子呼叫 gram_of_space（Θ(d³)），在 45 × 45 的表裡同一個因子被重算 45 次，故改用 tensor_space_g 由呼叫端傳入因子 Gram；其正當性要求 (a) 註冊表登記的 sg 確實等於 gram_of_space(space())，" +
+    "（ℍ³ ⊗ ℍ³）。**第十四輪起全部七項判準皆為 2025／2025，無一略過**（第十三輪時 det 與正定只到 73.8%、IPSpace 層只到 87.0%）：維數相乘、tr(A⊗B) = tr(A)·tr(B)（左式以 Kronecker 結構逐對角元現算）、交換律由完美洗牌 σ(i·d_B+j) = j·d_A+i 以 Θ(d²) 逐元指標映射見證（兩側皆不物化）、行列式 det(A⊗B) = det(A)^{n_B}·det(B)^{n_A} 走**模 p** 路徑（Fp 上每元一個機器字，Θ(d³) 高斯消去全程無係數膨脹，故 144 階也能直接算；全表僅 0.2 秒）、正定走 **Kronecker LDLᵀ 證書**（定理 K-2：A⊗B = (L_A⊗L_B)(D_A⊗D_B)(L_A⊗L_B)ᵀ，而 L_A⊗L_B 仍為單位下三角，故右式即 A⊗B 之 LDLᵀ；成本 Θ(n_A³+n_B³) 而非 Θ((n_An_B)³)）、IPSpace 層抽查改用**惰性張量空間**（定理 K-1，內積不需要 Gram 先存在）。兩條新路徑都不許自說自話：ℚ 軌的直接計算仍在 dim ≤ 24 的 " +
+    r.q7detqrun.to_string() +
+    " 對上跑，det 與正定各自與模 p、LDL⊗ 的結論逐對帳，" +
+    r.q7detq.to_string() +
+    "／" +
+    r.q7spdq.to_string() +
+    " 全中 —— 一條只在自己的軌上自洽的捷徑，等於沒有驗。快路徑之另一前提（註冊表 sg = gram_of_space(space())）獨立驗證 " +
     gok.to_string() +
     "／" +
     nsp.to_string() +
-    " 成立，(b) 兩條路徑造出的張量空間逐元相同，在 9 族代表之 " +
+    "，兩路張量空間逐元相同 " +
     tok.to_string() +
     "／" +
     mrep.to_string() +
-    " 對成立。指紋 " +
+    "。指紋 " +
     r.q7digest +
-    "。原 F-02 一併重跑並通過。",
+    "（與第十三輪一位元未變）。原 F-02 一併重跑並通過。",
   )
 }
 
@@ -132,19 +139,24 @@ pub fn ob_n84() -> Check {
 /// 【N-85】⊕ 與 ⊗ 之分配律與結合律。
 pub fn ob_n85() -> Check {
   let mut ok = true
-  let l = f_law_scan(512)
-  if l.l7triples != 729 {
+  let l = f_law_scan(256)
+  // 【第十四輪】Gram 層由 729（只有族代表）擴到 9477（三軸各自完整）
+  if l.l7triples != 9477 {
     ok = false
   }
-  // 分配律與兩條結合律皆須全成立
-  if l.l7dist != 729 {
+  if l.l7dist != 9477 {
     ok = false
   }
+  // 維數層跑滿 45³
+  if l.l7dimtot != 91125 || l.l7dimtri != 91125 {
+    ok = false
+  }
+  // 結合律為單一算子之結構恆等式，仍在 9 族代表之 729 個三元組上
   if l.l7assoc_run != 729 || l.l7assoc_sum != 729 || l.l7assoc_ten != 729 {
     ok = false
   }
   // 兩側對照：維數相容的三元組恰為 d_P = d_Q 者
-  if l.l7wrongable != 261 {
+  if l.l7wrongable != 2259 {
     ok = false
   }
   if l.l7wrong + l.l7blind != l.l7wrongable {
@@ -160,18 +172,20 @@ pub fn ob_n85() -> Check {
   mk_check(
     "N-85 直和與張量積之分配律與結合律",
     ok,
-    l.l7triples * 3 + l.l7wrongable,
-    "⊕ 與 ⊗ 必須互相配合，否則兩個建構子各自正確也拼不出一個張量範疇。在 9 族代表（座標／函數／矩陣／多項式／四元數／複結構／外代數／子空間／其他 各取維數最小者）之全部 " +
+    l.l7triples * 2 + l.l7assoc_run * 2 + l.l7wrongable + l.l7dimtot,
+    "⊕ 與 ⊗ 必須互相配合，否則兩個建構子各自正確也拼不出一個張量範疇。**第十四輪起 Gram 層由 729（只有 9 族代表）擴到 " +
     l.l7triples.to_string() +
-    " 個三元組上驗三條律。**分配律** P⊗(Q⊕R) ≅ (P⊗Q)⊕(P⊗R)：" +
+    " 個三元組：三軸各自完整 —— 任一軸可取遍全部 45 個空間，其餘兩軸為族代表，故每一個空間都在每一個位置上出現過**（第十三輪時只在第一個位置）。維數層另跑滿 45³ = " +
+    l.l7dimtot.to_string() +
+    " 個三元組，全數相容。**分配律** P⊗(Q⊕R) ≅ (P⊗Q)⊕(P⊗R)：" +
     l.l7dist.to_string() +
     "／" +
     l.l7triples.to_string() +
-    "，由具名指標映射見證 —— 左側 u = i·(d_Q+d_R)+k，k < d_Q 時落在第一塊 i·d_Q+k，否則落在第二塊 d_P·d_Q + i·d_R + (k−d_Q)。**結合律** (P⊕Q)⊕R = P⊕(Q⊕R) 與 (P⊗Q)⊗R = P⊗(Q⊗R)：各 " +
+    "，由具名指標映射見證（左側 u = i·(d_Q+d_R)+k，k < d_Q 時落在第一塊 i·d_Q+k，否則落在第二塊 d_P·d_Q + i·d_R + (k−d_Q)），且**兩側皆不物化** —— 每一元 O(1)，省去三趟 Θ(d²) 的配置與寫入。**結合律** (P⊕Q)⊕R = P⊕(Q⊕R) 與 (P⊗Q)⊗R = P⊗(Q⊗R)：各 " +
     l.l7assoc_sum.to_string() +
     "／" +
     l.l7assoc_ten.to_string() +
-    " 全數成立，而且是**逐元相等**不是僅同構 —— 分塊對角與 Kronecker 在本庫的座標約定下都嚴格結合，連置換都不需要。這一點值得分開講：分配律要見證、結合律不要，兩者不是同一種「成立」。**兩側對照**：錯式 (P⊗Q)⊕(Q⊗R)（把第二塊的 P 誤寫成 Q）只在維數相容時才有意義，而相容 ⟺ d_P·d_R = d_Q·d_R ⟺ d_P = d_Q，實測恰為 " +
+    "，逐元相等不是僅同構 —— 以 u = (i·n_B+j)·n_C+k 與 u = i·n_Bn_C+(j·n_C+k) 索引兩種括號法**給出同一個 u**，兩邊之元皆為 A[i][i']·B[j][j']·C[k][k']（命題 K-5）。結合律是單一算子的結構恆等式、與是哪些空間無關，故仍只在 9 族代表之 729 個三元組上跑；分配律混合兩個算子且對照有內容，才需要寬覆蓋。這一點值得分開講：分配律要見證、結合律不要，兩者不是同一種「成立」。**兩側對照**：錯式 (P⊗Q)⊕(Q⊗R)（把第二塊的 P 誤寫成 Q）只在維數相容時才有意義，而相容 ⟺ d_P·d_R = d_Q·d_R ⟺ d_P = d_Q，實測恰為 " +
     l.l7wrongable.to_string() +
     " 個三元組。其中抓到 " +
     l.l7wrong.to_string() +
@@ -181,6 +195,6 @@ pub fn ob_n85() -> Check {
     l.l7blindok.to_string() +
     "／" +
     l.l7wrongable.to_string() +
-    "，且兩端（抓到、抓不到）都真的出現過，故這條對照既非恆真也非恆假。",
+    "，且兩端都真的出現過，故這條對照既非恆真也非恆假。全 45³ 於 Gram 層實測約需 89 秒，不跑，照實記。",
   )
 }

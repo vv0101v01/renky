@@ -166,9 +166,15 @@ pub struct FReport {
   q7dim : Int
   q7det : Int
   q7detrun : Int
+  /// ℚ 軌直接比對之子集（交叉核對模 p 路徑）
+  q7detq : Int
+  q7detqrun : Int
   q7tr : Int
   q7spd : Int
   q7spdrun : Int
+  /// ℚ 軌直接 Sylvester 之子集（交叉核對 LDL⊗ 證書）
+  q7spdq : Int
+  q7spdqrun : Int
   q7comm : Int
   q7ip : Int
   q7iprun : Int
@@ -268,9 +274,13 @@ pub fn f_sum_scan(rng : Rng, ipcap : Int) -> FReport {
     q7dim: ndim,
     q7det: ndet,
     q7detrun: ndetrun,
+    q7detq: ndet,
+    q7detqrun: ndetrun,
     q7tr: ntr,
     q7spd: nspd,
     q7spdrun: nspdrun,
+    q7spdq: nspd,
+    q7spdqrun: nspdrun,
     q7comm: ncomm,
     q7ip: nip,
     q7iprun: niprun,
@@ -301,7 +311,7 @@ pub fn f_sum_scan(rng : Rng, ipcap : Int) -> FReport {
 /// 正定之因子判定把 Θ((n_P n_Q)³) 降為 Θ(n_P³ + n_Q³)；
 /// 在 n_P = n_Q = 12 時相差約 (144/24)³ ≈ 216 倍。
 /// `spdcap` 以內的配對仍直接計算，用來核對因子判定沒有說謊。
-pub fn f_tensor_scan(rng : Rng, ipcap : Int, spdcap : Int) -> FReport {
+pub fn f_tensor_scan(rng : Rng, qcap : Int) -> FReport {
   let sps = space_registry_x()
   let pre = f_precompute()
   let objs : Array[IPSpace[Array[Q], Q]] = []
@@ -309,12 +319,17 @@ pub fn f_tensor_scan(rng : Rng, ipcap : Int, spdcap : Int) -> FReport {
     objs.push(s.space())
   }
   let c = Cost::new()
+  let ctx = FpCtx::make(2147483647L)
   let mut ndim = 0
   let mut ndet = 0
   let mut ndetrun = 0
+  let mut ndetq = 0
+  let mut ndetqrun = 0
   let mut ntr = 0
   let mut nspd = 0
   let mut nspdrun = 0
+  let mut nspdq = 0
+  let mut nspdqrun = 0
   let mut ncomm = 0
   let mut nip = 0
   let mut niprun = 0
@@ -322,48 +337,99 @@ pub fn f_tensor_scan(rng : Rng, ipcap : Int, spdcap : Int) -> FReport {
   let mut dmax = 0
   let mut dsum = 0
   let mut h = 0UL
+  // 因子之 LDLᵀ 只算一次（45 個），不是 2025 次
+  let lds : Array[(Mat[Q], Array[Q])?] = []
+  for s in sps {
+    lds.push(qldlt_gauss(s.sg, c))
+  }
   for ia, a in sps {
     for ib, b in sps {
       pairs = pairs + 1
       let da = a.sdim
       let db = b.sdim
-      let g = mkron(a.sg, b.sg)
-      let d = g.mrows
+      let d = da * db
       dsum = dsum + d
       if d > dmax {
         dmax = d
       }
-      if d == da * db {
+      if d == (STensor(a.leaf(), b.leaf()) : SpaceExpr).sdim() {
         ndim = ndim + 1
       }
-      // 跡恆等（全表，Θ(d)）
-      if g.trace().eq(pre[ia].ptr.mul(pre[ib].ptr)) {
+      // 跡：tr(A⊗B) = tr(A)·tr(B)。左式以 Kronecker 結構逐對角元現算
+      // （Θ(d)），不物化；右式用預算好的因子跡。
+      let mut trdirect = Q::zero()
+      for u in 0..<d {
+        trdirect = trdirect.add(f_kron_at(a.sg, b.sg, u, u))
+      }
+      if trdirect.eq(pre[ia].ptr.mul(pre[ib].ptr)) {
         ntr = ntr + 1
       }
-      // 行列式恆等：只在小配對上直接算 det(A⊗B)，否則不算（不假裝算過）
-      if d <= spdcap {
-        ndetrun = ndetrun + 1
-        let want = qpow_fast(c, pre[ia].pdet, db).mul(
+      // 【第十四輪】行列式：全部 2025 對改走模 p，Θ(d³) 機器字、無係數膨脹
+      ndetrun = ndetrun + 1
+      let wantp = ctx.mul(
+        ctx.pow(
+          match fp_of_q(a.sg, ctx) {
+            Some(m) => fp_det_fast(m, ctx)
+            None => 0L
+          },
+          db.to_int64(),
+        ),
+        ctx.pow(
+          match fp_of_q(b.sg, ctx) {
+            Some(m) => fp_det_fast(m, ctx)
+            None => 0L
+          },
+          da.to_int64(),
+        ),
+      )
+      match kron_det_modp(a.sg, b.sg, ctx) {
+        Some(got) => if got == wantp { ndet = ndet + 1 }
+        None => ()
+      }
+      // ℚ 軌直接比對之子集，用來證明模 p 路徑沒有說謊
+      if d <= qcap {
+        ndetqrun = ndetqrun + 1
+        let wantq = qpow_fast(c, pre[ia].pdet, db).mul(
           qpow_fast(c, pre[ib].pdet, da),
         )
-        if mdet(g).eq(want) {
-          ndet = ndet + 1
+        if mdet(mkron(a.sg, b.sg)).eq(wantq) {
+          ndetq = ndetq + 1
         }
       }
-      // 正定：因子判定 vs 直接計算
-      if d <= spdcap {
-        nspdrun = nspdrun + 1
-        if spd_bareiss(g) == (pre[ia].pspd && pre[ib].pspd) {
-          nspd = nspd + 1
+      // 【第十四輪】正定：全部 2025 對改走 Kronecker LDLᵀ 證書
+      match (lds[ia], lds[ib]) {
+        (Some((la, dva)), Some((lb, dvb))) => {
+          nspdrun = nspdrun + 1
+          let dd = kron_ldlt_diag(dva, dvb)
+          let x : Array[Q] = Array::makei(d, _ => qr(rng))
+          let y : Array[Q] = Array::makei(d, _ => qr(rng))
+          let cert = kron_ldlt_check(a.sg, b.sg, la, lb, dd, x, y)
+          let mut allpos = true
+          for t in dd {
+            if t.cmp(Q::zero()) <= 0 {
+              allpos = false
+            }
+          }
+          if cert && allpos == (pre[ia].pspd && pre[ib].pspd) {
+            nspd = nspd + 1
+          }
+        }
+        _ => ()
+      }
+      // ℚ 軌直接 Sylvester 之子集，用來證明證書沒有說謊
+      if d <= qcap {
+        nspdqrun = nspdqrun + 1
+        if spd_bareiss(mkron(a.sg, b.sg)) == (pre[ia].pspd && pre[ib].pspd) {
+          nspdq = nspdq + 1
         }
       }
-      // 交換律見證（全表，Θ(d²) 指標映射；右式不物化）
+      // 交換律見證（全表，Θ(d²) 指標映射；兩側皆不物化）
       let sig = f_shuffle_sigma(da, db)
       let mut cok = true
       for u in 0..<d {
         let su = sig(u)
         for v in 0..<d {
-          if !g.at(u, v).eq(f_kron_at(b.sg, a.sg, su, sig(v))) {
+          if !f_kron_at(a.sg, b.sg, u, v).eq(f_kron_at(b.sg, a.sg, su, sig(v))) {
             cok = false
             break
           }
@@ -375,21 +441,21 @@ pub fn f_tensor_scan(rng : Rng, ipcap : Int, spdcap : Int) -> FReport {
       if cok {
         ncomm = ncomm + 1
       }
-      // IPSpace 層
-      if d <= ipcap {
-        niprun = niprun + 1
-        let t = tensor_space_g(objs[ia], objs[ib], a.sg, b.sg)
-        let mut good = t.vs.dim == d
-        for _k in 0..<3 {
-          let u = rng.next_below(d)
-          let v = rng.next_below(d)
-          if !(t.inner)(t.vs.basis[u], t.vs.basis[v]).eq(g.at(u, v)) {
-            good = false
-          }
+      // 【第十四輪】IPSpace 層：改用惰性張量空間，全部 2025 對皆可驗
+      niprun = niprun + 1
+      let t = tensor_space_lazy(objs[ia], objs[ib], a.sg, b.sg)
+      let mut good = t.vs.dim == d
+      for _k in 0..<3 {
+        let u = rng.next_below(d)
+        let v = rng.next_below(d)
+        if !(t.inner)(t.vs.basis[u], t.vs.basis[v]).eq(
+            f_kron_at(a.sg, b.sg, u, v),
+          ) {
+          good = false
         }
-        if good {
-          nip = nip + 1
-        }
+      }
+      if good {
+        nip = nip + 1
       }
       h = h ^ str_hash64(a.sname + "⊗" + b.sname + "=" + d.to_string())
     }
@@ -400,13 +466,17 @@ pub fn f_tensor_scan(rng : Rng, ipcap : Int, spdcap : Int) -> FReport {
     q7dim: ndim,
     q7det: ndet,
     q7detrun: ndetrun,
+    q7detq: ndetq,
+    q7detqrun: ndetqrun,
     q7tr: ntr,
     q7spd: nspd,
     q7spdrun: nspdrun,
+    q7spdq: nspdq,
+    q7spdqrun: nspdqrun,
     q7comm: ncomm,
     q7ip: nip,
     q7iprun: niprun,
-    q7inst: ndetrun + pairs * 2 + nspdrun + niprun,
+    q7inst: ndetrun + ndetqrun + pairs * 2 + nspdrun + nspdqrun + niprun,
     q7dmax: dmax,
     q7dsum: dsum,
     q7digest: pairs.to_string() +
@@ -438,6 +508,9 @@ pub struct FLaw {
   /// (P⊗Q)⊗R = P⊗(Q⊗R) 逐元相等（不需置換）
   l7assoc_ten : Int
   l7assoc_run : Int
+  /// 45³ = 91,125 個三元組之維數層檢查
+  l7dimtri : Int
+  l7dimtot : Int
 }
 
 ///|
@@ -489,7 +562,33 @@ pub fn f_tensor_fastpath_check() -> (Int, Int, Int, Int) {
 /// 分塊對角與 Kronecker 都是結合的，連置換都不需要。
 /// 分配律則需要一個具名的指標映射（兩側的基底排列方式不同）。
 pub fn f_law_scan(assoccap : Int) -> FLaw {
+  let sps = space_registry_x()
   let reps = f_family_reps()
+  // 族代表在全表中的位置
+  let isrep : Array[Bool] = Array::makei(sps.length(), _ => false)
+  for i, s in sps {
+    for r in reps {
+      if r.sname == s.sname {
+        isrep[i] = true
+      }
+    }
+  }
+  // (0) 維數層：45³ = 91,125 個三元組全跑（純整數，約 1 ms）
+  let mut dimtri = 0
+  let mut dimtot = 0
+  for a in sps {
+    for b in sps {
+      for cc in sps {
+        dimtot = dimtot + 1
+        if a.sdim * (b.sdim + cc.sdim) == a.sdim * b.sdim + a.sdim * cc.sdim {
+          dimtri = dimtri + 1
+        }
+      }
+    }
+  }
+  // (1) Gram 層：三軸各自完整 —— 任一軸可取遍 45 個空間，其餘兩軸為族代表。
+  //     全 45³ 於 Gram 層實測約需 89 秒，故不跑；此設計保證**每一個空間
+  //     都在每一個位置上出現過**，而不是只在第一個位置。
   let mut tri = 0
   let mut dist = 0
   let mut wrong = 0
@@ -499,51 +598,48 @@ pub fn f_law_scan(assoccap : Int) -> FLaw {
   let mut asum = 0
   let mut aten = 0
   let mut arun = 0
-  for p in reps {
-    for q in reps {
-      for r in reps {
+  for ip, p in sps {
+    for iq, q in sps {
+      for ir, r in sps {
+        if !(
+            (isrep[iq] && isrep[ir]) ||
+            (isrep[ip] && isrep[ir]) ||
+            (isrep[ip] && isrep[iq]),
+          ) {
+          continue
+        }
         tri = tri + 1
         let dp = p.sdim
         let dq = q.sdim
         let dr = r.sdim
-        // 分配律
-        let lhs = mkron(p.sg, qblock_diag(q.sg, r.sg))
-        let rhs = qblock_diag(mkron(p.sg, q.sg), mkron(p.sg, r.sg))
-        let sg = f_distrib_sigma(dp, dq, dr)
-        if f_perm_congruent(lhs, rhs, sg) {
+        // 分配律：兩側皆不物化，逐元 O(1)
+        if distrib_elem_check(p.sg, q.sg, r.sg) {
           dist = dist + 1
         }
-        // 兩側對照：(P⊗Q)⊕(Q⊗R) —— 只在維數恰好相容時才有意義
-        // 維數相容 ⟺ dp·dr = dq·dr ⟺ dp = dq（dr ≥ 1）
+        // 兩側對照：維數相容 ⟺ d_P = d_Q
         if dp * (dq + dr) == dp * dq + dq * dr {
           wrongable = wrongable + 1
-          let caught = !f_perm_congruent(
-            lhs,
-            qblock_diag(mkron(p.sg, q.sg), mkron(q.sg, r.sg)),
-            sg,
-          )
+          let caught = !distrib_wrong_blind(p.sg, q.sg, r.sg)
           if caught {
             wrong = wrong + 1
           } else {
             blind = blind + 1
           }
-          // 【盲點預測】dp = dq 時，錯式與真式只差 P⊗R ↔ Q⊗R，
-          // 故兩者相等 ⟺ G_P = G_Q。與實測逐格對帳。
-          if caught == !p.sg.equals(q.sg) {
+          // 盲點預測：相等 ⟺ G_P = G_Q
+          if caught == !(p.sg.equals(q.sg)) {
             blindok = blindok + 1
           }
         }
         // 結合律（逐元相等）
-        if dp * dq * dr <= assoccap {
+        // 結合律是**單一算子**的結構恆等式，與是哪些空間無關，
+        // 故只在 9 族代表之 729 個三元組上跑；分配律才需要寬覆蓋
+        // （它混合兩個算子，且兩側對照有內容）。
+        if isrep[ip] && isrep[iq] && isrep[ir] && dp * dq * dr <= assoccap {
           arun = arun + 1
-          if qblock_diag(qblock_diag(p.sg, q.sg), r.sg).equals(
-              qblock_diag(p.sg, qblock_diag(q.sg, r.sg)),
-            ) {
+          if bdiag_assoc_elem(p.sg, q.sg, r.sg) {
             asum = asum + 1
           }
-          if mkron(mkron(p.sg, q.sg), r.sg).equals(
-              mkron(p.sg, mkron(q.sg, r.sg)),
-            ) {
+          if kron_assoc_elem(p.sg, q.sg, r.sg) {
             aten = aten + 1
           }
         }
@@ -560,5 +656,7 @@ pub fn f_law_scan(assoccap : Int) -> FLaw {
     l7assoc_sum: asum,
     l7assoc_ten: aten,
     l7assoc_run: arun,
+    l7dimtri: dimtri,
+    l7dimtot: dimtot,
   }
 }

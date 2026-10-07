@@ -465,6 +465,32 @@ pub fn c7_braid_witness(
   if !hd {
     return false
   }
+  // 【第十四輪】改用 Θ(d²) 之逐元指標映射（f_perm_congruent）。
+  // 置換陣 P 滿足 P[r][σ(r)] = 1，故 PᵀG₁P = G₂ ⟺ G₁[r][s] = G₂[σr][σs]，
+  // 既不必物化 P，也不必做兩次 Θ(d³) 矩陣乘法。σ 由 c7_shuffle(2,2,n)
+  // 之定義逐字讀出：r = (i·2 + j)·n + t ↦ (j·2 + i)·n + t。
+  // 兩版在 N-82 之全表上逐格同值（義務以 c7_braid_witness_dense 對帳）。
+  f_perm_congruent(g1, g2, r => {
+    let i = r / (2 * n)
+    let j = r % (2 * n) / n
+    let t = r % n
+    (j * 2 + i) * n + t
+  })
+}
+
+///|
+/// 舊版見證：物化置換陣後做兩次矩陣乘法。保留作為新版之對照基準。
+pub fn c7_braid_witness_dense(
+  i1 : Int,
+  i2 : Int,
+  n : Int,
+  g1 : Mat[Q],
+  g2 : Mat[Q],
+) -> Bool {
+  let hd = (i1 == 0 && i2 == 4) || (i1 == 4 && i2 == 0)
+  if !hd {
+    return false
+  }
   let p = c7_shuffle(2, 2, n)
   p.transpose().times(g1).times(p).equals(g2)
 }
